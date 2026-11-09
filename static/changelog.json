@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.18.5",
+    "date": "2026-11-09",
+    "time": "08:10 UTC",
+    "type": "fix",
+    "title": "Consistent Call-to-Action Label for Saweria Card",
+    "highlights": [
+      "Updated Indonesian donation card action button text to 'Support on Saweria' to ensure consistent phrasing with 'Support on Ko-fi'."
+    ]
+  },
+  {
     "version": "v1.18.4",
     "date": "2026-11-09",
     "time": "08:05 UTC",
