@@ -5,7 +5,9 @@
 
   <p>
     <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-7c3aed.svg" alt="License: AGPL v3" /></a>
-    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.17.2-a855f7.svg" alt="Version: 1.17.2" /></a>
+    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.18.0-a855f7.svg" alt="Version: 1.18.0" /></a>
+    <a href="https://saweria.co/iFelzz"><img src="https://img.shields.io/badge/Saweria-Support_via_QRIS-faae2b.svg" alt="Support on Saweria" /></a>
+    <a href="https://ko-fi.com/ifelzz"><img src="https://img.shields.io/badge/Ko--fi-Support_on_Ko--fi-ff5e5b.svg" alt="Support on Ko-fi" /></a>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.11+-3776ab.svg" alt="Python: 3.11+" /></a>
     <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.111.0-009688.svg" alt="FastAPI" /></a>
     <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-enabled-2496ED.svg" alt="Docker" /></a>
@@ -184,6 +186,19 @@ Environment variables can be configured in a `.env` file or passed through the c
 * **Metadata & Art**: Apple Music API, iTunes Store API, ID3v2 Syncsafe In-Stream Patcher
 * **Frontend**: Vanilla HTML5, Modern CSS3 Custom Properties, ES6+ JavaScript, PWA Service Worker
 * **Deployment**: Docker, Docker Compose, Debian Bookworm-slim
+
+---
+
+## Support & Donations
+
+Melodyxx is 100% free and open-source, maintained without intrusive third-party ads or trackers. Every donation directly helps fund our streaming servers, high-speed CPU transcoding pipelines, and domain hosting:
+
+| Platform | Supported Payment Methods | Region | Link |
+| :--- | :--- | :--- | :--- |
+| **Saweria** | Instant QRIS, GoPay, OVO, DANA, ShopeePay | 🇮🇩 Indonesia | [saweria.co/iFelzz](https://saweria.co/iFelzz) |
+| **Ko-fi** | Credit/Debit Card, PayPal, Apple Pay, Google Pay | 🌐 International | [ko-fi.com/ifelzz](https://ko-fi.com/ifelzz) |
+
+Thank you for keeping Melodyxx alive and high-speed for everyone!
 
 ---
 

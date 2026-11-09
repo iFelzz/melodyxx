@@ -1,5 +1,19 @@
 [
   {
+    "version": "v1.18.0",
+    "date": "2026-11-09",
+    "time": "07:15 UTC",
+    "type": "feature",
+    "title": "Ad-Free Project Support Modal (Saweria & Ko-fi)",
+    "highlights": [
+      "Integrated dedicated Support & Sponsorship modal with zero ads and zero intrusive trackers, keeping Melodyxx 100% free and open-source.",
+      "Added native Saweria integration for Indonesian supporters supporting instant QRIS, GoPay, OVO, DANA, and ShopeePay.",
+      "Added native Ko-fi integration for international supporters supporting credit/debit cards, PayPal, Apple Pay, and Google Pay with 0% platform fee.",
+      "Added accessible trigger points across Hero section, footer navigation, analytics dashboard header, and batch download completion drawer.",
+      "Styled with Melodyxx glowing violet neon glassmorphism cards and smooth GPU-accelerated enter/exit animations."
+    ]
+  },
+  {
     "version": "v1.17.2",
     "date": "2026-11-09",
     "time": "03:15 UTC",

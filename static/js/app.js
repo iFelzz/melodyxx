@@ -116,6 +116,12 @@
     const $diagPage = document.getElementById('diag-page');
     const $btnReportSubmit = document.getElementById('btn-report-submit');
 
+    // Support Modal DOM refs
+    const $btnHeroSupport = document.getElementById('btn-hero-support');
+    const $btnOpenSupport = document.getElementById('btn-open-support');
+    const $supportModal = document.getElementById('support-modal');
+    const $btnSupportClose = document.getElementById('btn-support-close');
+
     // Global state
     let searchMode = 'songs'; // 'songs' | 'artists'
     let isSearching = false;
@@ -1390,7 +1396,15 @@
       if (failedTracks.length === 0) {
         $batchProgressTitle.textContent = 'Completed!';
         $batchProgressSub.textContent = `All ${successCount} track${successCount === 1 ? '' : 's'} downloaded successfully.`;
-        $batchProgressStatus.textContent = 'All downloads finished';
+        if ($batchProgressStatus) {
+          $batchProgressStatus.innerHTML = `All downloads finished &bull; <button type="button" id="btn-batch-support" style="background:none;border:none;color:var(--accent-glow, #c084fc);cursor:pointer;font-weight:600;text-decoration:underline;padding:0;font-size:inherit;">Support Server</button>`;
+          const $btnBatchSupport = document.getElementById('btn-batch-support');
+          if ($btnBatchSupport) {
+            $btnBatchSupport.addEventListener('click', () => {
+              openSupportModal();
+            });
+          }
+        }
         toast('success', `Finished downloading all ${successCount} tracks!`);
 
         setTimeout(() => {
@@ -2885,7 +2899,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.2';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.0';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -2928,6 +2942,29 @@
         $bugReportModal.classList.remove('closing');
         document.body.style.overflow = '';
         isReportModalClosing = false;
+      }, 120);
+    }
+
+    // Support Modal Handlers
+    let isSupportModalClosing = false;
+    function openSupportModal() {
+      if (!$supportModal) return;
+      $supportModal.classList.remove('closing');
+      $supportModal.setAttribute('aria-hidden', 'false');
+      $supportModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSupportModal() {
+      if (!$supportModal || isSupportModalClosing || $supportModal.style.display === 'none') return;
+      isSupportModalClosing = true;
+      $supportModal.classList.add('closing');
+      setTimeout(() => {
+        $supportModal.style.display = 'none';
+        $supportModal.setAttribute('aria-hidden', 'true');
+        $supportModal.classList.remove('closing');
+        document.body.style.overflow = '';
+        isSupportModalClosing = false;
       }, 120);
     }
 
@@ -3146,7 +3183,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.2');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.0');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
@@ -3202,9 +3239,31 @@
         if (e.target === $bugReportModal) closeBugReportModal();
       });
     }
+
+    // Support Modal Listeners
+    if ($btnHeroSupport) {
+      $btnHeroSupport.addEventListener('click', openSupportModal);
+    }
+    if ($btnOpenSupport) {
+      $btnOpenSupport.addEventListener('click', openSupportModal);
+    }
+    if ($btnSupportClose) {
+      $btnSupportClose.addEventListener('click', closeSupportModal);
+    }
+    if ($supportModal) {
+      $supportModal.addEventListener('click', (e) => {
+        if (e.target === $supportModal) closeSupportModal();
+      });
+    }
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && $bugReportModal && $bugReportModal.style.display === 'flex') {
-        closeBugReportModal();
+      if (e.key === 'Escape') {
+        if ($bugReportModal && $bugReportModal.style.display === 'flex') {
+          closeBugReportModal();
+        }
+        if ($supportModal && $supportModal.style.display === 'flex') {
+          closeSupportModal();
+        }
       }
     });
 

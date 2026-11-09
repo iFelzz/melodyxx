@@ -145,7 +145,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.17.2" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.18.0" />
 </head>
 
 <body>
@@ -196,6 +196,19 @@
       <p class="hero-tagline">
         Free YouTube to MP3 Downloader &amp; Discography Browser with official Apple Music artwork.
       </p>
+
+      <div class="hero-support-wrap">
+        <button type="button" class="hero-support-pill" id="btn-hero-support" title="Support Melodyxx open-source server">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+            <line x1="6" y1="1" x2="6" y2="4"></line>
+            <line x1="10" y1="1" x2="10" y2="4"></line>
+            <line x1="14" y1="1" x2="14" y2="4"></line>
+          </svg>
+          <span>Support Melodyxx</span>
+        </button>
+      </div>
 
       <!-- Search Mode Tabs -->
       <div class="search-mode-tabs" role="tablist" aria-label="Search Mode">
@@ -645,6 +658,17 @@
           <span class="footer-by">Built by <a href="https://github.com/iFelzz" target="_blank" rel="noopener">iFelzz</a></span>
         </div>
         <div class="footer-right">
+          <button type="button" class="footer-github-link footer-support-btn" id="btn-open-support" title="Support Melodyxx (Saweria &amp; Ko-fi)">
+            <svg class="footer-github-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+              <line x1="6" y1="1" x2="6" y2="4"></line>
+              <line x1="10" y1="1" x2="10" y2="4"></line>
+              <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+            <span>Support</span>
+          </button>
+          <span class="footer-sep">&bull;</span>
           <button type="button" class="footer-github-link footer-release-btn" id="btn-open-release-log" title="Open Release Log &amp; What's New">
             <svg class="footer-github-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -857,6 +881,112 @@
     </div>
   </div>
 
+  <!-- Support & Sponsorship Modal -->
+  <div class="support-modal-backdrop" id="support-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="support-modal-title">
+    <div class="support-modal-card">
+      <div class="support-modal-header">
+        <div class="support-modal-title-wrap">
+          <div class="support-modal-icon-badge" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+              <line x1="6" y1="1" x2="6" y2="4"></line>
+              <line x1="10" y1="1" x2="10" y2="4"></line>
+              <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 class="support-modal-title" id="support-modal-title">Support Melodyxx</h2>
+            <p class="support-modal-subtitle">Keep Melodyxx 100% free, ad-free, and high-speed for everyone.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-support-close" id="btn-support-close" aria-label="Close dialog">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="support-modal-body">
+        <p class="support-intro-text">
+          Melodyxx is an open-source project with zero ads and zero trackers. Every contribution helps cover ongoing server bandwidth, high-performance transcoding CPU, and domain maintenance!
+        </p>
+
+        <div class="support-options-grid">
+          <!-- Saweria Card (Indonesia) -->
+          <a href="https://saweria.co/iFelzz" target="_blank" rel="noopener noreferrer" class="support-option-card support-card-saweria" title="Support via Saweria (QRIS &amp; E-Wallet)">
+            <div class="support-card-top">
+              <span class="support-region-tag">
+                <span class="country-flag">🇮🇩</span> Indonesia
+              </span>
+              <span class="support-badge-saweria">Instant QRIS</span>
+            </div>
+            <div class="support-card-brand">
+              <div class="support-brand-icon-wrap saweria-icon-wrap" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="support-brand-info">
+                <h3 class="support-brand-name">Saweria</h3>
+                <span class="support-brand-desc">QRIS, GoPay, OVO, DANA, ShopeePay</span>
+              </div>
+            </div>
+            <div class="support-card-action">
+              <span>Support via QRIS</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+              </svg>
+            </div>
+          </a>
+
+          <!-- Ko-fi Card (International) -->
+          <a href="https://ko-fi.com/ifelzz" target="_blank" rel="noopener noreferrer" class="support-option-card support-card-kofi" title="Support on Ko-fi (Card &amp; PayPal)">
+            <div class="support-card-top">
+              <span class="support-region-tag">
+                <span class="country-flag">🌐</span> International
+              </span>
+              <span class="support-badge-kofi">0% Platform Fee</span>
+            </div>
+            <div class="support-card-brand">
+              <div class="support-brand-icon-wrap kofi-icon-wrap" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                  <line x1="6" y1="1" x2="6" y2="4"></line>
+                  <line x1="10" y1="1" x2="10" y2="4"></line>
+                  <line x1="14" y1="1" x2="14" y2="4"></line>
+                </svg>
+              </div>
+              <div class="support-brand-info">
+                <h3 class="support-brand-name">Ko-fi</h3>
+                <span class="support-brand-desc">Credit/Debit Card, PayPal, Apple Pay</span>
+              </div>
+            </div>
+            <div class="support-card-action">
+              <span>Support on Ko-fi</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+              </svg>
+            </div>
+          </a>
+        </div>
+
+        <div class="support-perks-box">
+          <div class="support-perks-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </div>
+          <div class="support-perks-text">
+            <strong>Thank you for keeping Melodyxx alive!</strong>
+            <span>All funds are 100% reinvested into server bandwidth and open-source updates.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bug Report & Feedback Modal -->
   <div class="report-modal-backdrop" id="bug-report-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
     <div class="report-modal-card">
@@ -991,7 +1121,7 @@
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.17.2" defer></script>
+  <script src="/static/js/app.js?v=1.18.0" defer></script>
 </body>
 
 </html>
