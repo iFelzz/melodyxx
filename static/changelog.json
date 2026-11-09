@@ -1,5 +1,13 @@
 [
   {
+    "version": "v1.18.14",
+    "date": "2026-11-10",
+    "title": "Tab State Synchronization: Auto-slide Glider to Artists upon Discography Load",
+    "highlights": [
+      "Synchronized search mode switcher tab and sliding glider (.search-mode-glider) to automatically slide to the 'Artists' tab whenever an artist discography is opened from search autocomplete suggestions or direct links."
+    ]
+  },
+  {
     "version": "v1.18.13",
     "date": "2026-11-10",
     "title": "Interactive Motion: Smooth Fluid Sliding Glider for Songs & Artists Tabs",

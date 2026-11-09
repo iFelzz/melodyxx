@@ -776,6 +776,16 @@
     }
 
     async function loadArtistDiscography(artistId) {
+      // Ensure searchMode is set to 'artists' and glider slides to the Artists tab
+      searchMode = 'artists';
+      if ($tabModeArtists && $tabModeSongs) {
+        $tabModeArtists.classList.add('active');
+        $tabModeArtists.setAttribute('aria-selected', 'true');
+        $tabModeSongs.classList.remove('active');
+        $tabModeSongs.setAttribute('aria-selected', 'false');
+        updateSearchModeGlider();
+      }
+
       showState('loading');
       $loadingText.textContent = 'Loading discography & popular tracks…';
       $searchBtn.disabled = true;
@@ -2944,7 +2954,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.13';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.14';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3228,7 +3238,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.13');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.14');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
