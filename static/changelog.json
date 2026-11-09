@@ -1,5 +1,14 @@
 [
   {
+    "version": "v1.18.10",
+    "date": "2026-11-09",
+    "title": "Search Card Typography: Multi-line Word Wrap for Song & Album Titles",
+    "highlights": [
+      "Enhanced search result card titles (.card-title) with responsive 3-line clamp and word-break (overflow-wrap: break-word), allowing long YouTube song titles, featured artist collaborations, and compilation names to wrap completely without '...'.",
+      "Updated album titles (.album-title) and artist card names (.artist-card-name) with multi-line word wrap support across all devices."
+    ]
+  },
+  {
     "version": "v1.18.9",
     "date": "2026-11-09",
     "title": "Mobile Typography: Multi-line Word Wrap for Titles and Metadata",
