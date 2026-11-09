@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.18.2",
+    "date": "2026-11-09",
+    "time": "07:45 UTC",
+    "type": "fix",
+    "title": "Official Saweria & Ko-fi Brand Assets & Modal Cleanup",
+    "highlights": [
+      "Integrated official Saweria mascot Capy icon directly into the Indonesian support card.",
+      "Embedded official Ko-fi cup vector with red heart branding into the international support card.",
+      "Removed redundant promotional tags ('Instant QRIS' and '0% Platform Fee') for a cleaner, unified presentation.",
+      "Refined icon wrapper borders, background glows, and drop-shadows."
+    ]
+  },
+  {
     "version": "v1.18.1",
     "date": "2026-11-09",
     "time": "07:30 UTC",
