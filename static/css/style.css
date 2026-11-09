@@ -4585,46 +4585,6 @@ details[open] .summary-caret {
 }
 
 /* ── Support & Sponsorship Modal ────────────────────────────── */
-.hero-support-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: -6px;
-  margin-bottom: 22px;
-}
-
-.hero-support-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
-  border-radius: 999px;
-  background: rgba(168, 85, 247, 0.12);
-  border: 1px solid rgba(168, 85, 247, 0.32);
-  color: #d8b4fe;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-}
-
-.hero-support-pill:hover {
-  background: rgba(168, 85, 247, 0.25);
-  border-color: rgba(192, 132, 252, 0.65);
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.35);
-}
-
-.footer-support-btn {
-  color: #d8b4fe !important;
-}
-
-.footer-support-btn:hover {
-  color: #ffffff !important;
-  text-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
-}
-
 .support-modal-backdrop {
   position: fixed;
   inset: 0;

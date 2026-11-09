@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.18.3",
+    "date": "2026-11-09",
+    "time": "08:00 UTC",
+    "type": "fix",
+    "title": "Declutter Hero & Footer Navigation in Favor of Floating Support Bubble",
+    "highlights": [
+      "Removed redundant support pill button from the Hero banner section to preserve the clean, focused search interface.",
+      "Removed support link button from the footer bar to keep release notes and bug reporting streamlined.",
+      "Centralized user donation interactions around the floating 'Support Me !' bottom-right bubble."
+    ]
+  },
+  {
     "version": "v1.18.2",
     "date": "2026-11-09",
     "time": "07:45 UTC",

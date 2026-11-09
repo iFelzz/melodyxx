@@ -118,8 +118,6 @@
 
     // Support Modal DOM refs
     const $btnFloatingSupport = document.getElementById('btn-floating-support');
-    const $btnHeroSupport = document.getElementById('btn-hero-support');
-    const $btnOpenSupport = document.getElementById('btn-open-support');
     const $supportModal = document.getElementById('support-modal');
     const $btnSupportClose = document.getElementById('btn-support-close');
 
@@ -2900,7 +2898,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.2';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.3';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3184,7 +3182,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.2');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.3');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
@@ -3244,20 +3242,6 @@
     // Support Modal Listeners
     if ($btnFloatingSupport) {
       $btnFloatingSupport.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openSupportModal();
-      });
-    }
-    if ($btnHeroSupport) {
-      $btnHeroSupport.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openSupportModal();
-      });
-    }
-    if ($btnOpenSupport) {
-      $btnOpenSupport.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         openSupportModal();
