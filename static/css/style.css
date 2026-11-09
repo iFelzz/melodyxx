@@ -5019,12 +5019,11 @@ details[open] .summary-caret {
 }
 
 @media (max-width: 640px) {
-  /* Dock floating support button unobtrusively on the bottom-left of mobile screens
-     so it never blocks right-side action buttons (Play/Download) or bottom-right stats */
+  /* Dock floating support button on the bottom-right of mobile screens */
   .floating-support-bubble {
     bottom: calc(var(--footer-height, 44px) + 14px);
-    left: 14px;
-    right: auto;
+    right: 14px;
+    left: auto;
     width: 44px;
     height: 44px;
     padding: 0;
@@ -5040,8 +5039,9 @@ details[open] .summary-caret {
   .floating-support-text {
     display: none !important;
   }
-  body.player-open .floating-support-bubble {
-    bottom: calc(var(--footer-height, 44px) + 94px);
+  body.player-open .floating-support-bubble,
+  body:has(#mini-player.show) .floating-support-bubble {
+    bottom: calc(var(--footer-height, 64px) + 90px);
   }
   .floating-support-icon-wrap {
     width: 34px;

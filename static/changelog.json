@@ -1,5 +1,14 @@
 [
   {
+    "version": "v1.18.11",
+    "date": "2026-11-09",
+    "title": "Mobile Layout: Relocate Floating Coffee Button to Bottom-Right",
+    "highlights": [
+      "Repositioned floating coffee bubble (.floating-support-bubble) to the bottom-right on mobile viewports (right: 14px, left: auto).",
+      "Configured dynamic bottom clearance above the floating mini player (bottom: calc(var(--footer-height) + 90px)) when player is open, keeping controls visible and unblocked."
+    ]
+  },
+  {
     "version": "v1.18.10",
     "date": "2026-11-09",
     "title": "Search Card Typography: Multi-line Word Wrap for Song & Album Titles",
