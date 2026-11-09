@@ -1280,48 +1280,60 @@
     }
 
     /* ═══════════════════════════════════════════════════
-       TOAST NOTIFICATIONS
+       TOAST NOTIFICATIONS (Top Capsule Island - Mobile & Desktop)
     ═══════════════════════════════════════════════════ */
     #toast-container {
       position: fixed;
-      bottom: 90px;
-      right: 28px;
-      z-index: 9999;
+      top: max(20px, env(safe-area-inset-top, 20px));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10005;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      align-items: flex-end;
+      align-items: center;
+      width: auto;
+      max-width: calc(100vw - 32px);
+      pointer-events: none;
     }
 
     .toast {
+      pointer-events: auto;
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 14px 18px;
-      border-radius: var(--radius-md);
-      background: var(--clr-surface-2);
-      border: 1px solid var(--clr-border);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      font-size: 0.88rem;
-      font-weight: 500;
-      max-width: 360px;
-      animation: toast-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      padding: 10px 18px;
+      border-radius: 9999px;
+      background: rgba(18, 12, 32, 0.94);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(124, 58, 237, 0.22);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      font-size: 0.86rem;
+      font-weight: 600;
+      line-height: 1.4;
+      max-width: 480px;
+      width: auto;
+      animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
     .toast.success {
-      border-color: rgba(16, 185, 129, 0.4);
+      border-color: rgba(52, 211, 153, 0.55);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(16, 185, 129, 0.25);
     }
 
     .toast.error {
-      border-color: rgba(239, 68, 68, 0.4);
+      border-color: rgba(248, 113, 113, 0.55);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(239, 68, 68, 0.25);
     }
 
     .toast.info {
-      border-color: rgba(124, 58, 237, 0.4);
+      border-color: rgba(168, 85, 247, 0.55);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(124, 58, 237, 0.25);
     }
 
     .toast-icon {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -1329,36 +1341,35 @@
     }
 
     .toast-icon svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
     }
 
     .toast-msg {
       flex: 1;
-      color: var(--clr-text);
+      color: #f8fafc;
+      letter-spacing: -0.01em;
     }
 
     @keyframes toast-in {
       from {
         opacity: 0;
-        transform: translateX(40px) scale(0.9);
+        transform: translateY(-24px) scale(0.94);
       }
-
       to {
         opacity: 1;
-        transform: translateX(0) scale(1);
+        transform: translateY(0) scale(1);
       }
     }
 
     @keyframes toast-out {
       from {
         opacity: 1;
-        transform: translateX(0) scale(1);
+        transform: translateY(0) scale(1);
       }
-
       to {
         opacity: 0;
-        transform: translateX(40px) scale(0.9);
+        transform: translateY(-20px) scale(0.94);
       }
     }
 
@@ -5093,6 +5104,110 @@ details[open] .summary-caret {
     width: 100%;
     justify-content: space-between;
   }
+
+  /* ── Mobile Toast Notification Capsule ── */
+  #toast-container {
+    top: max(12px, env(safe-area-inset-top, 12px));
+    width: calc(100vw - 24px);
+    max-width: 420px;
+  }
+  .toast {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.82rem;
+  }
+  .toast-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ── Mobile Floating Batch Action Bar & Drawer ── */
+  .batch-action-bar {
+    width: calc(100vw - 24px);
+    max-width: 440px;
+    padding: 8px 12px;
+    gap: 10px;
+    border-radius: 16px;
+    justify-content: space-between;
+  }
+  .batch-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .batch-count-label {
+    font-size: 0.78rem;
+  }
+  .btn-batch-clear {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+  .btn-batch-download {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+    gap: 6px;
+  }
+  .batch-progress-widget {
+    width: calc(100vw - 24px);
+    right: 12px;
+    left: 12px;
+    margin: 0 auto;
+    max-width: 420px;
+  }
+
+  /* ── Mobile Album Card Header ── */
+  .album-header {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .album-art {
+    width: 48px;
+    height: 48px;
+  }
+  .album-title {
+    font-size: 0.90rem;
+  }
+  .album-meta-text {
+    font-size: 0.74rem;
+  }
+  .btn-select-album {
+    font-size: 0.70rem;
+    padding: 4px 8px;
+  }
+
+  /* ── Mobile Discography Sub-Tabs ── */
+  .disco-nav-tabs {
+    gap: 6px;
+  }
+  .disco-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+
+  /* ── Mobile Support Modal Optimization ── */
+  .support-modal-backdrop {
+    padding: 10px;
+  }
+  .support-modal-card {
+    max-height: 94vh;
+    border-radius: 18px;
+  }
+  .support-modal-header {
+    padding: 16px 18px 12px;
+  }
+  .support-modal-body {
+    padding: 16px 18px;
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .support-options-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 @keyframes supportRadarPingCircle {
@@ -5172,5 +5287,38 @@ details[open] .summary-caret {
   }
   .seo-faq-title {
     font-size: 1.15rem;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   TABLET RESPONSIVENESS (641px - 1024px)
+═══════════════════════════════════════════════════ */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .artist-banner-content {
+    padding: 22px;
+    gap: 20px;
+  }
+  .artist-extra-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .track-row {
+    grid-template-columns: 28px 40px 1fr 50px 76px;
+    gap: 10px;
+    padding: 8px 12px;
+  }
+  .track-title {
+    font-size: 0.90rem;
+  }
+  .track-sub {
+    font-size: 0.74rem;
+  }
+  .card {
+    grid-template-columns: 120px 1fr;
+  }
+  .mini-player {
+    width: calc(100% - 32px);
+    padding: 10px 18px;
   }
 }

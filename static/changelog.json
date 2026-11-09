@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.18.8",
+    "date": "2026-11-09",
+    "title": "Comprehensive Responsive UI/UX Overhaul: Mobile, Tablet & Island Toast",
+    "highlights": [
+      "Re-engineered Toast Notifications into an elegant top floating pill/capsule island (Dynamic Island style) with frosted glassmorphism, eliminating bottom-screen collisions with mini player, buttons, and system gestures.",
+      "Mobile batch operations overhaul: Floating Batch Action Bar and Batch Progress Drawer now dynamically adapt to viewport width with optimized typography and action buttons.",
+      "Refined mobile discography: Full-width responsive sub-tabs, compact album headers (48px art, adjusted font scales), and improved tap-target padding.",
+      "Support Modal mobile responsiveness: Added scrolling containment (max-height: 94vh) and stacked 1-column layout for small viewports.",
+      "Added dedicated Tablet layout rules (641px - 1024px) for balanced multi-column grids, player sizing, and album cards."
+    ]
+  },
+  {
     "version": "v1.18.7",
     "date": "2026-11-09",
     "title": "Mobile UX Optimization: Tracklist Grid & Floating Support Layout",
