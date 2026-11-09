@@ -5,7 +5,7 @@
 
   <p>
     <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-7c3aed.svg" alt="License: AGPL v3" /></a>
-    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.18.11-a855f7.svg" alt="Version: 1.18.11" /></a>
+    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.18.12-a855f7.svg" alt="Version: 1.18.12" /></a>
     <a href="https://saweria.co/iFelzz"><img src="https://img.shields.io/badge/Saweria-Support_via_QRIS-faae2b.svg" alt="Support on Saweria" /></a>
     <a href="https://ko-fi.com/ifelzz"><img src="https://img.shields.io/badge/Ko--fi-Support_on_Ko--fi-ff5e5b.svg" alt="Support on Ko-fi" /></a>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.11+-3776ab.svg" alt="Python: 3.11+" /></a>

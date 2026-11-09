@@ -1861,11 +1861,15 @@
         $searchSuggestions.querySelectorAll('.suggestion-artist-item').forEach(el => {
           el.addEventListener('click', () => {
             const name = el.dataset.name;
+            const artistId = el.dataset.artistId;
             $input.value = name;
             syncClearButtonVisibility();
             hideSearchSuggestions();
-            // In Artists mode, perform artist search to render artist cards grid (never auto-jump to discography)
-            performArtistSearch(name);
+            if (artistId) {
+              loadArtistDiscography(artistId);
+            } else {
+              performArtistSearch(name);
+            }
           });
         });
 
@@ -1946,10 +1950,15 @@
       $searchSuggestions.querySelectorAll('.suggestion-artist-item').forEach(el => {
         el.addEventListener('click', () => {
           const name = el.dataset.name;
+          const artistId = el.dataset.artistId;
           $input.value = name;
           syncClearButtonVisibility();
           hideSearchSuggestions();
-          performSearch(name);
+          if (artistId) {
+            loadArtistDiscography(artistId);
+          } else {
+            performSearch(name);
+          }
         });
       });
 
@@ -2898,7 +2907,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.11';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.12';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3182,7 +3191,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.11');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.12');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
