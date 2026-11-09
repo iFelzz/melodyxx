@@ -2667,6 +2667,10 @@
   text-align: right;
 }
 
+.track-dur-inline {
+  display: none;
+}
+
 .track-actions {
   display: flex;
   align-items: center;
@@ -4989,9 +4993,12 @@ details[open] .summary-caret {
 }
 
 @media (max-width: 640px) {
+  /* Dock floating support button unobtrusively on the bottom-left of mobile screens
+     so it never blocks right-side action buttons (Play/Download) or bottom-right stats */
   .floating-support-bubble {
     bottom: calc(var(--footer-height, 44px) + 14px);
-    right: 14px;
+    left: 14px;
+    right: auto;
     width: 44px;
     height: 44px;
     padding: 0;
@@ -5020,6 +5027,71 @@ details[open] .summary-caret {
   .floating-support-icon-wrap svg {
     width: 20px;
     height: 20px;
+  }
+
+  /* ── Mobile Track Row Optimization ── */
+  .track-row {
+    grid-template-columns: 24px 38px 1fr auto;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .track-art {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+  }
+  .track-main {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .track-title {
+    font-size: 0.86rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+  .track-sub {
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+  /* Hide standalone desktop duration column and show inline in track-sub */
+  .track-dur {
+    display: none;
+  }
+  .track-dur-inline {
+    display: inline;
+    color: var(--clr-text-muted);
+    font-size: 0.72rem;
+  }
+  .track-actions {
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .btn-track-action {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+  }
+
+  /* Discography Container & Panel Spacing */
+  .artist-discography-section {
+    padding-bottom: 70px;
+  }
+  .tracks-list {
+    padding-bottom: 20px;
+  }
+  .disco-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .disco-top-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 

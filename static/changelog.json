@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.18.7",
+    "date": "2026-11-09",
+    "title": "Mobile UX Optimization: Tracklist Grid & Floating Support Layout",
+    "highlights": [
+      "Fixed mobile track row squishing: restructured CSS grid to 4-column responsive layout (24px 38px 1fr auto) so song titles and album metadata are fully visible.",
+      "Integrated track duration inline on mobile devices to prevent excessive grid columns from starving track title width.",
+      "Repositioned floating coffee button to bottom-left on mobile screens (<=640px) to prevent overlapping right-side action buttons (Play/Download) and discography stat pills.",
+      "Added extra scroll clearance to discography and tracks view on mobile viewports."
+    ]
+  },
+  {
     "version": "v1.18.6",
     "date": "2026-11-09",
     "time": "08:35 UTC",

@@ -1081,7 +1081,7 @@
           <img class="track-art" src="${track.artwork_url || '/static/logo.png'}" alt="Art" loading="lazy" onerror="this.src='/static/logo.png'">
           <div class="track-main">
             <div class="track-title" title="${esc(track.title)}">${esc(track.title)}</div>
-            <div class="track-sub">${esc(track.album || '')}${track.year ? ' • ' + track.year : ''}</div>
+            <div class="track-sub">${esc(track.album || '')}${track.year ? ' • ' + track.year : ''}${track.duration ? `<span class="track-dur-inline"> • ${track.duration}</span>` : ''}</div>
           </div>
           <div class="track-dur">${track.duration || ''}</div>
           <div class="track-actions">
@@ -2898,7 +2898,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.6';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.7';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3182,7 +3182,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.6');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.7');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
