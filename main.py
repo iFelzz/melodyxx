@@ -435,9 +435,29 @@ class DownloadRequest(BaseModel):
 
 # ── Helpers ───────────────────────────────────────────────────
 def sanitise_filename(name: str) -> str:
-    """Clean filename of illegal characters across Windows and Linux."""
+    """
+    Clean filename of illegal characters across Windows and Linux,
+    and strip YouTube hashtags (#GarisCinta), annotations ([Official]), and noise.
+    """
+    if not name:
+        return "audio"
+    # 1. Clean annotations and hashtags via metadata_resolver
+    try:
+        name = metadata_resolver.clean_noise(name)
+    except Exception:
+        name = re.sub(r"#\w+", "", name)
+        name = re.sub(r"(?i)[\[\(\【][^\]\)\】]*\bofficial\b[^\]\)\】]*[\]\)\】]", "", name)
+
+    # 2. Safety regex for any remaining hashtags or brackets containing 'official'
+    name = re.sub(r"#\w+", "", name)
+    name = re.sub(r"(?i)[\[\(\【][^\]\)\】]*\bofficial\b[^\]\)\】]*[\]\)\】]", "", name)
+    name = re.sub(r"(?i)\b(official\s+video|official\s+audio|music\s+video|lyric\s+video)\b", "", name)
+    name = re.sub(r"[\(\[\【]\s*[\)\]\】]", "", name)
+
+    # 3. Strip illegal filesystem characters: \ / * ? : " < > |
     name = re.sub(r'[\\/*?:"<>|]', "", name)
     name = re.sub(r"\s+", " ", name).strip()
+    name = re.sub(r"^[-\s–—:|]+|[-\s–—:|]+$", "", name).strip()
     return name[:150] if name else "audio"
 
 def _extract_stream_info(url: str, raw_title: str = "", explicit_meta: Optional[dict] = None) -> dict:
@@ -1345,6 +1365,7 @@ async def prepare_download(request: Request, body: DownloadRequest):
         display_name = f"{clean_artist} - {clean_title}"
     else:
         display_name = clean_title
+    display_name = sanitise_filename(display_name)
     filename = f"{display_name}.{ext}"
 
     # Embed token AND fallback query params so the URL never 400s under multiple connections or retries
@@ -1489,6 +1510,7 @@ async def stream_audio(
     else:
         display_filename = stream_title
 
+    display_filename = sanitise_filename(display_filename)
     output_filename = f"{display_filename}.{ext}"
 
     quoted_filename = urllib.parse.quote(output_filename)

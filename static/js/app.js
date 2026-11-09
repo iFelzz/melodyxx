@@ -1417,7 +1417,16 @@
     function triggerDownload(url, filename) {
       const a = document.createElement('a');
       a.href = url;
-      if (filename) a.download = filename;
+      if (filename) {
+        const cleanName = filename
+          .replace(/#\w+/g, '')
+          .replace(/\[[^\]]*\bofficial\b[^\]]*\]/gi, '')
+          .replace(/\([^\)]*\bofficial\b[^\)]*\)/gi, '')
+          .replace(/\s+/g, ' ')
+          .replace(/^[-\s–—:|]+|[-\s–—:|]+(?=\.[^.]+$)/g, '')
+          .trim();
+        a.download = cleanName || filename;
+      }
       a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
@@ -1704,12 +1713,7 @@
         progressFill.style.width = '100%';
         btnText.innerHTML = `${ICON_CHECK} Downloading…`;
 
-        const link = document.createElement('a');
-        link.href = data.download_url;
-        link.download = data.filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        triggerDownload(data.download_url, data.filename);
 
         btn.classList.remove('loading');
         btn.classList.add('done');
@@ -2881,7 +2885,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.1';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.2';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3142,7 +3146,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.1');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.2');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

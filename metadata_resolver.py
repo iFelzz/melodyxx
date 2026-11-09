@@ -21,16 +21,15 @@ logger = logging.getLogger(__name__)
 
 # Patterns commonly added to YouTube video titles that are not part of the song title
 _NOISE_PATTERNS = [
-    r"(?i)\[\s*official\s+music\s+video\s*\]",
-    r"(?i)\(\s*official\s+music\s+video\s*\)",
-    r"(?i)\[\s*official\s+video\s*\]",
-    r"(?i)\(\s*official\s+video\s*\)",
-    r"(?i)\[\s*official\s+audio\s*\]",
-    r"(?i)\(\s*official\s+audio\s*\)",
-    r"(?i)\[\s*performance\s+video\s*\]",
-    r"(?i)\(\s*performance\s+video\s*\)",
-    r"(?i)\[\s*visualizer\s*\]",
-    r"(?i)\(\s*visualizer\s*\)",
+    # 1. Any bracket block containing 'official' (e.g. [Official], [Official ], (Official Music Video), 【Official Video】)
+    r"(?i)[\[\(\【][^\]\)\】]*\bofficial\b[^\]\)\】]*[\]\)\】]",
+
+    # 2. Any bracket block containing common video, audio, lyric, or release tags
+    r"(?i)[\[\(\【][^\]\)\】]*(?:music\s*video|m/?v|visualizer|lyric\s*video|lyrics?|audio|teaser|performance\s*video|dance\s*practice|live\s*session|live\s*version|acoustic\s*version|video\s*lirik|lirik\s*video|lirik|video\s*musik|video\s*klip|klip\s*musik|lagu\s*resmi|audio\s*resmi|karaoke|full\s*audio|full\s*song|full\s*album|remastered?|hd|4k|1080p|720p)[^\]\)\】]*[\]\)\】]",
+
+    # 3. Specific bracket patterns
+    r"(?i)\[\s*official\s*\]",
+    r"(?i)\(\s*official\s*\)",
     r"(?i)\[\s*m/?v\s*\]",
     r"(?i)\(\s*m/?v\s*\)",
     r"(?i)\bM/?V\b",
@@ -44,8 +43,9 @@ _NOISE_PATTERNS = [
     r"(?i)\(\s*pre-debut\s+song\s*\)",
     r"(?i)\[\s*karaoke\s*(version)?\s*\]",
     r"(?i)\(\s*karaoke\s*(version)?\s*\)",
-    r"(?i)\b(official\s+music\s+video|official\s+video|official\s+audio|music\s+video|lyric\s+video)\b",
-    r"(?i)\b(official\s+mv|official\s+m/v)\b",
+
+    # 4. Standalone video/audio tags outside brackets
+    r"(?i)\b(official\s+music\s+video|official\s+video|official\s+audio|music\s+video|lyric\s+video|video\s+lirik|lirik\s+video|video\s+klip|klip\s+musik|official\s+mv|official\s+m/v)\b",
     r"(?i)\b(4k|hd|1080p|720p)\b",
 ]
 
@@ -96,15 +96,28 @@ def is_label_channel(name: str) -> bool:
     return False
 
 def clean_noise(text: str) -> str:
-    """Strip video annotations like [MV], (Official Audio), (Lyrics), and all quote marks."""
+    """Strip hashtags, video annotations like [MV], [Official], (Lyrics), and quote marks."""
+    if not text:
+        return ""
     result = text
+    # 1. Strip hashtags (e.g. #GarisCinta, #Shorts, #Trending)
+    result = re.sub(r"#\w+", "", result)
+
+    # 2. Apply noise patterns
     for pat in _NOISE_PATTERNS:
         result = re.sub(pat, "", result)
-    # Remove leftover empty brackets or parentheses: () or []
-    result = re.sub(r"\(\s*\)|\[\s*\]", "", result)
-    # Strip all ASCII and Unicode curly/straight quotes
+
+    # 3. Clean any remaining empty or whitespace-only brackets: (), [], 【】
+    result = re.sub(r"[\(\[\【]\s*[\)\]\】]", "", result)
+
+    # 4. Strip all ASCII and Unicode curly/straight quotes
     result = re.sub(r"[\u2018\u2019\u201a\u201b\u201c\u201d\u201e\u201f\'\"\`]", "", result)
+
+    # 5. Normalize whitespace
     result = re.sub(r"\s+", " ", result).strip()
+
+    # 6. Strip dangling hyphens, dashes, colons, or pipes at start or end
+    result = re.sub(r"^[-\s–—:|]+|[-\s–—:|]+$", "", result).strip()
     return result
 
 def parse_artist_and_title(raw_title: str, uploader: str = "") -> Tuple[str, str]:
@@ -166,78 +179,87 @@ def fetch_itunes_metadata(artist: str, title: str) -> Optional[Dict[str, Any]]:
     """
     Query Apple iTunes Search API for official studio metadata and 800x800 square cover art.
     Uses smart multi-candidate matching to avoid piano covers or unrelated artists.
+    Supports global and regional storefront fallback (e.g. ID for Indonesian songs).
     Free, no API key required, response time ~100-150ms.
     """
+    clean_art = clean_noise(artist)
+    clean_tit = clean_noise(title)
     # Clean query: strip hyphens and punctuation that iTunes interprets as NOT operators
-    clean_art = re.sub(r"[\u2018\u2019\u201c\u201d\u2014\u2013'\"`\-_:;/]", " ", artist)
-    clean_tit = re.sub(r"[\u2018\u2019\u201c\u201d\u2014\u2013'\"`\-_:;/]", " ", title)
-    query = re.sub(r"\s+", " ", f"{clean_art} {clean_tit}").strip()
+    clean_art_q = re.sub(r"[\u2018\u2019\u201c\u201d\u2014\u2013'\"`\-_:;/]", " ", clean_art)
+    clean_tit_q = re.sub(r"[\u2018\u2019\u201c\u201d\u2014\u2013'\"`\-_:;/]", " ", clean_tit)
+    query = re.sub(r"\s+", " ", f"{clean_art_q} {clean_tit_q}").strip()
     if not query:
         return None
 
     encoded_query = urllib.parse.quote_plus(query[:100])
-    url = f"https://itunes.apple.com/search?term={encoded_query}&entity=song&limit=5"
+    storefronts = ["", "id"]
 
-    req = urllib.request.Request(
-        url,
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    )
+    for country in storefronts:
+        c_param = f"&country={country}" if country else ""
+        url = f"https://itunes.apple.com/search?term={encoded_query}&entity=song&limit=5{c_param}"
 
-    try:
-        with urllib.request.urlopen(req, timeout=3.5) as response:
-            if response.status != 200:
-                return None
-            data = json.loads(response.read().decode("utf-8"))
-            results = data.get("results", [])
-            if not results:
-                return None
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
 
-            norm_artist = re.sub(r"[^a-zA-Z0-9]", "", artist).lower()
-            norm_title  = re.sub(r"[^a-zA-Z0-9]", "", title).lower()
+        try:
+            with urllib.request.urlopen(req, timeout=3.5) as response:
+                if response.status != 200:
+                    continue
+                data = json.loads(response.read().decode("utf-8"))
+                results = data.get("results", [])
+                if not results:
+                    continue
 
-            best_item = None
-            for item in results:
-                item_artist = re.sub(r"[^a-zA-Z0-9]", "", item.get("artistName", "")).lower()
-                item_track  = re.sub(r"[^a-zA-Z0-9]", "", item.get("trackName", "")).lower()
+                norm_artist = re.sub(r"[^a-zA-Z0-9]", "", clean_art).lower()
+                norm_title  = re.sub(r"[^a-zA-Z0-9]", "", clean_tit).lower()
 
-                # Strong match: artist contains our artist OR our artist contains item artist
-                if norm_artist and (norm_artist in item_artist or item_artist in norm_artist):
-                    if norm_title and (norm_title in item_track or item_track in norm_title):
-                        best_item = item
-                        break
-                    elif not best_item:
-                        best_item = item
+                best_item = None
+                for item in results:
+                    item_artist = re.sub(r"[^a-zA-Z0-9]", "", item.get("artistName", "")).lower()
+                    item_track  = re.sub(r"[^a-zA-Z0-9]", "", item.get("trackName", "")).lower()
 
-            # If no artist match was found among candidates, reject iTunes candidates
-            # rather than picking an unrelated cover / instrumental artist
-            if not best_item:
-                first_artist = re.sub(r"[^a-zA-Z0-9]", "", results[0].get("artistName", "")).lower()
-                first_track  = re.sub(r"[^a-zA-Z0-9]", "", results[0].get("trackName", "")).lower()
-                if norm_artist and norm_artist in first_artist:
-                    best_item = results[0]
-                elif norm_title and norm_title in first_track and len(norm_title) >= 4:
-                    best_item = results[0]
-                else:
-                    return None
+                    # Strong match: artist contains our artist OR our artist contains item artist
+                    if norm_artist and (norm_artist in item_artist or item_artist in norm_artist):
+                        if norm_title and (norm_title in item_track or item_track in norm_title):
+                            best_item = item
+                            break
+                        elif not best_item:
+                            best_item = item
 
-            raw_art = best_item.get("artworkUrl100", "")
-            # Upgrade standard 100x100 artwork URL to high-res 800x800 square
-            hi_res_art = raw_art.replace("100x100bb.jpg", "800x800bb.jpg") if raw_art else ""
+                # If no artist match was found among candidates, reject iTunes candidates
+                # rather than picking an unrelated cover / instrumental artist
+                if not best_item:
+                    first_artist = re.sub(r"[^a-zA-Z0-9]", "", results[0].get("artistName", "")).lower()
+                    first_track  = re.sub(r"[^a-zA-Z0-9]", "", results[0].get("trackName", "")).lower()
+                    if norm_artist and norm_artist in first_artist:
+                        best_item = results[0]
+                    elif norm_title and norm_title in first_track and len(norm_title) >= 4:
+                        best_item = results[0]
+                    else:
+                        continue
 
-            rel_date = best_item.get("releaseDate", "")
-            year = rel_date[:4] if rel_date and len(rel_date) >= 4 else ""
+                raw_art = best_item.get("artworkUrl100", "")
+                # Upgrade standard 100x100 artwork URL to high-res 800x800 square
+                hi_res_art = raw_art.replace("100x100bb.jpg", "800x800bb.jpg") if raw_art else ""
 
-            return {
-                "title":      best_item.get("trackName") or title,
-                "artist":     best_item.get("artistName") or artist,
-                "album":      best_item.get("collectionName") or "",
-                "year":       year,
-                "poster_url": hi_res_art,
-                "source":     "itunes",
-            }
-    except Exception as exc:
-        logger.warning("iTunes search lookup error for '%s': %s", query, exc)
-        return None
+                rel_date = best_item.get("releaseDate", "")
+                year = rel_date[:4] if rel_date and len(rel_date) >= 4 else ""
+
+                return {
+                    "title":      best_item.get("trackName") or clean_tit,
+                    "artist":     best_item.get("artistName") or clean_art,
+                    "album":      best_item.get("collectionName") or "",
+                    "year":       year,
+                    "poster_url": hi_res_art,
+                    "source":     "itunes",
+                }
+        except Exception as exc:
+            logger.warning("iTunes search lookup error for '%s' (%s): %s", query, country or "global", exc)
+            continue
+
+    return None
 
 def resolve_best_poster(yt_info: dict) -> str:
     """Find highest resolution thumbnail from YouTube metadata."""
@@ -271,12 +293,12 @@ def resolve_rich_metadata(yt_info: dict, raw_title: str) -> Dict[str, Any]:
     official_artist = yt_info.get("artist")
     official_album  = yt_info.get("album")
 
-    query_artist = official_artist or parsed_artist
-    query_title  = official_track or parsed_title
+    query_artist = clean_noise(official_artist or parsed_artist)
+    query_title  = clean_noise(official_track or parsed_title)
 
     # Never allow a record label channel name (e.g. SMTOWN, HYBE, JYP) to be the artist query
     if is_label_channel(query_artist):
-        query_artist = official_artist or (parsed_artist if not is_label_channel(parsed_artist) else "Unknown Artist")
+        query_artist = clean_noise(official_artist or (parsed_artist if not is_label_channel(parsed_artist) else "Unknown Artist"))
 
     # 2. Query iTunes Search API for official studio cover & metadata
     itunes_data = fetch_itunes_metadata(query_artist, query_title)

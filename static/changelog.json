@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.17.2",
+    "date": "2026-11-09",
+    "time": "03:15 UTC",
+    "type": "fix",
+    "title": "Comprehensive Hashtag & Official Annotation Sanitization",
+    "highlights": [
+      "Purged YouTube promotional hashtags (e.g. '#GarisCinta', '#shorts') and residual '[Official]' annotations from generated filenames and ID3 tags.",
+      "Upgraded metadata noise cleaner with multi-bracket matching covering '[Official]', '(Official)', '[Video Lirik]', and standalone video promotional tags.",
+      "Enabled automatic regional Apple Music storefront fallback ('country=id') ensuring Indonesian and regional releases reliably match studio metadata and 800x800 square cover art.",
+      "Hardened backend sanitise_filename and frontend triggerDownload functions with dual-layer noise filtering so audio downloads always arrive with pristine 'Artist - Song Title.mp3' names."
+    ]
+  },
+  {
     "version": "v1.17.1",
     "date": "2026-11-09",
     "time": "03:00 UTC",
