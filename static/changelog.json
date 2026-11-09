@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.18.4",
+    "date": "2026-11-09",
+    "time": "08:05 UTC",
+    "type": "fix",
+    "title": "Compact Circular Floating Coffee Bubble on Mobile Devices",
+    "highlights": [
+      "Optimized mobile layout (screen widths under 640px) by transforming the support button into a compact, perfectly circular 44x44px floating coffee bubble.",
+      "Hidden text label on mobile screens to preserve valuable viewport space and prevent overlapping footer controls.",
+      "Centered cute steaming coffee icon with circular radiating radar pulse animation."
+    ]
+  },
+  {
     "version": "v1.18.3",
     "date": "2026-11-09",
     "time": "08:00 UTC",
