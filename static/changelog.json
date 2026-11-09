@@ -1,5 +1,14 @@
 [
   {
+    "version": "v1.18.9",
+    "date": "2026-11-09",
+    "title": "Mobile Typography: Multi-line Word Wrap for Titles and Metadata",
+    "highlights": [
+      "Replaced strict single-line ellipsis (nowrap) with responsive multi-line word-break (overflow-wrap: break-word) and 2-line clamp on mobile and tablet screens.",
+      "Song titles with remix/featured credits and album metadata now wrap naturally into 2 legible lines without being truncated with '...'."
+    ]
+  },
+  {
     "version": "v1.18.8",
     "date": "2026-11-09",
     "title": "Comprehensive Responsive UI/UX Overhaul: Mobile, Tablet & Island Toast",
