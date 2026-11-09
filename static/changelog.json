@@ -1,5 +1,14 @@
 [
   {
+    "version": "v1.18.13",
+    "date": "2026-11-10",
+    "title": "Interactive Motion: Smooth Fluid Sliding Glider for Songs & Artists Tabs",
+    "highlights": [
+      "Implemented an ultra-smooth fluid sliding glider (.search-mode-glider) with spring physics easing (cubic-bezier(0.2, 0.9, 0.3, 1.2)) for the Songs vs Artists mode switcher.",
+      "Dynamic width and translateX synchronization on tab switch, window resize, and browser orientation changes."
+    ]
+  },
+  {
     "version": "v1.18.12",
     "date": "2026-11-10",
     "title": "Search Suggestion: Direct Discography Navigation on Artist Selection",

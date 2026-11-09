@@ -26,6 +26,7 @@
     const $pageTotal = document.getElementById('page-total');
 
     // Artist & Mode DOM refs
+    const $searchModeGlider = document.getElementById('search-mode-glider');
     const $tabModeSongs = document.getElementById('tab-mode-songs');
     const $tabModeArtists = document.getElementById('tab-mode-artists');
     const $artistSearchResults = document.getElementById('artist-search-results');
@@ -497,7 +498,36 @@
     // Initialize UI with preferred quality
     setGlobalQuality(currentPreferredQuality);
 
-    // ── Search Mode Switcher ──────────────────────────────────
+    // ── Search Mode Switcher with Fluid Sliding Glider ────────
+    function updateSearchModeGlider(instant = false) {
+      if (!$searchModeGlider || !$tabModeSongs || !$tabModeArtists) return;
+      const activeTab = searchMode === 'artists' ? $tabModeArtists : $tabModeSongs;
+      const parent = activeTab.parentElement;
+      if (!parent) return;
+
+      const parentRect = parent.getBoundingClientRect();
+      const tabRect = activeTab.getBoundingClientRect();
+
+      const left = tabRect.left - parentRect.left;
+      const width = tabRect.width;
+
+      if (instant) {
+        $searchModeGlider.style.transition = 'none';
+      } else {
+        $searchModeGlider.style.transition = '';
+      }
+
+      $searchModeGlider.style.width = `${width}px`;
+      $searchModeGlider.style.transform = `translateX(${left}px)`;
+      $searchModeGlider.classList.add('ready');
+
+      if (instant) {
+        // Force reflow and re-enable transition for future user clicks
+        void $searchModeGlider.offsetWidth;
+        $searchModeGlider.style.transition = '';
+      }
+    }
+
     if ($tabModeSongs && $tabModeArtists) {
       $tabModeSongs.addEventListener('click', () => {
         searchMode = 'songs';
@@ -505,6 +535,7 @@
         $tabModeSongs.setAttribute('aria-selected', 'true');
         $tabModeArtists.classList.remove('active');
         $tabModeArtists.setAttribute('aria-selected', 'false');
+        updateSearchModeGlider();
         $input.placeholder = 'Type the song title, or paste a YouTube URL...';
         clearSelection();
         if (allSearchResults.length > 0) {
@@ -520,6 +551,7 @@
         $tabModeArtists.setAttribute('aria-selected', 'true');
         $tabModeSongs.classList.remove('active');
         $tabModeSongs.setAttribute('aria-selected', 'false');
+        updateSearchModeGlider();
         $input.placeholder = 'Type artist or band name (e.g. Coldplay, Red Velvet, Alan Walker)…';
         clearSelection();
         if (currentDiscography) {
@@ -535,6 +567,10 @@
           showState('empty');
         }
       });
+
+      // Initialize glider position on page load and handle window resizing
+      requestAnimationFrame(() => updateSearchModeGlider(true));
+      window.addEventListener('resize', () => updateSearchModeGlider(true));
     }
 
     // ── Search ───────────────────────────────────────────────
@@ -771,6 +807,7 @@
           searchMode = 'songs';
           $tabModeSongs.classList.add('active');
           $tabModeArtists.classList.remove('active');
+          updateSearchModeGlider();
           showState('results');
         } else {
           showState('empty');
@@ -2907,7 +2944,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.12';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.13';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3191,7 +3228,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.12');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.13');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
