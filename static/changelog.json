@@ -1,5 +1,14 @@
 [
   {
+    "version": "v1.18.15",
+    "date": "2026-11-10",
+    "title": "Interactive Motion: Smooth Fluid Sliding Glider for Download Quality Switcher",
+    "highlights": [
+      "Implemented a smooth fluid sliding glider (.global-quality-glider) with spring physics (cubic-bezier(0.2, 0.9, 0.3, 1.2)) across 128k, 192k, and 320k quality buttons.",
+      "Automatic width, position, and resize synchronization for seamless transitions without visual stutter."
+    ]
+  },
+  {
     "version": "v1.18.14",
     "date": "2026-11-10",
     "title": "Tab State Synchronization: Auto-slide Glider to Artists upon Discography Load",

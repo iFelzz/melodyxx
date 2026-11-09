@@ -24,6 +24,7 @@
     const $btnNext = document.getElementById('btn-next');
     const $pageCurrent = document.getElementById('page-current');
     const $pageTotal = document.getElementById('page-total');
+    const $globalQualityGlider = document.getElementById('global-quality-glider');
 
     // Artist & Mode DOM refs
     const $searchModeGlider = document.getElementById('search-mode-glider');
@@ -455,6 +456,36 @@
 
     // ── Global Quality Sync ───────────────────────────────────
 
+    // ── Global Quality Sync with Fluid Glider ────────────────
+    function updateQualityGlider(instant = false) {
+      if (!$globalQualityGlider) return;
+      const activeBtn = document.querySelector(`.global-q-btn[data-quality="${currentPreferredQuality}"]`);
+      if (!activeBtn) return;
+      const parent = activeBtn.parentElement;
+      if (!parent) return;
+
+      const parentRect = parent.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+
+      const left = btnRect.left - parentRect.left;
+      const width = btnRect.width;
+
+      if (instant) {
+        $globalQualityGlider.style.transition = 'none';
+      } else {
+        $globalQualityGlider.style.transition = '';
+      }
+
+      $globalQualityGlider.style.width = `${width}px`;
+      $globalQualityGlider.style.transform = `translateX(${left}px)`;
+      $globalQualityGlider.classList.add('ready');
+
+      if (instant) {
+        void $globalQualityGlider.offsetWidth;
+        $globalQualityGlider.style.transition = '';
+      }
+    }
+
     function setGlobalQuality(quality) {
       if (!quality) return;
       currentPreferredQuality = String(quality);
@@ -468,6 +499,7 @@
         btn.classList.toggle('active', isActive);
         btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
+      updateQualityGlider();
 
       // 2. Update all card download buttons with preferred quality
       document.querySelectorAll('.btn-download').forEach(dlBtn => {
@@ -497,6 +529,8 @@
 
     // Initialize UI with preferred quality
     setGlobalQuality(currentPreferredQuality);
+    requestAnimationFrame(() => updateQualityGlider(true));
+    window.addEventListener('resize', () => updateQualityGlider(true));
 
     // ── Search Mode Switcher with Fluid Sliding Glider ────────
     function updateSearchModeGlider(instant = false) {
@@ -2954,7 +2988,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.14';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.15';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3238,7 +3272,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.14');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.15');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
