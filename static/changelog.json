@@ -1,5 +1,19 @@
 [
   {
+    "version": "v1.18.1",
+    "date": "2026-11-09",
+    "time": "07:30 UTC",
+    "type": "fix",
+    "title": "Floating 'Support Me !' Coffee Bubble & Modal Click Fix",
+    "highlights": [
+      "Fixed backdrop visibility and display state issue ensuring the Support & Sponsorship modal smoothly opens on every trigger click.",
+      "Engineered vibrant floating 'Support Me !' pill bubble at bottom-right with an eye-catching coral-gold gradient and gentle floating bobbing animation.",
+      "Added custom cute steaming coffee cup vector SVG with heart steam curls.",
+      "Added subtle radar ping ripple effect to naturally draw user attention while respecting dark-mode harmony.",
+      "Optimized mobile positioning to dynamically lift above the mini player bar when active."
+    ]
+  },
+  {
     "version": "v1.18.0",
     "date": "2026-11-09",
     "time": "07:15 UTC",

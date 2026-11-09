@@ -117,6 +117,7 @@
     const $btnReportSubmit = document.getElementById('btn-report-submit');
 
     // Support Modal DOM refs
+    const $btnFloatingSupport = document.getElementById('btn-floating-support');
     const $btnHeroSupport = document.getElementById('btn-hero-support');
     const $btnOpenSupport = document.getElementById('btn-open-support');
     const $supportModal = document.getElementById('support-modal');
@@ -2899,7 +2900,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.0';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.1';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3183,7 +3184,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.0');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.1');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
@@ -3241,14 +3242,33 @@
     }
 
     // Support Modal Listeners
+    if ($btnFloatingSupport) {
+      $btnFloatingSupport.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openSupportModal();
+      });
+    }
     if ($btnHeroSupport) {
-      $btnHeroSupport.addEventListener('click', openSupportModal);
+      $btnHeroSupport.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openSupportModal();
+      });
     }
     if ($btnOpenSupport) {
-      $btnOpenSupport.addEventListener('click', openSupportModal);
+      $btnOpenSupport.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openSupportModal();
+      });
     }
     if ($btnSupportClose) {
-      $btnSupportClose.addEventListener('click', closeSupportModal);
+      $btnSupportClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSupportModal();
+      });
     }
     if ($supportModal) {
       $supportModal.addEventListener('click', (e) => {
