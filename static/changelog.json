@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.18.6",
+    "date": "2026-11-09",
+    "time": "08:35 UTC",
+    "type": "fix",
+    "title": "Horizontal Brand Alignment & Space Optimization in Support Modal",
+    "highlights": [
+      "Re-engineered donation option cards with a unified horizontal flex layout, positioning platform names and region tags directly adjacent to brand icons.",
+      "Eliminated empty vertical spacing inside cards, delivering a tight, balanced, and aesthetic modal interface."
+    ]
+  },
+  {
     "version": "v1.18.5",
     "date": "2026-11-09",
     "time": "08:10 UTC",
