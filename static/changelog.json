@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.17.1",
+    "date": "2026-11-09",
+    "time": "03:00 UTC",
+    "type": "fix",
+    "title": "Smart Studio Album Selection & Latest Album Pill Expansion",
+    "highlights": [
+      "Engineered intelligent studio album resolution in the artist header discography, prioritizing full studio albums (e.g. 'Tutur Batin' for Yura Yunita, 'GOLDEN' for Jung Kook) over 1-track promotional singles.",
+      "Cleaned redundant title clutter including trailing '- Single' and verbose featuring tags, ensuring clean presentation.",
+      "Expanded artist stats pill grid and removed restrictive 140px width ceiling, enabling multiline wrapping (up to 2 lines) without unsightly '...' truncation.",
+      "Added interactive 1-click shortcut on the Latest Album pill to smoothly switch to the Albums tab and navigate directly to the target album."
+    ]
+  },
+  {
     "version": "v1.17.0",
     "date": "2026-11-06",
     "time": "11:55 UTC",

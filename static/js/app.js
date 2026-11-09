@@ -889,16 +889,51 @@
 
       // 2. Latest Album Release
       const $statLatest = document.getElementById('artist-stat-latest');
+      const $cardStatLatest = document.getElementById('card-stat-latest') || $statLatest?.closest('.stat-pill-card');
       if ($statLatest) {
         if (disco.albums && disco.albums.length > 0) {
-          const latest = disco.albums[0];
-          const latestTitle = latest.title || 'Latest Album';
-          const yrSuffix = latest.year ? ` (${latest.year})` : '';
-          $statLatest.textContent = `${latestTitle}${yrSuffix}`;
-          $statLatest.title = `${latestTitle}${yrSuffix}`;
+          // Smart Studio Album selection: favor full studio albums over 1-track singles
+          const studioAlbum = disco.albums.find(a => (a.track_count && a.track_count > 1) && !/\b(single)\b/i.test(a.title || ''))
+            || disco.albums.find(a => !/\b(single)\b/i.test(a.title || ''))
+            || disco.albums[0];
+
+          let cleanTitle = studioAlbum.title || 'Latest Album';
+          // Clean trailing " - Single" or " - EP"
+          cleanTitle = cleanTitle.replace(/\s*-\s*(Single|EP)\s*$/i, '');
+          // If title has redundant featuring tags, clean them for pill readability
+          if (cleanTitle.length > 25 && /\s*\((feat\.|with).*?\)/i.test(cleanTitle)) {
+            cleanTitle = cleanTitle.replace(/\s*\((feat\.|with).*?\)/i, '');
+          }
+          cleanTitle = cleanTitle.trim();
+
+          const yrSuffix = studioAlbum.year ? ` (${studioAlbum.year})` : '';
+          $statLatest.textContent = `${cleanTitle}${yrSuffix}`;
+
+          const tooltip = `${studioAlbum.title || cleanTitle}${yrSuffix}${studioAlbum.track_count ? ` • ${studioAlbum.track_count} tracks` : ''} • Click to view in discography`;
+          $statLatest.title = tooltip;
+          if ($cardStatLatest) {
+            $cardStatLatest.title = tooltip;
+            $cardStatLatest.style.cursor = 'pointer';
+            $cardStatLatest.onclick = () => {
+              if ($tabAlbums) $tabAlbums.click();
+              const targetAlbumCard = document.getElementById(`album-card-${studioAlbum.album_id}`);
+              if (targetAlbumCard) {
+                targetAlbumCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (!targetAlbumCard.classList.contains('open')) {
+                  const header = targetAlbumCard.querySelector('.album-header');
+                  if (header) header.click();
+                }
+              }
+            };
+          }
         } else {
           $statLatest.textContent = '—';
           $statLatest.title = '';
+          if ($cardStatLatest) {
+            $cardStatLatest.title = '';
+            $cardStatLatest.style.cursor = 'default';
+            $cardStatLatest.onclick = null;
+          }
         }
       }
 
@@ -2846,7 +2881,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.0';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.1';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3107,7 +3142,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.0');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.17.1');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

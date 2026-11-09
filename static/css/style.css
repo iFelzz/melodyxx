@@ -2399,7 +2399,7 @@
 /* Extra Music Insights Grid */
 .artist-extra-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(136px, 1fr));
+  grid-template-columns: minmax(130px, auto) minmax(170px, 280px);
   gap: 10px;
   flex-shrink: 0;
 }
@@ -2415,12 +2415,18 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
 }
 
 .stat-pill-card:hover {
   background: rgba(168, 85, 247, 0.12);
   border-color: rgba(168, 85, 247, 0.45);
   transform: translateY(-1px);
+}
+
+.stat-pill-card#card-stat-latest:hover {
+  border-color: rgba(192, 132, 252, 0.65);
+  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.25);
 }
 
 .stat-pill-icon {
@@ -2440,6 +2446,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
 .stat-pill-label {
@@ -2449,17 +2456,20 @@
   letter-spacing: 0.05em;
   color: var(--clr-text-muted);
   line-height: 1.2;
+  margin-bottom: 2px;
 }
 
 .stat-pill-val {
   font-size: 0.82rem;
   font-weight: 700;
   color: #ffffff;
-  white-space: nowrap;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 140px;
-  line-height: 1.3;
+  word-break: break-word;
+  max-width: 260px;
 }
 
 /* Discography Nav Tabs */
