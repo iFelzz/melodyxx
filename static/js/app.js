@@ -165,6 +165,11 @@
       $loading.classList.toggle('visible', state === 'loading');
       if ($artistSearchResults) $artistSearchResults.style.display = state === 'artists' ? '' : 'none';
       if ($artistView) $artistView.style.display = state === 'artist-view' ? '' : 'none';
+
+      if (state === 'results') {
+        requestAnimationFrame(() => updateQualityGlider(true));
+        setTimeout(() => updateQualityGlider(true), 60);
+      }
     }
 
     /** Render a toast notification */
@@ -366,6 +371,9 @@
       // Update pagination UI
       $pageCurrent.textContent = currentPage;
       $pageTotal.textContent = totalPages;
+
+      // Ensure quality glider is properly positioned after rendering cards
+      requestAnimationFrame(() => updateQualityGlider(true));
       $btnPrev.disabled = currentPage === 1;
       $btnNext.disabled = currentPage === totalPages;
 
@@ -467,8 +475,13 @@
       const parentRect = parent.getBoundingClientRect();
       const btnRect = activeBtn.getBoundingClientRect();
 
-      const left = btnRect.left - parentRect.left;
       const width = btnRect.width;
+      if (width === 0) {
+        // Element is currently not visible/rendered (e.g. results panel is hidden)
+        return;
+      }
+
+      const left = btnRect.left - parentRect.left;
 
       if (instant) {
         $globalQualityGlider.style.transition = 'none';
@@ -531,6 +544,19 @@
     setGlobalQuality(currentPreferredQuality);
     requestAnimationFrame(() => updateQualityGlider(true));
     window.addEventListener('resize', () => updateQualityGlider(true));
+
+    // Observe quality toggle container for visibility/size changes (e.g. when search results appear)
+    const $qualityToggle = document.querySelector('.global-quality-toggle');
+    if ($qualityToggle && typeof ResizeObserver !== 'undefined') {
+      const roQuality = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.contentRect && entry.contentRect.width > 0) {
+            updateQualityGlider(true);
+          }
+        }
+      });
+      roQuality.observe($qualityToggle);
+    }
 
     // ── Search Mode Switcher with Fluid Sliding Glider ────────
     function updateSearchModeGlider(instant = false) {
@@ -2988,7 +3014,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.16';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.17';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3272,7 +3298,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.16');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.17');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
