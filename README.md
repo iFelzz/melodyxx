@@ -5,12 +5,20 @@
 
   <p>
     <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-7c3aed.svg" alt="License: AGPL v3" /></a>
-    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.18.19-a855f7.svg" alt="Version: 1.18.19" /></a>
-    <a href="https://saweria.co/iFelzz"><img src="https://img.shields.io/badge/Saweria-Support_via_QRIS-faae2b.svg" alt="Support on Saweria" /></a>
-    <a href="https://ko-fi.com/ifelzz"><img src="https://img.shields.io/badge/Ko--fi-Support_on_Ko--fi-ff5e5b.svg" alt="Support on Ko-fi" /></a>
+    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.18.20-a855f7.svg" alt="Version: 1.18.20" /></a>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.11+-3776ab.svg" alt="Python: 3.11+" /></a>
     <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.111.0-009688.svg" alt="FastAPI" /></a>
     <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-enabled-2496ED.svg" alt="Docker" /></a>
+  </p>
+
+  <p>
+    <a href="https://saweria.co/iFelzz" target="_blank" rel="noopener noreferrer">
+      <img src="static/btn-saweria.svg" height="40" alt="Support on Saweria (QRIS &amp; E-Wallet)" />
+    </a>
+    &nbsp;&nbsp;
+    <a href="https://ko-fi.com/ifelzz" target="_blank" rel="noopener noreferrer">
+      <img src="static/btn-kofi.svg" height="40" alt="Support on Ko-fi (Card &amp; PayPal)" />
+    </a>
   </p>
 </div>
 
@@ -192,6 +200,16 @@ Environment variables can be configured in a `.env` file or passed through the c
 ## Support & Donations
 
 Melodyxx is 100% free and open-source, maintained without intrusive third-party ads or trackers. Every donation directly helps fund our streaming servers, high-speed CPU transcoding pipelines, and domain hosting:
+
+<p align="center">
+  <a href="https://saweria.co/iFelzz" target="_blank" rel="noopener noreferrer">
+    <img src="static/btn-saweria.svg" height="42" alt="Support on Saweria (QRIS, GoPay, OVO, DANA)" />
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://ko-fi.com/ifelzz" target="_blank" rel="noopener noreferrer">
+    <img src="static/btn-kofi.svg" height="42" alt="Support on Ko-fi (Credit Card, PayPal, Apple Pay)" />
+  </a>
+</p>
 
 | Platform | Supported Payment Methods | Region | Link |
 | :--- | :--- | :--- | :--- |

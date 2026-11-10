@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.18.20",
+    "date": "2026-11-10",
+    "title": "Dedicated Large Donation Action Buttons for Saweria & Ko-fi",
+    "highlights": [
+      "Replaced small badge chips with prominent custom 40px SVG donation buttons in README.md.",
+      "Created brand-accurate SVG assets (btn-saweria.svg with vector capybara mascot and btn-kofi.svg with official cup & heart).",
+      "Added dedicated donation buttons to both header showcase and Support & Donations section."
+    ]
+  },
+  {
     "version": "v1.18.19",
     "date": "2026-11-10",
     "title": "Fix Download Quality Pill Glider Animation Interruption & Snap",
