@@ -156,6 +156,9 @@
       return `${n} views`;
     }
 
+    let qualityGliderInit = false;
+    let lastQualityToggleWidth = 0;
+
     /** Show / hide the named state panel */
     function showState(state) {
       $emptyState.style.display = state === 'empty' ? '' : 'none';
@@ -166,9 +169,8 @@
       if ($artistSearchResults) $artistSearchResults.style.display = state === 'artists' ? '' : 'none';
       if ($artistView) $artistView.style.display = state === 'artist-view' ? '' : 'none';
 
-      if (state === 'results') {
+      if (state === 'results' && !qualityGliderInit) {
         requestAnimationFrame(() => updateQualityGlider(true));
-        setTimeout(() => updateQualityGlider(true), 60);
       }
     }
 
@@ -371,9 +373,6 @@
       // Update pagination UI
       $pageCurrent.textContent = currentPage;
       $pageTotal.textContent = totalPages;
-
-      // Ensure quality glider is properly positioned after rendering cards
-      requestAnimationFrame(() => updateQualityGlider(true));
       $btnPrev.disabled = currentPage === 1;
       $btnNext.disabled = currentPage === totalPages;
 
@@ -512,7 +511,8 @@
         btn.classList.toggle('active', isActive);
         btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
-      updateQualityGlider();
+      // Always slide smoothly with CSS animation on user change
+      updateQualityGlider(false);
 
       // 2. Update all card download buttons with preferred quality
       document.querySelectorAll('.btn-download').forEach(dlBtn => {
@@ -545,13 +545,22 @@
     requestAnimationFrame(() => updateQualityGlider(true));
     window.addEventListener('resize', () => updateQualityGlider(true));
 
-    // Observe quality toggle container for visibility/size changes (e.g. when search results appear)
+    // Observe quality toggle container for initial visibility and significant window resize
     const $qualityToggle = document.querySelector('.global-quality-toggle');
     if ($qualityToggle && typeof ResizeObserver !== 'undefined') {
       const roQuality = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          if (entry.contentRect && entry.contentRect.width > 0) {
-            updateQualityGlider(true);
+          const w = Math.round(entry.contentRect.width);
+          if (w > 0) {
+            if (!qualityGliderInit) {
+              qualityGliderInit = true;
+              lastQualityToggleWidth = w;
+              updateQualityGlider(true);
+            } else if (Math.abs(w - lastQualityToggleWidth) > 5) {
+              // Only snap on real container/viewport resizing (> 5px), never on micro text shifts
+              lastQualityToggleWidth = w;
+              updateQualityGlider(true);
+            }
           }
         }
       });
@@ -3014,7 +3023,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.18';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.19';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3298,7 +3307,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.18');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.19');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

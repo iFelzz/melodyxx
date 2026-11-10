@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.18.19",
+    "date": "2026-11-10",
+    "title": "Fix Download Quality Pill Glider Animation Interruption & Snap",
+    "highlights": [
+      "Eliminated race condition where ResizeObserver and async state updates called updateQualityGlider(true), prematurely cancelling smooth CSS animations mid-transition.",
+      "Stabilized button font-weight at 600 across active/inactive states to prevent subpixel layout shifts that triggered container resize events.",
+      "Guaranteed consistently fluid 0.28s cubic-bezier sliding glider animation whenever toggling audio download quality."
+    ]
+  },
+  {
     "version": "v1.18.18",
     "date": "2026-11-10",
     "title": "Agent Guidelines Update: Mandatory Multi-Resolution & Responsive Layout Standards",
