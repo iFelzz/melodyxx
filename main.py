@@ -29,13 +29,15 @@ import time
 import secrets
 import asyncio
 import logging
+import threading
 import urllib.parse
 import urllib.request
 import urllib.error
 import shutil
 from pathlib import Path
+from collections import OrderedDict
 from contextlib import asynccontextmanager
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 import yt_dlp
 from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile
@@ -247,49 +249,92 @@ def _get_base_ytdl_opts() -> dict[str, Any]:
         opts["proxy"] = YTDLP_PROXY
     return opts
 
+# ── In-Memory Thread-Safe TTL Cache Class ─────────────────────
+class InMemoryTTLCache:
+    """
+    Thread-safe, high-performance in-memory LRU cache with time-to-live (TTL).
+    Automatically evicts expired entries and enforces strict memory ceilings.
+    """
+    def __init__(self, maxsize: int = 400, ttl_seconds: float = 3600.0):
+        self.maxsize = maxsize
+        self.ttl = ttl_seconds
+        self._cache: OrderedDict = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key: str) -> Optional[Any]:
+        now = time.time()
+        with self._lock:
+            if key not in self._cache:
+                return None
+            val, expire_at = self._cache[key]
+            if now > expire_at:
+                del self._cache[key]
+                return None
+            self._cache.move_to_end(key)
+            return val
+
+    def set(self, key: str, value: Any, custom_ttl: Optional[float] = None) -> None:
+        now = time.time()
+        ttl = custom_ttl if custom_ttl is not None else self.ttl
+        expire_at = now + ttl
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+            self._cache[key] = (value, expire_at)
+            while len(self._cache) > self.maxsize:
+                self._cache.popitem(last=False)
+
+    def pop(self, key: str, default: Any = None) -> Any:
+        with self._lock:
+            if key in self._cache:
+                val, _ = self._cache.pop(key)
+                return val
+            return default
+
+    def prune(self) -> int:
+        now = time.time()
+        pruned = 0
+        with self._lock:
+            expired_keys = [k for k, (_, exp) in self._cache.items() if now > exp]
+            for k in expired_keys:
+                del self._cache[k]
+                pruned += 1
+            while len(self._cache) > self.maxsize:
+                self._cache.popitem(last=False)
+                pruned += 1
+        return pruned
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._cache)
+
+    def clear(self) -> None:
+        with self._lock:
+            self._cache.clear()
+
 # ── In-Memory Caches & Active Streams Tracker ─────────────────
-_preview_cache: dict[str, dict] = {}
-_PREVIEW_TTL_SECONDS = 600   # 10 minutes
-
-_search_cache: dict[str, dict] = {}
-_SEARCH_TTL_SECONDS = 300    # 5 minutes
-
-_artist_search_cache: dict[str, dict] = {}
-_artist_disco_cache:  dict[str, dict] = {}
-_album_tracks_cache:  dict[str, dict] = {}
-_ARTIST_CACHE_TTL = 7200     # 2 hours
+_preview_cache = InMemoryTTLCache(maxsize=300, ttl_seconds=600)        # 10 minutes
+_search_cache = InMemoryTTLCache(maxsize=500, ttl_seconds=3600)        # 1 hour
+_artist_search_cache = InMemoryTTLCache(maxsize=400, ttl_seconds=7200) # 2 hours
+_artist_disco_cache = InMemoryTTLCache(maxsize=300, ttl_seconds=7200)  # 2 hours
+_album_tracks_cache = InMemoryTTLCache(maxsize=500, ttl_seconds=7200)  # 2 hours
 
 _stream_tokens: dict[str, dict] = {}
 _TOKEN_TTL_SECONDS = 900     # 15 minutes (allows download managers to reconnect & probe)
 
-_MAX_CACHE_ENTRIES = 300
 _active_streams_count: int = 0
 _STREAM_SEMAPHORE = asyncio.Semaphore(12)
 
 def prune_memory_caches() -> None:
-    """Evict expired entries and enforce memory cache boundaries."""
+    """Evict expired entries and enforce memory cache boundaries across all caches."""
+    _search_cache.prune()
+    _preview_cache.prune()
+    _artist_search_cache.prune()
+    _artist_disco_cache.prune()
+    _album_tracks_cache.prune()
+
     now = time.time()
-
-    # 1. Prune search cache
-    expired_search = [k for k, v in _search_cache.items() if (now - v.get("ts", 0)) > _SEARCH_TTL_SECONDS]
-    for k in expired_search:
-        _search_cache.pop(k, None)
-    if len(_search_cache) > _MAX_CACHE_ENTRIES:
-        oldest_search = sorted(_search_cache.keys(), key=lambda k: _search_cache[k].get("ts", 0))
-        for k in oldest_search[: len(_search_cache) - _MAX_CACHE_ENTRIES]:
-            _search_cache.pop(k, None)
-
-    # 2. Prune preview cache
-    expired_preview = [k for k, v in _preview_cache.items() if (now - v.get("ts", 0)) > _PREVIEW_TTL_SECONDS]
-    for k in expired_preview:
-        _preview_cache.pop(k, None)
-    if len(_preview_cache) > _MAX_CACHE_ENTRIES:
-        oldest_preview = sorted(_preview_cache.keys(), key=lambda k: _preview_cache[k].get("ts", 0))
-        for k in oldest_preview[: len(_preview_cache) - _MAX_CACHE_ENTRIES]:
-            _preview_cache.pop(k, None)
-
-    # 3. Prune stream tokens
-    expired_tokens = [k for k, v in _stream_tokens.items() if (now - v.get("created_at", 0)) > _TOKEN_TTL_SECONDS]
+    expired_tokens = [k for k, v in list(_stream_tokens.items()) if (now - v.get("created_at", 0)) > _TOKEN_TTL_SECONDS]
     for k in expired_tokens:
         _stream_tokens.pop(k, None)
 
@@ -1007,8 +1052,8 @@ async def search(request: Request, q: str, limit: int = 10):
     cache_key = f"{q_stripped.lower()}::{limit}"
     if not is_url:
         cached = _search_cache.get(cache_key)
-        if cached and (time.time() - cached["ts"]) < _SEARCH_TTL_SECONDS:
-            return JSONResponse(content={"results": cached["results"]})
+        if cached:
+            return JSONResponse(content={"results": cached})
 
     ydl_opts = {
         **_get_base_ytdl_opts(),
@@ -1043,9 +1088,7 @@ async def search(request: Request, q: str, limit: int = 10):
             })
 
         if not is_url:
-            if len(_search_cache) >= _MAX_CACHE_ENTRIES:
-                prune_memory_caches()
-            _search_cache[cache_key] = {"results": results, "ts": time.time()}
+            _search_cache.set(cache_key, results)
 
         return JSONResponse(content={"results": results})
 
@@ -1076,7 +1119,7 @@ async def preview(request: Request, url: str):
     analytics.record_preview(title="", ip=client_ip, cf_country=cf_country, user_agent=ua)
 
     cached = _preview_cache.get(clean_url)
-    if not (cached and (time.time() - cached.get("ts", 0)) < _PREVIEW_TTL_SECONDS):
+    if not cached:
         ydl_opts = {
             **_get_base_ytdl_opts(),
             "format": "bestaudio/best",
@@ -1092,9 +1135,7 @@ async def preview(request: Request, url: str):
             if not stream_url:
                 raise HTTPException(status_code=404, detail="Stream URL not found")
 
-            if len(_preview_cache) >= _MAX_CACHE_ENTRIES:
-                prune_memory_caches()
-            _preview_cache[clean_url] = {"stream_url": stream_url, "ts": time.time()}
+            _preview_cache.set(clean_url, stream_url)
         except Exception as exc:
             logger.error("Preview error: %s", exc)
             raise HTTPException(status_code=500, detail=f"Failed to extract preview: {str(exc)}")
@@ -1115,10 +1156,7 @@ async def preview_stream(request: Request, url: str):
     if not clean_url:
         raise HTTPException(status_code=400, detail="URL is required")
 
-    cached = _preview_cache.get(clean_url)
-    stream_url = None
-    if cached and (time.time() - cached.get("ts", 0)) < _PREVIEW_TTL_SECONDS:
-        stream_url = cached.get("stream_url")
+    stream_url = _preview_cache.get(clean_url)
 
     if not stream_url:
         ydl_opts = {
@@ -1133,7 +1171,7 @@ async def preview_stream(request: Request, url: str):
             stream_url = info.get("url")
             if not stream_url:
                 raise HTTPException(status_code=404, detail="Stream URL not found")
-            _preview_cache[clean_url] = {"stream_url": stream_url, "ts": time.time()}
+            _preview_cache.set(clean_url, stream_url)
         except Exception as exc:
             logger.error("Preview stream extraction error: %s", exc)
             raise HTTPException(status_code=500, detail=f"Failed to extract preview stream: {str(exc)}")
@@ -1175,7 +1213,7 @@ async def preview_stream(request: Request, url: str):
                 stream_url = info.get("url")
                 if not stream_url:
                     raise HTTPException(status_code=404, detail="Stream URL not found on refresh")
-                _preview_cache[clean_url] = {"stream_url": stream_url, "ts": time.time()}
+                _preview_cache.set(clean_url, stream_url)
                 resp = await loop.run_in_executor(None, _open_upstream, stream_url)
             except Exception as re_err:
                 logger.error("Preview re-extraction failed: %s", re_err)
@@ -1259,11 +1297,11 @@ async def search_artist(request: Request, q: str, limit: int = 24):
     q_clean = q.strip().lower()
     cache_key = f"{q_clean}:{limit}"
     cached = _artist_search_cache.get(cache_key)
-    if cached and (time.time() - cached["ts"]) < _ARTIST_CACHE_TTL:
-        return JSONResponse(content=cached["data"])
+    if cached:
+        return JSONResponse(content=cached)
 
     res_data = await asyncio.to_thread(metadata_resolver.search_artists, q.strip(), limit)
-    _artist_search_cache[cache_key] = {"data": res_data, "ts": time.time()}
+    _artist_search_cache.set(cache_key, res_data)
     return JSONResponse(content=res_data)
 
 @app.get("/api/artist/{artist_id}/discography")
@@ -1275,14 +1313,14 @@ async def get_artist_discography(request: Request, artist_id: str):
 
     aid = artist_id.strip()
     cached = _artist_disco_cache.get(aid)
-    if cached and (time.time() - cached["ts"]) < _ARTIST_CACHE_TTL:
-        return JSONResponse(content=cached["data"])
+    if cached:
+        return JSONResponse(content=cached)
 
     disco = await asyncio.to_thread(metadata_resolver.get_artist_discography, aid)
     if not disco or not disco.get("name"):
         raise HTTPException(status_code=404, detail="Artist not found.")
 
-    _artist_disco_cache[aid] = {"data": disco, "ts": time.time()}
+    _artist_disco_cache.set(aid, disco)
     return JSONResponse(content=disco)
 
 @app.get("/api/album/{album_id}/tracks")
@@ -1294,11 +1332,11 @@ async def get_album_tracks(request: Request, album_id: str):
 
     al_id = album_id.strip()
     cached = _album_tracks_cache.get(al_id)
-    if cached and (time.time() - cached["ts"]) < _ARTIST_CACHE_TTL:
-        return JSONResponse(content={"tracks": cached["data"]})
+    if cached:
+        return JSONResponse(content={"tracks": cached})
 
     tracks = await asyncio.to_thread(metadata_resolver.get_album_tracks, al_id)
-    _album_tracks_cache[al_id] = {"data": tracks, "ts": time.time()}
+    _album_tracks_cache.set(al_id, tracks)
     return JSONResponse(content={"tracks": tracks})
 
 @app.post("/api/download")

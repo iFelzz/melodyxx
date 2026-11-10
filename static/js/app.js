@@ -1636,6 +1636,263 @@
     window.addEventListener('resize', syncFooterHeight, { passive: true });
     window.addEventListener('orientationchange', syncFooterHeight, { passive: true });
 
+    // ── Media Session API Integration (Lockscreen, Smartwatch & TWS) ──
+
+    function playAdjacentTrack(direction) {
+      if (!currentPlayingBtn) return;
+      const isTrackList = currentPlayingBtn.classList.contains('btn-track-play');
+      const selector = isTrackList ? '.btn-track-play' : '.btn-card-play';
+      const allPlayBtns = Array.from(document.querySelectorAll(selector));
+      if (allPlayBtns.length <= 1) return;
+
+      const currentIndex = allPlayBtns.indexOf(currentPlayingBtn);
+      if (currentIndex === -1) return;
+
+      let nextIndex = currentIndex + direction;
+      if (nextIndex < 0) nextIndex = allPlayBtns.length - 1;
+      if (nextIndex >= allPlayBtns.length) nextIndex = 0;
+
+      const targetBtn = allPlayBtns[nextIndex];
+      if (targetBtn) {
+        targetBtn.click();
+        targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function updateMediaSessionMetadata(title, artist, thumb) {
+      if (!('mediaSession' in navigator)) return;
+      try {
+        const coverArt = thumb || window.location.origin + '/static/logo.png';
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: title || 'Melodyxx Audio',
+          artist: artist || 'Melodyxx Artist',
+          album: 'Melodyxx YouTube Audio Stream',
+          artwork: [
+            { src: coverArt, sizes: '96x96', type: 'image/jpeg' },
+            { src: coverArt, sizes: '128x128', type: 'image/jpeg' },
+            { src: coverArt, sizes: '192x192', type: 'image/jpeg' },
+            { src: coverArt, sizes: '256x256', type: 'image/jpeg' },
+            { src: coverArt, sizes: '384x384', type: 'image/jpeg' },
+            { src: coverArt, sizes: '512x512', type: 'image/jpeg' }
+          ]
+        });
+      } catch (err) {
+        console.warn('MediaSession metadata error:', err);
+      }
+    }
+
+    let lastPositionUpdate = 0;
+    function updateMediaSessionPosition() {
+      if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return;
+      const now = performance.now();
+      if (now - lastPositionUpdate < 500) return; // throttle 500ms
+      lastPositionUpdate = now;
+
+      if (isFinite(audioPlayer.duration) && audioPlayer.duration > 0) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audioPlayer.duration,
+            playbackRate: audioPlayer.playbackRate || 1,
+            position: Math.min(Math.max(audioPlayer.currentTime, 0), audioPlayer.duration)
+          });
+        } catch (_) {}
+      }
+    }
+
+    function initMediaSession() {
+      if (!('mediaSession' in navigator)) return;
+      const handlers = [
+        ['play', () => { audioPlayer.play(); }],
+        ['pause', () => { audioPlayer.pause(); }],
+        ['stop', () => {
+          audioPlayer.pause();
+          audioPlayer.currentTime = 0;
+          hideMiniPlayer();
+          resetCurrentPlayingBtn();
+        }],
+        ['seekbackward', (details) => {
+          const skip = details.seekOffset || 10;
+          audioPlayer.currentTime = Math.max(audioPlayer.currentTime - skip, 0);
+          updateMediaSessionPosition();
+        }],
+        ['seekforward', (details) => {
+          const skip = details.seekOffset || 10;
+          if (isFinite(audioPlayer.duration)) {
+            audioPlayer.currentTime = Math.min(audioPlayer.currentTime + skip, audioPlayer.duration);
+          } else {
+            audioPlayer.currentTime += skip;
+          }
+          updateMediaSessionPosition();
+        }],
+        ['seekto', (details) => {
+          if (details.seekTime != null && isFinite(details.seekTime)) {
+            audioPlayer.currentTime = Math.min(Math.max(details.seekTime, 0), audioPlayer.duration || details.seekTime);
+            updateMediaSessionPosition();
+          }
+        }],
+        ['previoustrack', () => { playAdjacentTrack(-1); }],
+        ['nexttrack', () => { playAdjacentTrack(1); }]
+      ];
+
+      for (const [action, handler] of handlers) {
+        try {
+          navigator.mediaSession.setActionHandler(action, handler);
+        } catch (_) {}
+      }
+    }
+
+    // ── Neon Audio Visualizer Engine ───────────────────────────
+
+    class NeonVisualizer {
+      constructor(canvas, audioEl) {
+        this.canvas = canvas;
+        this.ctx = canvas ? canvas.getContext('2d') : null;
+        this.audio = audioEl;
+        this.audioCtx = null;
+        this.analyser = null;
+        this.source = null;
+        this.dataArray = null;
+        this.animId = null;
+        this.numBars = 16;
+        this.barHeights = new Float32Array(16);
+        this.isAudioCtxReady = false;
+      }
+
+      init() {
+        if (!this.canvas || !this.ctx) return;
+        this.drawIdle();
+      }
+
+      ensureContext() {
+        if (this.isAudioCtxReady) return;
+        try {
+          const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtxClass) return;
+          this.audioCtx = new AudioCtxClass();
+          this.analyser = this.audioCtx.createAnalyser();
+          this.analyser.fftSize = 64;
+          this.analyser.smoothingTimeConstant = 0.8;
+          this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+
+          try {
+            this.audio.crossOrigin = 'anonymous';
+            this.source = this.audioCtx.createMediaElementSource(this.audio);
+            this.source.connect(this.analyser);
+            this.analyser.connect(this.audioCtx.destination);
+          } catch (_) {}
+
+          this.isAudioCtxReady = true;
+        } catch (e) {
+          console.warn('AudioContext init note:', e);
+        }
+      }
+
+      start() {
+        this.ensureContext();
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+        if (!this.animId) {
+          this.loop();
+        }
+      }
+
+      stop() {
+        if (this.animId) {
+          cancelAnimationFrame(this.animId);
+          this.animId = null;
+        }
+        this.drawIdle();
+      }
+
+      drawIdle() {
+        if (!this.ctx || !this.canvas) return;
+        const { width, height } = this.canvas;
+        this.ctx.clearRect(0, 0, width, height);
+
+        const barW = 3.5;
+        const gap = (width - (this.numBars * barW)) / (this.numBars - 1);
+        this.ctx.fillStyle = 'rgba(168, 85, 247, 0.28)';
+
+        for (let i = 0; i < this.numBars; i++) {
+          const x = i * (barW + gap);
+          const y = height - 3;
+          this.ctx.beginPath();
+          if (this.ctx.roundRect) {
+            this.ctx.roundRect(x, y, barW, 3, 1.5);
+          } else {
+            this.ctx.rect(x, y, barW, 3);
+          }
+          this.ctx.fill();
+        }
+      }
+
+      loop() {
+        this.animId = requestAnimationFrame(() => this.loop());
+        if (!this.ctx || !this.canvas) return;
+        const { width, height } = this.canvas;
+        this.ctx.clearRect(0, 0, width, height);
+
+        let hasRealData = false;
+        if (this.analyser && this.dataArray && this.audio && !this.audio.paused) {
+          this.analyser.getByteFrequencyData(this.dataArray);
+          for (let i = 0; i < 16; i++) {
+            if (this.dataArray[i] > 0) {
+              hasRealData = true;
+              break;
+            }
+          }
+        }
+
+        const isPlaying = this.audio && !this.audio.paused;
+        const barW = 3.5;
+        const gap = (width - (this.numBars * barW)) / (this.numBars - 1);
+
+        const grad = this.ctx.createLinearGradient(0, height, 0, 0);
+        grad.addColorStop(0, '#9333ea');
+        grad.addColorStop(0.5, '#c084fc');
+        grad.addColorStop(1, '#f472b6');
+
+        for (let i = 0; i < this.numBars; i++) {
+          let targetH = 2.5;
+          if (isPlaying) {
+            if (hasRealData) {
+              const val = this.dataArray[i % this.dataArray.length] / 255;
+              targetH = Math.max(2.5, val * (height - 2));
+            } else {
+              const t = performance.now() * 0.005;
+              const wave = Math.sin(t + i * 0.45) * 0.5 + 0.5;
+              const beat = Math.sin(t * 1.6) > 0.35 ? 1.25 : 0.8;
+              targetH = Math.max(2.5, wave * (height - 3) * beat * 0.85);
+            }
+          }
+
+          this.barHeights[i] += (targetH - this.barHeights[i]) * 0.28;
+          const currentH = Math.min(height, Math.max(2.5, this.barHeights[i]));
+          const x = i * (barW + gap);
+          const y = height - currentH;
+
+          this.ctx.save();
+          this.ctx.shadowColor = 'rgba(192, 132, 252, 0.75)';
+          this.ctx.shadowBlur = 5;
+          this.ctx.fillStyle = grad;
+          this.ctx.beginPath();
+          if (this.ctx.roundRect) {
+            this.ctx.roundRect(x, y, barW, currentH, 1.75);
+          } else {
+            this.ctx.rect(x, y, barW, currentH);
+          }
+          this.ctx.fill();
+          this.ctx.restore();
+        }
+      }
+    }
+
+    const $miniVisualizer = document.getElementById('mini-visualizer');
+    const neonVisualizer = new NeonVisualizer($miniVisualizer, audioPlayer);
+    neonVisualizer.init();
+    initMediaSession();
+
     function showMiniPlayer(title, artist, thumb) {
       syncFooterHeight();
       $miniTitle.textContent = title || '—';
@@ -1649,12 +1906,19 @@
       $miniPlayIcon.querySelector('path') && ($miniPlayIcon.innerHTML = `<path d="${MINI_ICON_PAUSE}"/>`);
       $miniPlayer.classList.add('show');
       document.body.classList.add('player-open');
+
+      updateMediaSessionMetadata(title, artist, thumb);
+      neonVisualizer.start();
     }
 
     function hideMiniPlayer() {
       $miniPlayer.classList.remove('show');
       $miniPlayer.classList.remove('playing');
       document.body.classList.remove('player-open');
+      neonVisualizer.stop();
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'none';
+      }
     }
 
     function setMiniIcon(isPaused) {
@@ -1706,6 +1970,10 @@
       $miniPlayer.classList.add('playing');
       setMiniIcon(false); // show pause icon in mini player
       updateCurrentPlayingBtn(true);
+      neonVisualizer.start();
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
     });
 
     audioPlayer.addEventListener('waiting', () => {
@@ -1730,12 +1998,21 @@
         currentPlayingBtn.classList.remove('loading');
       }
       updateCurrentPlayingBtn(true);
+      neonVisualizer.start();
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
+      updateMediaSessionPosition();
     });
 
     audioPlayer.addEventListener('ended', () => {
       $miniPlayer.classList.remove('playing');
       hideMiniPlayer();
       resetCurrentPlayingBtn();
+      neonVisualizer.stop();
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'none';
+      }
     });
 
     audioPlayer.addEventListener('pause', () => {
@@ -1743,6 +2020,10 @@
       setMiniIcon(true); // show play icon in mini player
       if (!audioPlayer.ended) {
         updateCurrentPlayingBtn(false);
+      }
+      neonVisualizer.stop();
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
       }
     });
 
@@ -1760,11 +2041,13 @@
         // Update seekbar fill gradient
         $miniSeek.style.background = `linear-gradient(to right, var(--clr-accent) ${$miniSeek.value}%, rgba(255,255,255,0.1) ${$miniSeek.value}%)`;
       }
+      updateMediaSessionPosition();
     });
 
     audioPlayer.addEventListener('loadedmetadata', () => {
       if (isFinite(audioPlayer.duration)) {
         $miniDuration.textContent = formatTime(audioPlayer.duration);
+        updateMediaSessionPosition();
       }
     });
 
@@ -3023,7 +3306,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.20';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.0';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3307,7 +3590,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.18.20');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.0');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
@@ -3404,6 +3687,43 @@
     }
     pingAnalytics('Browsing App');
     setInterval(() => pingAnalytics('Active in App'), 120000);
+
+    // ── PWA Native Installation Prompt ────────────────────────
+    let deferredInstallPrompt = null;
+    const $btnInstallPwa = document.getElementById('btn-install-pwa');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if (!isStandalone && $btnInstallPwa) {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        $btnInstallPwa.style.display = 'inline-flex';
+      });
+
+      $btnInstallPwa.addEventListener('click', async () => {
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          const { outcome } = await deferredInstallPrompt.userChoice;
+          if (outcome === 'accepted') {
+            $btnInstallPwa.style.display = 'none';
+          }
+          deferredInstallPrompt = null;
+        } else {
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          if (isIOS) {
+            toast('info', 'To install Melodyxx on iOS: Tap Share and select "Add to Home Screen".');
+          } else {
+            toast('info', 'Open your browser menu (⋮) and select "Install app" or "Add to Home screen".');
+          }
+        }
+      });
+
+      window.addEventListener('appinstalled', () => {
+        $btnInstallPwa.style.display = 'none';
+        deferredInstallPrompt = null;
+        toast('success', 'Melodyxx installed successfully! You can launch it anytime from your home screen.');
+      });
+    }
 
     // ── Load and display version badge ─────────────────────────
     function loadVersion() {

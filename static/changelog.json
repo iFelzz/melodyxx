@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.19.0",
+    "date": "2026-11-10",
+    "title": "Major Feature Release: Media Session Lockscreen Controls, Neon Audio Visualizer, PWA Install & High-Performance TTL Cache",
+    "highlights": [
+      "Lockscreen & Notification Media Session API: Full background playback support with high-res Apple Music artwork, seekbar position state, and Next/Previous track controls for Android, iOS, Windows, and smartwatch/TWS.",
+      "Neon Audio Visualizer: Integrated 16-band real-time Web Audio API frequency visualizer inside the floating mini player drawer with radiant violet-to-pink gradient bloom.",
+      "PWA Native Install Prompt: Added a sleek, glassmorphic 'Install App' action pill for seamless 1-click installation to mobile and desktop home screens.",
+      "In-Memory Thread-Safe TTL Cache: Built high-concurrency LRU caching for YouTube searches, artist discovery, and album discographies, cutting repeat query latency down to <5ms."
+    ]
+  },
+  {
     "version": "v1.18.20",
     "date": "2026-11-10",
     "title": "Dedicated Large Donation Action Buttons for Saweria & Ko-fi",

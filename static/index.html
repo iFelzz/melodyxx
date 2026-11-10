@@ -145,7 +145,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.18.20" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.19.0" />
 </head>
 
 <body>
@@ -188,6 +188,16 @@
 
     <!-- ── HERO / HEADER ── -->
     <header class="hero" role="banner">
+      <!-- PWA Install Button -->
+      <button type="button" class="btn-install-pwa" id="btn-install-pwa" style="display: none;" title="Install Melodyxx App">
+        <svg class="install-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Install App</span>
+      </button>
+
       <div class="logo-wrap">
         <img src="/static/logo.png?v=3" alt="Melodyxx logo" class="logo-img" />
         <h1 class="logo-text">Melodyxx</h1>
@@ -692,13 +702,18 @@
       </div>
     </div>
 
-    <!-- Center: In-Card Seekbar & Times -->
+    <!-- Center: In-Card Seekbar & Times + Neon Visualizer -->
     <div class="mini-center">
-      <span class="mini-time-label" id="mini-current">0:00</span>
-      <div class="mini-seek-wrap">
-        <input type="range" id="mini-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek audio">
+      <div class="mini-visualizer-wrap" aria-hidden="true">
+        <canvas id="mini-visualizer" class="mini-visualizer" width="160" height="16"></canvas>
       </div>
-      <span class="mini-time-label" id="mini-duration">0:00</span>
+      <div class="mini-seek-row">
+        <span class="mini-time-label" id="mini-current">0:00</span>
+        <div class="mini-seek-wrap">
+          <input type="range" id="mini-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek audio">
+        </div>
+        <span class="mini-time-label" id="mini-duration">0:00</span>
+      </div>
     </div>
 
     <!-- Right: Play/Pause, Volume, and Close Controls -->
@@ -1106,7 +1121,7 @@
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.18.20" defer></script>
+  <script src="/static/js/app.js?v=1.19.0" defer></script>
 </body>
 
 </html>
