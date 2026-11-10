@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.18.16",
+    "date": "2026-11-10",
+    "title": "Support Modal Redesign: Enhanced Glassmorphic Cards & Brand Consistency",
+    "highlights": [
+      "Expanded Support Modal width (max-width: 620px) to eliminate awkward word-breaking and unbalanced card columns.",
+      "Redesigned Saweria and Ko-fi cards with spacious horizontal alignment, 48px brand avatar badges, and branded accent colors.",
+      "Refined typography and external diagonal action arrows with micro-animations on hover."
+    ]
+  },
+  {
     "version": "v1.18.15",
     "date": "2026-11-10",
     "title": "Interactive Motion: Smooth Fluid Sliding Glider for Download Quality Switcher",
