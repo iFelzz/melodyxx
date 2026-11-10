@@ -77,6 +77,11 @@ Whenever you bump the version in `VERSION` (e.g., from `1.0.0` to `1.0.1`):
 ## 4. UI Standards
 
 - The version badge in the footer displays the current version dynamically (`v1.0.0`), fetched via `/api/version`.
+- **Full Responsive Design & Multi-Resolution Support (Desktop, Tablet & Mobile)**:
+  - Every new layout, redesign, or component fix **MUST** fully support and adapt to all screen resolutions: Desktop (wide screens), Tablet (portrait & landscape), and Mobile devices (small screens ~360px up to modern smartphones).
+  - Implement fluid responsive CSS layouts using flexible grids, flexbox wrapping, and standard media queries (`@media (max-width: 768px)`, `@media (max-width: 580px)`, `@media (max-width: 480px)`).
+  - Prevent horizontal page overflow (`overflow-x: hidden`), ensure text wraps cleanly without awkward single-syllable breaks or accidental clipping, and maintain minimum accessible touch targets (at least 40–44px) on mobile.
+  - Floating UI components (audio player drawer, support button, notification toasts, batch action bars) must never collide, overlap, or obscure active interactive elements on compact viewports.
 - Artist search must **never auto-jump** into discography without user selection; always render the matching artist cards first.
 - In batch downloads, successful downloads are automatically deselected; failed tracks remain selected and the drawer displays a **Retry Failed Tracks** button.
 - **In-App Auto-Update Notification**: When a new version is detected (via Service Worker or periodic polling), a floating top banner `#update-notification-banner` prompts the user to refresh with one click (`btn-update-reload`).

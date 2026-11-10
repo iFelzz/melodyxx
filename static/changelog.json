@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.18.18",
+    "date": "2026-11-10",
+    "title": "Agent Guidelines Update: Mandatory Multi-Resolution & Responsive Layout Standards",
+    "highlights": [
+      "Updated AGENTS.md UI standards with mandatory multi-resolution responsiveness rules.",
+      "Required all future layout changes and new components to fully adapt across desktop, tablet, and mobile (>= 360px).",
+      "Enforced clean text-wrapping, accessible touch targets, and non-overlapping floating UI elements."
+    ]
+  },
+  {
     "version": "v1.18.17",
     "date": "2026-11-10",
     "title": "Fix Initial Download Quality Pill Glider Visibility & Resize Observer",
