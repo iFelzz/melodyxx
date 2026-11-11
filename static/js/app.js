@@ -770,6 +770,91 @@
 
     const ARTIST_PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>`;
 
+    // ── Country Flag Graphic Renderer ──────────────────────────
+    function getCountryCodeFromFlag(flagEmoji) {
+      if (!flagEmoji || typeof flagEmoji !== 'string') return '';
+      const codePoints = [...flagEmoji].map(c => c.codePointAt(0));
+      if (codePoints.length === 2 &&
+          codePoints[0] >= 127462 && codePoints[0] <= 127487 &&
+          codePoints[1] >= 127462 && codePoints[1] <= 127487) {
+        return String.fromCharCode(codePoints[0] - 127397, codePoints[1] - 127397).toLowerCase();
+      }
+      return '';
+    }
+
+    const COUNTRY_NAME_TO_CODE = {
+      'indonesia': 'id',
+      'sweden': 'se',
+      'united kingdom': 'gb',
+      'england': 'gb',
+      'great britain': 'gb',
+      'scotland': 'gb',
+      'united states': 'us',
+      'usa': 'us',
+      'south korea': 'kr',
+      'korea': 'kr',
+      'japan': 'jp',
+      'canada': 'ca',
+      'australia': 'au',
+      'germany': 'de',
+      'france': 'fr',
+      'italy': 'it',
+      'spain': 'es',
+      'brazil': 'br',
+      'netherlands': 'nl',
+      'norway': 'no',
+      'denmark': 'dk',
+      'finland': 'fi',
+      'malaysia': 'my',
+      'singapore': 'sg',
+      'thailand': 'th',
+      'philippines': 'ph',
+      'india': 'in',
+      'china': 'cn',
+      'taiwan': 'tw',
+      'hong kong': 'hk',
+      'mexico': 'mx',
+      'turkey': 'tr',
+      'egypt': 'eg',
+      'saudi arabia': 'sa',
+      'ireland': 'ie',
+      'new zealand': 'nz',
+      'switzerland': 'ch',
+      'austria': 'at',
+      'belgium': 'be',
+      'poland': 'pl',
+      'portugal': 'pt',
+      'argentina': 'ar',
+      'colombia': 'co',
+      'russia': 'ru',
+      'stockholm': 'se'
+    };
+
+    function renderCountryFlagHtml(countryCodeOrEmoji, countryName = '') {
+      let code = '';
+      if (typeof countryCodeOrEmoji === 'string') {
+        const trimmed = countryCodeOrEmoji.trim();
+        if (trimmed.length === 2 && /^[a-zA-Z]{2}$/.test(trimmed)) {
+          code = trimmed.toLowerCase();
+        } else {
+          code = getCountryCodeFromFlag(trimmed);
+        }
+      }
+      if (!code && countryName && typeof countryName === 'string') {
+        const lowerName = countryName.toLowerCase().trim();
+        for (const [cName, cCode] of Object.entries(COUNTRY_NAME_TO_CODE)) {
+          if (lowerName === cName || lowerName.endsWith(cName) || lowerName.includes(cName)) {
+            code = cCode;
+            break;
+          }
+        }
+      }
+      if (code) {
+        return `<img src="https://flagcdn.com/24x18/${code}.png" srcset="https://flagcdn.com/48x36/${code}.png 2x" width="16" height="12" alt="${esc(countryName || code.toUpperCase())}" class="country-flag-img" loading="lazy" onerror="this.style.display='none'" />`;
+      }
+      return '';
+    }
+
     function renderArtistResults(artists, reset = true) {
       if (reset) {
         displayedArtistCount = 0;
@@ -786,8 +871,9 @@
       if (nextBatch.length === 0) return;
 
       const html = nextBatch.map(art => {
+        const flagHtml = renderCountryFlagHtml(art.country_code || art.flag, art.country);
         const countryLabel = art.country
-          ? `<span class="artist-card-country" title="${esc(art.country)}">${art.flag ? `${esc(art.flag)} ` : ''}${esc(art.country)}</span>`
+          ? `<span class="artist-card-country" title="${esc(art.country)}">${flagHtml}${flagHtml ? ' ' : ''}${esc(art.country)}</span>`
           : '';
         const photoHtml = art.photo
           ? `<img src="${esc(art.photo)}" alt="${esc(art.name)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="artist-card-placeholder" style="display:none;">${ARTIST_PLACEHOLDER_SVG}</div>`
@@ -956,7 +1042,8 @@
       const $artistCountry = document.getElementById('artist-country');
       if ($artistCountry) {
         if (disco.country) {
-          $artistCountry.textContent = `${disco.flag ? `${disco.flag} ` : ''}${disco.country}`;
+          const flagHtml = renderCountryFlagHtml(disco.country_code || disco.flag, disco.country);
+          $artistCountry.innerHTML = `${flagHtml}${flagHtml ? ' ' : ''}<span>${esc(disco.country)}</span>`;
           $artistCountry.style.display = 'inline-flex';
         } else {
           $artistCountry.style.display = 'none';
@@ -2248,9 +2335,10 @@
             ? `<img src="${esc(art.photo)}" alt="${esc(art.name)}" class="suggestion-artist-photo" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="suggestion-artist-avatar-fallback" style="display:none;">${ICON_SUGGEST_ARTIST}</div>`
             : `<div class="suggestion-artist-avatar-fallback">${ICON_SUGGEST_ARTIST}</div>`;
 
+          const flagHtml = renderCountryFlagHtml(art.country_code || art.flag, art.country);
           const countryLabel = art.country
-            ? `<span class="suggestion-artist-country" title="${esc(art.country)}">${art.flag ? `${esc(art.flag)} ` : ''}${esc(art.country)}</span>`
-            : (art.flag ? `<span class="suggestion-artist-country">${esc(art.flag)}</span>` : '');
+            ? `<span class="suggestion-artist-country" title="${esc(art.country)}">${flagHtml}${flagHtml ? ' ' : ''}${esc(art.country)}</span>`
+            : (flagHtml ? `<span class="suggestion-artist-country">${flagHtml}</span>` : '');
 
           const metaItems = [];
           if (countryLabel) metaItems.push(countryLabel);
@@ -2321,9 +2409,10 @@
           ? `<img src="${esc(topArtist.photo)}" alt="${esc(topArtist.name)}" class="suggestion-artist-photo" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="suggestion-artist-avatar-fallback" style="display:none;">${ICON_SUGGEST_ARTIST}</div>`
           : `<div class="suggestion-artist-avatar-fallback">${ICON_SUGGEST_ARTIST}</div>`;
 
+        const flagHtml = renderCountryFlagHtml(topArtist.country_code || topArtist.flag, topArtist.country);
         const countryLabel = topArtist.country
-          ? `<span class="suggestion-artist-country" title="${esc(topArtist.country)}">${topArtist.flag ? `${esc(topArtist.flag)} ` : ''}${esc(topArtist.country)}</span>`
-          : (topArtist.flag ? `<span class="suggestion-artist-country">${esc(topArtist.flag)}</span>` : '');
+          ? `<span class="suggestion-artist-country" title="${esc(topArtist.country)}">${flagHtml}${flagHtml ? ' ' : ''}${esc(topArtist.country)}</span>`
+          : (flagHtml ? `<span class="suggestion-artist-country">${flagHtml}</span>` : '');
 
         const metaItems = [];
         if (countryLabel) metaItems.push(countryLabel);
@@ -3327,7 +3416,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.2';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.3';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3611,7 +3700,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.2');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.3');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

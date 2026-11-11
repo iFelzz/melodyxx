@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.19.2" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.19.3" />
 
   <style>
     body {
@@ -513,6 +513,17 @@
     .country-flag {
       font-size: 1.05rem;
       line-height: 1;
+    }
+
+    .country-flag-img {
+      width: 16px;
+      height: 12px;
+      object-fit: cover;
+      border-radius: 2px;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
     }
 
     .device-pill {
@@ -1126,6 +1137,33 @@
       return String(str || '').replace(/[&<>"']/g, c => map[c]);
     }
 
+    function getCountryCodeFromFlag(flagEmoji) {
+      if (!flagEmoji || typeof flagEmoji !== 'string') return '';
+      const codePoints = [...flagEmoji].map(c => c.codePointAt(0));
+      if (codePoints.length === 2 &&
+          codePoints[0] >= 127462 && codePoints[0] <= 127487 &&
+          codePoints[1] >= 127462 && codePoints[1] <= 127487) {
+        return String.fromCharCode(codePoints[0] - 127397, codePoints[1] - 127397).toLowerCase();
+      }
+      return '';
+    }
+
+    function renderCountryFlagHtml(countryCodeOrEmoji, countryName = '') {
+      let code = '';
+      if (typeof countryCodeOrEmoji === 'string') {
+        const trimmed = countryCodeOrEmoji.trim();
+        if (trimmed.length === 2 && /^[a-zA-Z]{2}$/.test(trimmed)) {
+          code = trimmed.toLowerCase();
+        } else {
+          code = getCountryCodeFromFlag(trimmed);
+        }
+      }
+      if (code && code !== 'xx' && code !== 'loc') {
+        return `<img src="https://flagcdn.com/24x18/${code}.png" srcset="https://flagcdn.com/48x36/${code}.png 2x" width="16" height="12" alt="${esc(countryName || code.toUpperCase())}" class="country-flag-img" loading="lazy" onerror="this.style.display='none'" />`;
+      }
+      return `<svg class="country-flag-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+    }
+
     function formatBytes(bytes) {
       if (!bytes || bytes <= 0) return '0 MB';
       if (bytes >= 1024 * 1024 * 1024) {
@@ -1345,7 +1383,7 @@
             <td><span class="ip-pill">${esc(u.ip || 'Unknown')}</span></td>
             <td>
               <span class="country-pill">
-                <span class="country-flag">${esc(u.flag || '🌐')}</span>
+                ${renderCountryFlagHtml(u.country_code || u.flag, u.country)}
                 <span>${esc(u.country || 'Unknown')}</span>
               </span>
             </td>
@@ -1408,7 +1446,7 @@
             <div class="rank-item-info">
               <span class="rank-number">#${idx + 1}</span>
               <span class="country-pill">
-                <span class="country-flag">${esc(c.flag || '🌐')}</span>
+                ${renderCountryFlagHtml(c.country_code || c.flag, c.country)}
                 <span class="rank-item-name" title="${esc(c.country)}">${esc(c.country)}</span>
               </span>
             </div>

@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.19.3",
+    "date": "2026-11-10",
+    "title": "Cross-Platform High-Res Vector & Graphic Country Flags",
+    "highlights": [
+      "Fixed Windows Flag Emoji Omission: Windows does not render regional indicator emoji flags (falling back to plain letters like 'ID' or 'SE'); replaced with crisp 2x Retina graphic flag images across artist cards, discography headers, and suggestions.",
+      "Universal Flag Renderer: Added client-side bidirectional decoder converting Unicode regional indicator emojis and ISO-3166 alpha-2 codes into high-resolution national flags.",
+      "Strict SVG & Theme Compliance: Upgraded Saweria Indonesian flag to crisp graphic asset and Ko-fi International badge to theme-compliant glowing vector globe SVG."
+    ]
+  },
+  {
     "version": "v1.19.2",
     "date": "2026-11-10",
     "title": "Subtle & Refined Ambient Glow Contour for Mini Player",

@@ -391,6 +391,7 @@ KNOWN_ARTIST_OVERRIDES: Dict[str, Dict[str, str]] = {
     "vierratale": {"country": "Indonesia", "country_code": "ID", "flag": "🇮🇩"},
 
     # Top K-Pop & global acts with common spelling / space / pseudonym variances
+    "maher zain": {"country": "Sweden", "country_code": "SE", "flag": "🇸🇪"},
     "jung kook": {"country": "South Korea", "country_code": "KR", "flag": "🇰🇷"},
     "jungkook": {"country": "South Korea", "country_code": "KR", "flag": "🇰🇷"},
     "bts": {"country": "South Korea", "country_code": "KR", "flag": "🇰🇷"},
@@ -578,7 +579,7 @@ def resolve_artist_extras(name: str, itunes_id: str = "", genre: str = "") -> di
 
     if country_code and len(country_code) == 2:
         flag = "".join(chr(127397 + ord(c)) for c in country_code.upper() if "A" <= c <= "Z")
-    elif not country_name:
+    if not country_code:
         # Fallback to Wikidata
         try:
             w_url = f"https://www.wikidata.org/w/api.php?action=wbsearchentities&search={urllib.parse.quote(clean_name)}&language=en&format=json&limit=1"
