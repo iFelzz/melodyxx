@@ -1879,21 +1879,19 @@
         const bass = Math.min(1, Math.max(0, this.smoothBass));
 
         if (this.player) {
-          const coreBlur = Math.round(28 + bass * 44);
-          const coreSpread = Math.round(2 + bass * 8);
-          const ambientBlur = Math.round(50 + energy * 55);
-          const ambientSpread = Math.round(energy * 6);
-          const innerAlpha = (0.16 + energy * 0.25).toFixed(3);
-          const borderAlpha = (0.35 + energy * 0.45).toFixed(3);
-          const coreAlpha = (0.38 + bass * 0.48).toFixed(3);
-          const ambientAlpha = (0.24 + energy * 0.4).toFixed(3);
+          // Subtle, delicate glow contour ("tipis-tipis") that hugs the card
+          const coreBlur = Math.round(10 + bass * 12);
+          const ambientBlur = Math.round(18 + energy * 16);
+          const innerAlpha = (0.10 + energy * 0.12).toFixed(3);
+          const borderAlpha = (0.25 + energy * 0.20).toFixed(3);
+          const coreAlpha = (0.18 + bass * 0.20).toFixed(3);
+          const ambientAlpha = (0.10 + energy * 0.14).toFixed(3);
 
-          let shadow = `0 20px 56px -10px rgba(0, 0, 0, 0.92), 0 0 0 1px rgba(233, 213, 255, ${innerAlpha}) inset, 0 0 ${coreBlur}px ${coreSpread}px rgba(147, 51, 234, ${coreAlpha}), 0 0 ${ambientBlur}px ${ambientSpread}px rgba(192, 132, 252, ${ambientAlpha})`;
+          let shadow = `0 18px 45px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(233, 213, 255, ${innerAlpha}) inset, 0 0 ${coreBlur}px rgba(147, 51, 234, ${coreAlpha}), 0 0 ${ambientBlur}px rgba(192, 132, 252, ${ambientAlpha})`;
 
-          if (bass > 0.48) {
-            const magentaAlpha = ((bass - 0.48) * 0.75).toFixed(3);
-            const magentaBlur = Math.round(75 + bass * 35);
-            shadow += `, 0 0 ${magentaBlur}px rgba(244, 114, 182, ${magentaAlpha})`;
+          if (bass > 0.65) {
+            const magentaAlpha = ((bass - 0.65) * 0.35).toFixed(3);
+            shadow += `, 0 0 16px rgba(244, 114, 182, ${magentaAlpha})`;
           }
 
           this.player.style.boxShadow = shadow;
@@ -1901,9 +1899,9 @@
         }
 
         if (this.thumb) {
-          const thumbBlur = Math.round(12 + bass * 18);
-          const thumbAlpha = (0.32 + bass * 0.52).toFixed(3);
-          const thumbScale = (1 + bass * 0.038).toFixed(4);
+          const thumbBlur = Math.round(8 + bass * 8);
+          const thumbAlpha = (0.20 + bass * 0.25).toFixed(3);
+          const thumbScale = (1 + bass * 0.018).toFixed(4);
           this.thumb.style.boxShadow = `0 4px 14px rgba(0, 0, 0, 0.55), 0 0 ${thumbBlur}px rgba(168, 85, 247, ${thumbAlpha})`;
           this.thumb.style.transform = `scale(${thumbScale})`;
         }
@@ -3329,7 +3327,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.1';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.2';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3613,7 +3611,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.1');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.2');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

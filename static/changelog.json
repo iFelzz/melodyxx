@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.19.2",
+    "date": "2026-11-10",
+    "title": "Subtle & Refined Ambient Glow Contour for Mini Player",
+    "highlights": [
+      "Subtle & Thin Neon Contour: Reduced glowing aura radius and opacity to produce a crisp, elegant, and non-overpowering visualizer halo around the floating mini player pill.",
+      "Zero Background Obscuration: Eliminated oversized blur spread (from 110px down to ~20px) ensuring surrounding track cards and text remain 100% sharp and readable.",
+      "Calibrated Beat Dynamics: Refined reactive bass pulse with gentle micro-scaling and soft neon rim highlights."
+    ]
+  },
+  {
     "version": "v1.19.1",
     "date": "2026-11-10",
     "title": "Dynamic Audio-Reactive Ambient Glow Aura Visualizer",
