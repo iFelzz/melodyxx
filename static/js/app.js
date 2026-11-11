@@ -1741,26 +1741,27 @@
       }
     }
 
-    // ── Neon Audio Visualizer Engine ───────────────────────────
+    // ── Dynamic Audio-Reactive Ambient Glow Aura ────────────────
 
-    class NeonVisualizer {
-      constructor(canvas, audioEl) {
-        this.canvas = canvas;
-        this.ctx = canvas ? canvas.getContext('2d') : null;
+    class AmbientGlowVisualizer {
+      constructor(miniPlayerEl, miniThumbEl, audioEl) {
+        this.player = miniPlayerEl;
+        this.thumb = miniThumbEl;
         this.audio = audioEl;
         this.audioCtx = null;
         this.analyser = null;
         this.source = null;
         this.dataArray = null;
         this.animId = null;
-        this.numBars = 16;
-        this.barHeights = new Float32Array(16);
         this.isAudioCtxReady = false;
+
+        this.smoothEnergy = 0;
+        this.smoothBass = 0;
+        this.decaying = false;
       }
 
       init() {
-        if (!this.canvas || !this.ctx) return;
-        this.drawIdle();
+        this.resetStyles();
       }
 
       ensureContext() {
@@ -1771,7 +1772,7 @@
           this.audioCtx = new AudioCtxClass();
           this.analyser = this.audioCtx.createAnalyser();
           this.analyser.fftSize = 64;
-          this.analyser.smoothingTimeConstant = 0.8;
+          this.analyser.smoothingTimeConstant = 0.75;
           this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
           try {
@@ -1792,105 +1793,127 @@
         if (this.audioCtx && this.audioCtx.state === 'suspended') {
           this.audioCtx.resume();
         }
+        this.decaying = false;
         if (!this.animId) {
           this.loop();
         }
       }
 
       stop() {
-        if (this.animId) {
-          cancelAnimationFrame(this.animId);
-          this.animId = null;
-        }
-        this.drawIdle();
+        this.decaying = true;
       }
 
-      drawIdle() {
-        if (!this.ctx || !this.canvas) return;
-        const { width, height } = this.canvas;
-        this.ctx.clearRect(0, 0, width, height);
-
-        const barW = 3.5;
-        const gap = (width - (this.numBars * barW)) / (this.numBars - 1);
-        this.ctx.fillStyle = 'rgba(168, 85, 247, 0.28)';
-
-        for (let i = 0; i < this.numBars; i++) {
-          const x = i * (barW + gap);
-          const y = height - 3;
-          this.ctx.beginPath();
-          if (this.ctx.roundRect) {
-            this.ctx.roundRect(x, y, barW, 3, 1.5);
-          } else {
-            this.ctx.rect(x, y, barW, 3);
-          }
-          this.ctx.fill();
+      resetStyles() {
+        if (this.player) {
+          this.player.style.boxShadow = '';
+          this.player.style.borderColor = '';
+        }
+        if (this.thumb) {
+          this.thumb.style.boxShadow = '';
+          this.thumb.style.transform = '';
         }
       }
 
       loop() {
-        this.animId = requestAnimationFrame(() => this.loop());
-        if (!this.ctx || !this.canvas) return;
-        const { width, height } = this.canvas;
-        this.ctx.clearRect(0, 0, width, height);
-
-        let hasRealData = false;
-        if (this.analyser && this.dataArray && this.audio && !this.audio.paused) {
-          this.analyser.getByteFrequencyData(this.dataArray);
-          for (let i = 0; i < 16; i++) {
-            if (this.dataArray[i] > 0) {
-              hasRealData = true;
-              break;
-            }
-          }
-        }
-
         const isPlaying = this.audio && !this.audio.paused;
-        const barW = 3.5;
-        const gap = (width - (this.numBars * barW)) / (this.numBars - 1);
 
-        const grad = this.ctx.createLinearGradient(0, height, 0, 0);
-        grad.addColorStop(0, '#9333ea');
-        grad.addColorStop(0.5, '#c084fc');
-        grad.addColorStop(1, '#f472b6');
+        if (!isPlaying || this.decaying) {
+          // Smooth decay to zero before stopping frame loop
+          this.smoothEnergy *= 0.82;
+          this.smoothBass *= 0.82;
 
-        for (let i = 0; i < this.numBars; i++) {
-          let targetH = 2.5;
-          if (isPlaying) {
-            if (hasRealData) {
-              const val = this.dataArray[i % this.dataArray.length] / 255;
-              targetH = Math.max(2.5, val * (height - 2));
-            } else {
-              const t = performance.now() * 0.005;
-              const wave = Math.sin(t + i * 0.45) * 0.5 + 0.5;
-              const beat = Math.sin(t * 1.6) > 0.35 ? 1.25 : 0.8;
-              targetH = Math.max(2.5, wave * (height - 3) * beat * 0.85);
+          if (this.smoothEnergy < 0.02 && this.smoothBass < 0.02) {
+            this.smoothEnergy = 0;
+            this.smoothBass = 0;
+            this.resetStyles();
+            if (this.animId) {
+              cancelAnimationFrame(this.animId);
+              this.animId = null;
+            }
+            return;
+          }
+        } else {
+          let hasRealData = false;
+          if (this.analyser && this.dataArray) {
+            this.analyser.getByteFrequencyData(this.dataArray);
+            for (let i = 0; i < 16; i++) {
+              if (this.dataArray[i] > 0) {
+                hasRealData = true;
+                break;
+              }
             }
           }
 
-          this.barHeights[i] += (targetH - this.barHeights[i]) * 0.28;
-          const currentH = Math.min(height, Math.max(2.5, this.barHeights[i]));
-          const x = i * (barW + gap);
-          const y = height - currentH;
+          let targetEnergy = 0;
+          let targetBass = 0;
 
-          this.ctx.save();
-          this.ctx.shadowColor = 'rgba(192, 132, 252, 0.75)';
-          this.ctx.shadowBlur = 5;
-          this.ctx.fillStyle = grad;
-          this.ctx.beginPath();
-          if (this.ctx.roundRect) {
-            this.ctx.roundRect(x, y, barW, currentH, 1.75);
+          if (hasRealData) {
+            // Bass frequencies (bins 1 to 4: kick drums and bassline)
+            const b1 = this.dataArray[1] / 255;
+            const b2 = this.dataArray[2] / 255;
+            const b3 = this.dataArray[3] / 255;
+            const b4 = this.dataArray[4] / 255;
+            targetBass = Math.pow((b1 + b2 + b3 + b4) / 4, 1.3);
+
+            // Total energy across spectrum
+            let sum = 0;
+            for (let i = 0; i < 16; i++) {
+              sum += this.dataArray[i];
+            }
+            targetEnergy = sum / (16 * 255);
           } else {
-            this.ctx.rect(x, y, barW, currentH);
+            // Organic fallback rhythmic simulation
+            const t = performance.now() * 0.0035;
+            const kick = Math.pow(Math.sin(t * 2.3) * 0.5 + 0.5, 3.2);
+            const body = Math.sin(t * 4.6) * 0.5 + 0.5;
+            targetBass = kick * 0.8 + body * 0.2;
+            targetEnergy = kick * 0.6 + body * 0.4;
           }
-          this.ctx.fill();
-          this.ctx.restore();
+
+          // Smooth interpolation
+          this.smoothEnergy += (targetEnergy - this.smoothEnergy) * 0.24;
+          this.smoothBass += (targetBass - this.smoothBass) * 0.28;
         }
+
+        const energy = Math.min(1, Math.max(0, this.smoothEnergy));
+        const bass = Math.min(1, Math.max(0, this.smoothBass));
+
+        if (this.player) {
+          const coreBlur = Math.round(28 + bass * 44);
+          const coreSpread = Math.round(2 + bass * 8);
+          const ambientBlur = Math.round(50 + energy * 55);
+          const ambientSpread = Math.round(energy * 6);
+          const innerAlpha = (0.16 + energy * 0.25).toFixed(3);
+          const borderAlpha = (0.35 + energy * 0.45).toFixed(3);
+          const coreAlpha = (0.38 + bass * 0.48).toFixed(3);
+          const ambientAlpha = (0.24 + energy * 0.4).toFixed(3);
+
+          let shadow = `0 20px 56px -10px rgba(0, 0, 0, 0.92), 0 0 0 1px rgba(233, 213, 255, ${innerAlpha}) inset, 0 0 ${coreBlur}px ${coreSpread}px rgba(147, 51, 234, ${coreAlpha}), 0 0 ${ambientBlur}px ${ambientSpread}px rgba(192, 132, 252, ${ambientAlpha})`;
+
+          if (bass > 0.48) {
+            const magentaAlpha = ((bass - 0.48) * 0.75).toFixed(3);
+            const magentaBlur = Math.round(75 + bass * 35);
+            shadow += `, 0 0 ${magentaBlur}px rgba(244, 114, 182, ${magentaAlpha})`;
+          }
+
+          this.player.style.boxShadow = shadow;
+          this.player.style.borderColor = `rgba(192, 132, 252, ${borderAlpha})`;
+        }
+
+        if (this.thumb) {
+          const thumbBlur = Math.round(12 + bass * 18);
+          const thumbAlpha = (0.32 + bass * 0.52).toFixed(3);
+          const thumbScale = (1 + bass * 0.038).toFixed(4);
+          this.thumb.style.boxShadow = `0 4px 14px rgba(0, 0, 0, 0.55), 0 0 ${thumbBlur}px rgba(168, 85, 247, ${thumbAlpha})`;
+          this.thumb.style.transform = `scale(${thumbScale})`;
+        }
+
+        this.animId = requestAnimationFrame(() => this.loop());
       }
     }
 
-    const $miniVisualizer = document.getElementById('mini-visualizer');
-    const neonVisualizer = new NeonVisualizer($miniVisualizer, audioPlayer);
-    neonVisualizer.init();
+    const ambientGlowVisualizer = new AmbientGlowVisualizer($miniPlayer, $miniThumb, audioPlayer);
+    ambientGlowVisualizer.init();
     initMediaSession();
 
     function showMiniPlayer(title, artist, thumb) {
@@ -1908,14 +1931,14 @@
       document.body.classList.add('player-open');
 
       updateMediaSessionMetadata(title, artist, thumb);
-      neonVisualizer.start();
+      ambientGlowVisualizer.start();
     }
 
     function hideMiniPlayer() {
       $miniPlayer.classList.remove('show');
       $miniPlayer.classList.remove('playing');
       document.body.classList.remove('player-open');
-      neonVisualizer.stop();
+      ambientGlowVisualizer.stop();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'none';
       }
@@ -1970,7 +1993,7 @@
       $miniPlayer.classList.add('playing');
       setMiniIcon(false); // show pause icon in mini player
       updateCurrentPlayingBtn(true);
-      neonVisualizer.start();
+      ambientGlowVisualizer.start();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
       }
@@ -1998,7 +2021,7 @@
         currentPlayingBtn.classList.remove('loading');
       }
       updateCurrentPlayingBtn(true);
-      neonVisualizer.start();
+      ambientGlowVisualizer.start();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
       }
@@ -2009,7 +2032,7 @@
       $miniPlayer.classList.remove('playing');
       hideMiniPlayer();
       resetCurrentPlayingBtn();
-      neonVisualizer.stop();
+      ambientGlowVisualizer.stop();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'none';
       }
@@ -2021,7 +2044,7 @@
       if (!audioPlayer.ended) {
         updateCurrentPlayingBtn(false);
       }
-      neonVisualizer.stop();
+      ambientGlowVisualizer.stop();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
       }
@@ -3306,7 +3329,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.0';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.1';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3590,7 +3613,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.0');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.1');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

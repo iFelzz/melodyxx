@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.19.1",
+    "date": "2026-11-10",
+    "title": "Dynamic Audio-Reactive Ambient Glow Aura Visualizer",
+    "highlights": [
+      "Dynamic Ambient Glow Aura: Replaced static bar visualizer with a real-time reactive neon glow pulsing around the floating mini player card to the kick, bass, and rhythm of the track.",
+      "Clean Inline Seekbar Layout: Restored spacious inline seekbar with tabular timestamps across desktop, tablet, and mobile displays without vertical crowding.",
+      "Organic Rhythmic Pulsation Fallback: Added seamless procedural harmonic oscillator fallback ensuring vibrant visual pulsations even on restricted cross-origin streams.",
+      "Zero CPU Waste: Automatically decays glowing aura to idle and halts animation frames when paused or closed."
+    ]
+  },
+  {
     "version": "v1.19.0",
     "date": "2026-11-10",
     "title": "Major Feature Release: Media Session Lockscreen Controls, Neon Audio Visualizer, PWA Install & High-Performance TTL Cache",

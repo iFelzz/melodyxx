@@ -145,7 +145,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.19.0" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.19.1" />
 </head>
 
 <body>
@@ -702,18 +702,13 @@
       </div>
     </div>
 
-    <!-- Center: In-Card Seekbar & Times + Neon Visualizer -->
+    <!-- Center: In-Card Seekbar & Times -->
     <div class="mini-center">
-      <div class="mini-visualizer-wrap" aria-hidden="true">
-        <canvas id="mini-visualizer" class="mini-visualizer" width="160" height="16"></canvas>
+      <span class="mini-time-label" id="mini-current">0:00</span>
+      <div class="mini-seek-wrap">
+        <input type="range" id="mini-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek audio">
       </div>
-      <div class="mini-seek-row">
-        <span class="mini-time-label" id="mini-current">0:00</span>
-        <div class="mini-seek-wrap">
-          <input type="range" id="mini-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek audio">
-        </div>
-        <span class="mini-time-label" id="mini-duration">0:00</span>
-      </div>
+      <span class="mini-time-label" id="mini-duration">0:00</span>
     </div>
 
     <!-- Right: Play/Pause, Volume, and Close Controls -->
@@ -1121,7 +1116,7 @@
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.19.0" defer></script>
+  <script src="/static/js/app.js?v=1.19.1" defer></script>
 </body>
 
 </html>

@@ -1485,30 +1485,14 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* Ambient dynamic glow pulse while playing */
+    /* Ambient dynamic glow state while playing */
     .mini-player.show.playing {
+      border-color: rgba(192, 132, 252, 0.45);
       box-shadow:
         0 20px 56px -10px rgba(0, 0, 0, 0.9),
         0 0 0 1px rgba(216, 180, 254, 0.25) inset,
-        0 0 40px 2px rgba(147, 51, 234, 0.48);
-      animation: miniPlayerGlow 4s ease-in-out infinite;
-    }
-
-    @keyframes miniPlayerGlow {
-      0%, 100% {
-        border-color: rgba(168, 85, 247, 0.38);
-        box-shadow:
-          0 20px 56px -10px rgba(0, 0, 0, 0.9),
-          0 0 0 1px rgba(216, 180, 254, 0.2) inset,
-          0 0 34px 1px rgba(139, 92, 246, 0.4);
-      }
-      50% {
-        border-color: rgba(192, 132, 252, 0.58);
-        box-shadow:
-          0 22px 60px -8px rgba(0, 0, 0, 0.95),
-          0 0 0 1px rgba(255, 255, 255, 0.25) inset,
-          0 0 48px 4px rgba(168, 85, 247, 0.6);
-      }
+        0 0 40px 2px rgba(147, 51, 234, 0.48),
+        0 0 60px 4px rgba(192, 132, 252, 0.25);
     }
 
     /* Left section: Thumbnail & Song Info */
@@ -1573,36 +1557,10 @@
     .mini-center {
       flex: 1.5;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      min-width: 0;
-      padding: 0 10px;
-    }
-
-    .mini-visualizer-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 16px;
-      width: 100%;
-      pointer-events: none;
-    }
-
-    .mini-visualizer {
-      display: block;
-      width: 160px;
-      height: 16px;
-      max-width: 100%;
-    }
-
-    .mini-seek-row {
-      display: flex;
       align-items: center;
       gap: 12px;
-      width: 100%;
       min-width: 0;
+      padding: 0 10px;
     }
 
     .mini-time-label {
@@ -1990,21 +1948,7 @@
         flex: 1 1 100%;
         width: 100%;
         padding: 4px 0 0;
-        gap: 2px;
-      }
-
-      .mini-seek-row {
         gap: 8px;
-        width: 100%;
-      }
-
-      .mini-visualizer-wrap {
-        height: 14px;
-      }
-
-      .mini-visualizer {
-        width: 130px;
-        height: 14px;
       }
 
       .mini-time-label {
