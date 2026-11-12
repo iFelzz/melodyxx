@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.19.5",
+    "date": "2026-11-12",
+    "title": "Clean Minimal Stats Header & Unglowed Live Badge",
+    "highlights": [
+      "Header Clutter Reduction: Removed redundant 'Admin Active' badge and external 'Support' button from analytics dashboard controls.",
+      "Non-Glowing Flat Live Pill: Removed outer glowing aura/box-shadow from the 'Live' status bubble while preserving the gentle pulsing green dot.",
+      "Clean Minimalist Controls: Streamlined action bar to only essential actions: Lock, Refresh, and Melodyxx App navigation."
+    ]
+  },
+  {
     "version": "v1.19.4",
     "date": "2026-11-12",
     "title": "Fix Track Name Truncation & Universal Country Name/Flag Mapping in Stats",
