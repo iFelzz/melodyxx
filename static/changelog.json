@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.19.4",
+    "date": "2026-11-12",
+    "title": "Fix Track Name Truncation & Universal Country Name/Flag Mapping in Stats",
+    "highlights": [
+      "Fix Premature Track Truncation: Upgraded top streamed track cards with 2-line flexible clamp & word-break, preventing long song titles from getting cut off with '...' after only a few characters.",
+      "Universal Country Resolution: Added full 240+ ISO-3166 alpha-2 dictionary to AnalyticsEngine, automatically resolving raw codes like 'IE' and 'SE' into official names ('Ireland', 'Sweden') and national flags.",
+      "Auto-Normalizing Stats Dashboard: Upgraded stats.html client renderer to detect raw 2-letter country codes in top visitor ranks and display high-res Retina graphic flags."
+    ]
+  },
+  {
     "version": "v1.19.3",
     "date": "2026-11-10",
     "title": "Cross-Platform High-Res Vector & Graphic Country Flags",

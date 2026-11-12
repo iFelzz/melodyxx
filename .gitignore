@@ -46,6 +46,9 @@ downloads/
 *.swp
 *.swo
 
+# Runtime Analytics DB
+analytics.json
+
 # OS
 .DS_Store
 Thumbs.db

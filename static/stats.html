@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.19.3" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.19.4" />
 
   <style>
     body {
@@ -601,12 +601,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
+      padding: 9px 12px;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid transparent;
       transition: var(--transition);
       font-size: 0.85rem;
+      min-height: 42px;
     }
 
     .rank-item:hover {
@@ -646,9 +647,13 @@
     .rank-item-name {
       color: var(--clr-text);
       font-weight: 500;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
+      line-height: 1.35;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     .rank-item-stat {
@@ -658,6 +663,7 @@
       color: var(--clr-accent);
       padding-left: 10px;
       flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .empty-rank-msg {
@@ -1148,20 +1154,68 @@
       return '';
     }
 
-    function renderCountryFlagHtml(countryCodeOrEmoji, countryName = '') {
+    const ISO_COUNTRY_NAMES = {
+      "AD": "Andorra", "AE": "United Arab Emirates", "AF": "Afghanistan", "AG": "Antigua and Barbuda",
+      "AI": "Anguilla", "AL": "Albania", "AM": "Armenia", "AO": "Angola", "AR": "Argentina",
+      "AT": "Austria", "AU": "Australia", "AW": "Aruba", "AZ": "Azerbaijan", "BA": "Bosnia and Herzegovina",
+      "BB": "Barbados", "BD": "Bangladesh", "BE": "Belgium", "BF": "Burkina Faso", "BG": "Bulgaria",
+      "BH": "Bahrain", "BI": "Burundi", "BJ": "Benin", "BM": "Bermuda", "BN": "Brunei", "BO": "Bolivia",
+      "BR": "Brazil", "BS": "Bahamas", "BT": "Bhutan", "BW": "Botswana", "BY": "Belarus", "BZ": "Belize",
+      "CA": "Canada", "CH": "Switzerland", "CI": "Cote d'Ivoire", "CL": "Chile", "CM": "Cameroon",
+      "CN": "China", "CO": "Colombia", "CR": "Costa Rica", "CU": "Cuba", "CY": "Cyprus", "CZ": "Czechia",
+      "DE": "Germany", "DK": "Denmark", "DO": "Dominican Republic", "DZ": "Algeria", "EC": "Ecuador",
+      "EE": "Estonia", "EG": "Egypt", "ES": "Spain", "ET": "Ethiopia", "FI": "Finland", "FJ": "Fiji",
+      "FR": "France", "GA": "Gabon", "GB": "United Kingdom", "GE": "Georgia", "GH": "Ghana",
+      "GR": "Greece", "GT": "Guatemala", "HK": "Hong Kong", "HN": "Honduras", "HR": "Croatia",
+      "HT": "Haiti", "HU": "Hungary", "ID": "Indonesia", "IE": "Ireland", "IL": "Israel",
+      "IN": "India", "IQ": "Iraq", "IR": "Iran", "IS": "Iceland", "IT": "Italy", "JM": "Jamaica",
+      "JO": "Jordan", "JP": "Japan", "KE": "Kenya", "KR": "South Korea", "KW": "Kuwait", "KZ": "Kazakhstan",
+      "LA": "Laos", "LB": "Lebanon", "LK": "Sri Lanka", "LT": "Lithuania", "LU": "Luxembourg",
+      "LV": "Latvia", "LY": "Libya", "MA": "Morocco", "MC": "Monaco", "MD": "Moldova", "ME": "Montenegro",
+      "MG": "Madagascar", "MK": "North Macedonia", "ML": "Mali", "MM": "Myanmar", "MN": "Mongolia", "MO": "Macau",
+      "MT": "Malta", "MU": "Mauritius", "MX": "Mexico", "MY": "Malaysia", "MZ": "Mozambique",
+      "NA": "Namibia", "NG": "Nigeria", "NL": "Netherlands", "NO": "Norway", "NP": "Nepal",
+      "NZ": "New Zealand", "OM": "Oman", "PA": "Panama", "PE": "Peru", "PH": "Philippines",
+      "PK": "Pakistan", "PL": "Poland", "PT": "Portugal", "QA": "Qatar", "RO": "Romania",
+      "RS": "Serbia", "RU": "Russia", "SA": "Saudi Arabia", "SE": "Sweden", "SG": "Singapore",
+      "SI": "Slovenia", "SK": "Slovakia", "SN": "Senegal", "SO": "Somalia", "TH": "Thailand",
+      "TN": "Tunisia", "TR": "Turkey", "TW": "Taiwan", "UA": "Ukraine", "UG": "Uganda",
+      "US": "United States", "UY": "Uruguay", "UZ": "Uzbekistan", "VE": "Venezuela", "VN": "Vietnam",
+      "ZA": "South Africa", "ZW": "Zimbabwe"
+    };
+
+    function resolveCountryInfo(codeOrEmoji, rawCountryName = '') {
       let code = '';
-      if (typeof countryCodeOrEmoji === 'string') {
-        const trimmed = countryCodeOrEmoji.trim();
+      let name = (rawCountryName || '').trim();
+
+      if (typeof codeOrEmoji === 'string') {
+        const trimmed = codeOrEmoji.trim();
         if (trimmed.length === 2 && /^[a-zA-Z]{2}$/.test(trimmed)) {
-          code = trimmed.toLowerCase();
+          code = trimmed.toUpperCase();
         } else {
-          code = getCountryCodeFromFlag(trimmed);
+          code = getCountryCodeFromFlag(trimmed).toUpperCase();
         }
       }
-      if (code && code !== 'xx' && code !== 'loc') {
-        return `<img src="https://flagcdn.com/24x18/${code}.png" srcset="https://flagcdn.com/48x36/${code}.png 2x" width="16" height="12" alt="${esc(countryName || code.toUpperCase())}" class="country-flag-img" loading="lazy" onerror="this.style.display='none'" />`;
+
+      if (!code && name.length === 2 && /^[a-zA-Z]{2}$/.test(name)) {
+        code = name.toUpperCase();
       }
-      return `<svg class="country-flag-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+
+      if (code && ISO_COUNTRY_NAMES[code]) {
+        if (!name || name.length <= 2 || name.toUpperCase() === code) {
+          name = ISO_COUNTRY_NAMES[code];
+        }
+      }
+
+      return { code: code.toLowerCase(), name: name || 'Unknown' };
+    }
+
+    function renderCountryFlagHtml(countryCodeOrEmoji, countryName = '') {
+      const { code, name } = resolveCountryInfo(countryCodeOrEmoji, countryName);
+      if (code && code !== 'xx' && code !== 'loc') {
+        return `<img src="https://flagcdn.com/24x18/${code}.png" srcset="https://flagcdn.com/48x36/${code}.png 2x" width="16" height="12" alt="${esc(name || code.toUpperCase())}" class="country-flag-img" loading="lazy" onerror="this.style.display='none'" />`;
+      }
+      return `<svg class="country-flag-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
     }
 
     function formatBytes(bytes) {
@@ -1383,8 +1437,10 @@
             <td><span class="ip-pill">${esc(u.ip || 'Unknown')}</span></td>
             <td>
               <span class="country-pill">
-                ${renderCountryFlagHtml(u.country_code || u.flag, u.country)}
-                <span>${esc(u.country || 'Unknown')}</span>
+                ${(() => {
+                const uInfo = resolveCountryInfo(u.country_code || u.flag, u.country);
+                return `${renderCountryFlagHtml(uInfo.code, uInfo.name)}<span>${esc(uInfo.name)}</span>`;
+              })()}
               </span>
             </td>
             <td><span class="device-pill">${esc(u.device || 'Desktop • Browser')}</span></td>
@@ -1441,18 +1497,22 @@
       if (countries.length === 0) {
         $topCountriesList.innerHTML = '<li class="empty-rank-msg">No geographic visits recorded yet.</li>';
       } else {
-        $topCountriesList.innerHTML = countries.map((c, idx) => `
-          <li class="rank-item">
-            <div class="rank-item-info">
-              <span class="rank-number">#${idx + 1}</span>
-              <span class="country-pill">
-                ${renderCountryFlagHtml(c.country_code || c.flag, c.country)}
-                <span class="rank-item-name" title="${esc(c.country)}">${esc(c.country)}</span>
-              </span>
-            </div>
-            <span class="rank-item-stat">${Number(c.visits).toLocaleString()} visits</span>
-          </li>
-        `).join('');
+        $topCountriesList.innerHTML = countries.map((c, idx) => {
+          const cInfo = resolveCountryInfo(c.country_code || c.flag, c.country);
+          const flagHtml = renderCountryFlagHtml(cInfo.code, cInfo.name);
+          return `
+            <li class="rank-item">
+              <div class="rank-item-info">
+                <span class="rank-number">#${idx + 1}</span>
+                <span class="country-pill">
+                  ${flagHtml}
+                  <span class="rank-item-name" title="${esc(cInfo.name)}">${esc(cInfo.name)}</span>
+                </span>
+              </div>
+              <span class="rank-item-stat">${Number(c.visits).toLocaleString()} visits</span>
+            </li>
+          `;
+        }).join('');
       }
 
       // Daily Breakdown
