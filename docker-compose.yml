@@ -11,10 +11,13 @@ services:
     volumes:
       # Mount folder .git host agar commit hash selalu live dan sinkron dengan Portainer Git
       - ./.git:/app/.git:ro
+      # Persistent storage agar database analitik tidak pernah ter-reset saat rebuild/update
+      - ./data:/app/data
     # Hapus opsi --reload karena ini sudah masuk fase Production
     command: uvicorn main:app --host 0.0.0.0 --port 8000
     environment:
       - PYTHONUNBUFFERED=1
+      - MELODYXX_DATA_DIR=/app/data
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
     healthcheck:

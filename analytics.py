@@ -5,6 +5,7 @@ active user sessions (with IP and Country), and daily unique visitors
 with zero-database in-memory storage and debounced JSON persistence.
 """
 
+import os
 import json
 import time
 import logging
@@ -16,7 +17,31 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
-ANALYTICS_FILE = BASE_DIR / "analytics.json"
+def _resolve_analytics_path() -> Path:
+    env_path = os.getenv("ANALYTICS_FILE_PATH")
+    if env_path:
+        p = Path(env_path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
+
+    data_dir_env = os.getenv("MELODYXX_DATA_DIR")
+    if data_dir_env:
+        d = Path(data_dir_env)
+        d.mkdir(parents=True, exist_ok=True)
+        return d / "analytics.json"
+
+    docker_data = Path("/app/data")
+    if docker_data.exists() and docker_data.is_dir():
+        return docker_data / "analytics.json"
+
+    local_data = BASE_DIR / "data"
+    if local_data.exists() and local_data.is_dir():
+        return local_data / "analytics.json"
+
+    return BASE_DIR / "analytics.json"
+
+
+ANALYTICS_FILE = _resolve_analytics_path()
 
 _GEO_CACHE: Dict[str, dict] = {}
 
@@ -226,6 +251,17 @@ class AnalyticsEngine:
 
     def _load(self) -> None:
         """Load persisted metrics from disk if present."""
+        # Auto-migration: if target file doesn't exist yet but legacy analytics.json exists in root, copy it over
+        legacy_file = BASE_DIR / "analytics.json"
+        if not self.file_path.exists() and legacy_file.exists():
+            try:
+                if self.file_path.resolve() != legacy_file.resolve():
+                    self.file_path.parent.mkdir(parents=True, exist_ok=True)
+                    self.file_path.write_text(legacy_file.read_text(encoding="utf-8"), encoding="utf-8")
+                    logger.info("Migrated legacy analytics.json from %s to %s", legacy_file, self.file_path)
+            except Exception as mig_err:
+                logger.warning("Could not auto-migrate legacy analytics file: %s", mig_err)
+
         if self.file_path.exists():
             try:
                 content = self.file_path.read_text(encoding="utf-8")
@@ -268,6 +304,7 @@ class AnalyticsEngine:
             return
 
         try:
+            self.file_path.parent.mkdir(parents=True, exist_ok=True)
             self.file_path.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
             self._dirty = False
             self._last_save = now

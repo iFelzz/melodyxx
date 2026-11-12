@@ -46,8 +46,9 @@ downloads/
 *.swp
 *.swo
 
-# Runtime Analytics DB
+# Runtime Analytics & Persistent Storage
 analytics.json
+data/
 
 # OS
 .DS_Store

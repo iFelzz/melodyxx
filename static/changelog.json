@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.19.6",
+    "date": "2026-11-12",
+    "title": "Persistent Server Storage for Analytics Across Container Rebuilds",
+    "highlights": [
+      "Persistent Data Volume: Added `/app/data` volume mount (`./data:/app/data`) in `docker-compose.yml` and `MELODYXX_DATA_DIR` environment support so analytics metrics are never wiped during Docker / Portainer container updates.",
+      "Automatic Legacy Migration: AnalyticsEngine automatically checks for existing `analytics.json` in the root folder and migrates historical visitor, search, and stream metrics into persistent storage on first run.",
+      "Resilient Directory Creation: Added automatic parent directory creation (`mkdir -p`) before writing analytics state to eliminate path or filesystem permission issues on Linux/Docker servers."
+    ]
+  },
+  {
     "version": "v1.19.5",
     "date": "2026-11-12",
     "title": "Clean Minimal Stats Header & Unglowed Live Badge",
@@ -491,7 +501,7 @@
     "type": "improvement",
     "title": "Reposition Version Tag Beside Melodyxx Copyright",
     "highlights": [
-      "Moved the version tag badge into the left footer section right next to 'Melodyxx © 2026' with refined glassmorphic chip styling."
+      "Moved the version tag badge into the left footer section right next to 'Melodyxx \u00a9 2026' with refined glassmorphic chip styling."
     ]
   },
   {
@@ -513,7 +523,7 @@
     "type": "improvement",
     "title": "Clear Action Terminology: 'Downloading' UX Feedback",
     "highlights": [
-      "Updated download button status and toast notification labels from 'Streaming' to 'Downloading…' for intuitive user experience."
+      "Updated download button status and toast notification labels from 'Streaming' to 'Downloading\u2026' for intuitive user experience."
     ]
   },
   {
