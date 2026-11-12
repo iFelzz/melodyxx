@@ -3062,11 +3062,24 @@
       const q = (releaseSearchQuery || '').trim().toLowerCase();
       const selectedVerVal = $releaseVersionSelect ? $releaseVersionSelect.value : 'all';
 
+      function resolveReleaseType(item) {
+        if (item.type) return item.type.toLowerCase();
+        const t = (item.title || '').toLowerCase();
+        if (t.startsWith('fix') || t.includes('bug') || t.includes('prevent') || t.includes('truncation')) {
+          return 'fix';
+        }
+        if (t.startsWith('improve') || t.startsWith('clean') || t.startsWith('style') || t.startsWith('subtle') || t.startsWith('refine') || t.includes('redesign') || t.includes('overhaul') || t.includes('optimization') || t.includes('layout')) {
+          return 'improvement';
+        }
+        return 'feature';
+      }
+
       const filtered = cachedChangelog.filter(item => {
+        const itemType = resolveReleaseType(item);
+
         // Filter by Type
         if (selectedReleaseType !== 'all') {
-          const t = (item.type || 'feature').toLowerCase();
-          if (t !== selectedReleaseType) return false;
+          if (itemType !== selectedReleaseType) return false;
         }
 
         // Filter by Version dropdown
@@ -3088,7 +3101,7 @@
         if (q) {
           const matchVer = (item.version || '').toLowerCase().includes(q);
           const matchTitle = (item.title || '').toLowerCase().includes(q);
-          const matchType = (item.type || '').toLowerCase().includes(q);
+          const matchType = itemType.includes(q);
           const matchHighlights = (item.highlights || []).some(h => (h || '').toLowerCase().includes(q));
           if (!matchVer && !matchTitle && !matchType && !matchHighlights) {
             return false;
@@ -3125,7 +3138,7 @@
 
       $releaseModalBody.innerHTML = filtered.map((item, idx) => {
         const isLatest = idx === 0 && selectedReleaseType === 'all' && (!selectedVerVal || selectedVerVal === 'all') && !q;
-        const type = (item.type || 'feature').toLowerCase();
+        const type = resolveReleaseType(item);
         const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
         const highlightsHtml = (item.highlights || []).map(hl => `
           <li class="release-highlight-item">
@@ -3416,7 +3429,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.6';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.7';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -3700,7 +3713,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.6');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.19.7');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

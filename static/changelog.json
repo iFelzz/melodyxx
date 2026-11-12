@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.19.7",
+    "date": "2026-11-12",
+    "type": "fix",
+    "title": "Fix Release Log Categorization & Intelligent Release Type Inference",
+    "highlights": [
+      "Fixed Categorization Regression: Added explicit 'type' ('fix', 'improvement', 'feature') to all recent release notes, restoring the distinct orange 'FIX' and purple 'IMPROVEMENT' badges in the Release Log modal.",
+      "Intelligent Type Fallback: Upgraded client changelog parser to automatically infer semantic category ('fix', 'improvement', 'feature') from release titles when type is omitted, preventing bug fixes from incorrectly defaulting to 'FEATURE'.",
+      "Release Filter Synchronization: Restored accurate filtering for the 'Fixes' and 'Improvements' tab filters in the Release Log."
+    ]
+  },
+  {
     "version": "v1.19.6",
     "date": "2026-11-12",
     "title": "Persistent Server Storage for Analytics Across Container Rebuilds",
@@ -7,7 +18,8 @@
       "Persistent Data Volume: Added `/app/data` volume mount (`./data:/app/data`) in `docker-compose.yml` and `MELODYXX_DATA_DIR` environment support so analytics metrics are never wiped during Docker / Portainer container updates.",
       "Automatic Legacy Migration: AnalyticsEngine automatically checks for existing `analytics.json` in the root folder and migrates historical visitor, search, and stream metrics into persistent storage on first run.",
       "Resilient Directory Creation: Added automatic parent directory creation (`mkdir -p`) before writing analytics state to eliminate path or filesystem permission issues on Linux/Docker servers."
-    ]
+    ],
+    "type": "fix"
   },
   {
     "version": "v1.19.5",
@@ -17,7 +29,8 @@
       "Header Clutter Reduction: Removed redundant 'Admin Active' badge and external 'Support' button from analytics dashboard controls.",
       "Non-Glowing Flat Live Pill: Removed outer glowing aura/box-shadow from the 'Live' status bubble while preserving the gentle pulsing green dot.",
       "Clean Minimalist Controls: Streamlined action bar to only essential actions: Lock, Refresh, and Melodyxx App navigation."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.19.4",
@@ -27,7 +40,8 @@
       "Fix Premature Track Truncation: Upgraded top streamed track cards with 2-line flexible clamp & word-break, preventing long song titles from getting cut off with '...' after only a few characters.",
       "Universal Country Resolution: Added full 240+ ISO-3166 alpha-2 dictionary to AnalyticsEngine, automatically resolving raw codes like 'IE' and 'SE' into official names ('Ireland', 'Sweden') and national flags.",
       "Auto-Normalizing Stats Dashboard: Upgraded stats.html client renderer to detect raw 2-letter country codes in top visitor ranks and display high-res Retina graphic flags."
-    ]
+    ],
+    "type": "fix"
   },
   {
     "version": "v1.19.3",
@@ -37,7 +51,8 @@
       "Fixed Windows Flag Emoji Omission: Windows does not render regional indicator emoji flags (falling back to plain letters like 'ID' or 'SE'); replaced with crisp 2x Retina graphic flag images across artist cards, discography headers, and suggestions.",
       "Universal Flag Renderer: Added client-side bidirectional decoder converting Unicode regional indicator emojis and ISO-3166 alpha-2 codes into high-resolution national flags.",
       "Strict SVG & Theme Compliance: Upgraded Saweria Indonesian flag to crisp graphic asset and Ko-fi International badge to theme-compliant glowing vector globe SVG."
-    ]
+    ],
+    "type": "fix"
   },
   {
     "version": "v1.19.2",
@@ -47,7 +62,8 @@
       "Subtle & Thin Neon Contour: Reduced glowing aura radius and opacity to produce a crisp, elegant, and non-overpowering visualizer halo around the floating mini player pill.",
       "Zero Background Obscuration: Eliminated oversized blur spread (from 110px down to ~20px) ensuring surrounding track cards and text remain 100% sharp and readable.",
       "Calibrated Beat Dynamics: Refined reactive bass pulse with gentle micro-scaling and soft neon rim highlights."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.19.1",
@@ -58,7 +74,8 @@
       "Clean Inline Seekbar Layout: Restored spacious inline seekbar with tabular timestamps across desktop, tablet, and mobile displays without vertical crowding.",
       "Organic Rhythmic Pulsation Fallback: Added seamless procedural harmonic oscillator fallback ensuring vibrant visual pulsations even on restricted cross-origin streams.",
       "Zero CPU Waste: Automatically decays glowing aura to idle and halts animation frames when paused or closed."
-    ]
+    ],
+    "type": "feature"
   },
   {
     "version": "v1.19.0",
@@ -69,7 +86,8 @@
       "Neon Audio Visualizer: Integrated 16-band real-time Web Audio API frequency visualizer inside the floating mini player drawer with radiant violet-to-pink gradient bloom.",
       "PWA Native Install Prompt: Added a sleek, glassmorphic 'Install App' action pill for seamless 1-click installation to mobile and desktop home screens.",
       "In-Memory Thread-Safe TTL Cache: Built high-concurrency LRU caching for YouTube searches, artist discovery, and album discographies, cutting repeat query latency down to <5ms."
-    ]
+    ],
+    "type": "feature"
   },
   {
     "version": "v1.18.20",
@@ -79,7 +97,8 @@
       "Replaced small badge chips with prominent custom 40px SVG donation buttons in README.md.",
       "Created brand-accurate SVG assets (btn-saweria.svg with vector capybara mascot and btn-kofi.svg with official cup & heart).",
       "Added dedicated donation buttons to both header showcase and Support & Donations section."
-    ]
+    ],
+    "type": "feature"
   },
   {
     "version": "v1.18.19",
@@ -89,7 +108,8 @@
       "Eliminated race condition where ResizeObserver and async state updates called updateQualityGlider(true), prematurely cancelling smooth CSS animations mid-transition.",
       "Stabilized button font-weight at 600 across active/inactive states to prevent subpixel layout shifts that triggered container resize events.",
       "Guaranteed consistently fluid 0.28s cubic-bezier sliding glider animation whenever toggling audio download quality."
-    ]
+    ],
+    "type": "fix"
   },
   {
     "version": "v1.18.18",
@@ -99,7 +119,8 @@
       "Updated AGENTS.md UI standards with mandatory multi-resolution responsiveness rules.",
       "Required all future layout changes and new components to fully adapt across desktop, tablet, and mobile (>= 360px).",
       "Enforced clean text-wrapping, accessible touch targets, and non-overlapping floating UI elements."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.18.17",
@@ -109,7 +130,8 @@
       "Fixed quality pill glider remaining invisible (0px width) on initial search results before being clicked.",
       "Integrated ResizeObserver on .global-quality-toggle to measure and align the glider immediately when search results container becomes visible.",
       "Added CSS fallback highlight for active quality button while glider metrics are being computed."
-    ]
+    ],
+    "type": "fix"
   },
   {
     "version": "v1.18.16",
@@ -119,7 +141,8 @@
       "Expanded Support Modal width (max-width: 620px) to eliminate awkward word-breaking and unbalanced card columns.",
       "Redesigned Saweria and Ko-fi cards with spacious horizontal alignment, 48px brand avatar badges, and branded accent colors.",
       "Refined typography and external diagonal action arrows with micro-animations on hover."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.18.15",
@@ -128,7 +151,8 @@
     "highlights": [
       "Implemented a smooth fluid sliding glider (.global-quality-glider) with spring physics (cubic-bezier(0.2, 0.9, 0.3, 1.2)) across 128k, 192k, and 320k quality buttons.",
       "Automatic width, position, and resize synchronization for seamless transitions without visual stutter."
-    ]
+    ],
+    "type": "feature"
   },
   {
     "version": "v1.18.14",
@@ -136,7 +160,8 @@
     "title": "Tab State Synchronization: Auto-slide Glider to Artists upon Discography Load",
     "highlights": [
       "Synchronized search mode switcher tab and sliding glider (.search-mode-glider) to automatically slide to the 'Artists' tab whenever an artist discography is opened from search autocomplete suggestions or direct links."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.18.13",
@@ -145,7 +170,8 @@
     "highlights": [
       "Implemented an ultra-smooth fluid sliding glider (.search-mode-glider) with spring physics easing (cubic-bezier(0.2, 0.9, 0.3, 1.2)) for the Songs vs Artists mode switcher.",
       "Dynamic width and translateX synchronization on tab switch, window resize, and browser orientation changes."
-    ]
+    ],
+    "type": "feature"
   },
   {
     "version": "v1.18.12",
@@ -153,7 +179,8 @@
     "title": "Search Suggestion: Direct Discography Navigation on Artist Selection",
     "highlights": [
       "Clicking an artist suggestion in the search dropdown directly loads the artist's discography and popular tracks immediately using its verified artist ID, eliminating redundant artist re-searches."
-    ]
+    ],
+    "type": "feature"
   },
   {
     "version": "v1.18.11",
@@ -162,7 +189,8 @@
     "highlights": [
       "Repositioned floating coffee bubble (.floating-support-bubble) to the bottom-right on mobile viewports (right: 14px, left: auto).",
       "Configured dynamic bottom clearance above the floating mini player (bottom: calc(var(--footer-height) + 90px)) when player is open, keeping controls visible and unblocked."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.18.10",
@@ -171,7 +199,8 @@
     "highlights": [
       "Enhanced search result card titles (.card-title) with responsive 3-line clamp and word-break (overflow-wrap: break-word), allowing long YouTube song titles, featured artist collaborations, and compilation names to wrap completely without '...'.",
       "Updated album titles (.album-title) and artist card names (.artist-card-name) with multi-line word wrap support across all devices."
-    ]
+    ],
+    "type": "fix"
   },
   {
     "version": "v1.18.9",
@@ -180,7 +209,8 @@
     "highlights": [
       "Replaced strict single-line ellipsis (nowrap) with responsive multi-line word-break (overflow-wrap: break-word) and 2-line clamp on mobile and tablet screens.",
       "Song titles with remix/featured credits and album metadata now wrap naturally into 2 legible lines without being truncated with '...'."
-    ]
+    ],
+    "type": "fix"
   },
   {
     "version": "v1.18.8",
@@ -192,7 +222,8 @@
       "Refined mobile discography: Full-width responsive sub-tabs, compact album headers (48px art, adjusted font scales), and improved tap-target padding.",
       "Support Modal mobile responsiveness: Added scrolling containment (max-height: 94vh) and stacked 1-column layout for small viewports.",
       "Added dedicated Tablet layout rules (641px - 1024px) for balanced multi-column grids, player sizing, and album cards."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.18.7",
@@ -203,7 +234,8 @@
       "Integrated track duration inline on mobile devices to prevent excessive grid columns from starving track title width.",
       "Repositioned floating coffee button to bottom-left on mobile screens (<=640px) to prevent overlapping right-side action buttons (Play/Download) and discography stat pills.",
       "Added extra scroll clearance to discography and tracks view on mobile viewports."
-    ]
+    ],
+    "type": "improvement"
   },
   {
     "version": "v1.18.6",
