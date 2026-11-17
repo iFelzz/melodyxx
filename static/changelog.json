@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.20.0",
+    "date": "2026-11-17",
+    "type": "feature",
+    "title": "Favorites Playlist, Sequential Autoplay & Batch Download All",
+    "highlights": [
+      "Favorites Tab & Persistent Device Storage: Added dedicated 'Favorites' navigation tab with fluid glider animation, live counter badge, and safe zero-login localStorage persistence.",
+      "One-Click Star Favoriting: Added glowing amber vector star buttons across YouTube search cards and Apple Music discography tracklists with instant visual feedback and toast notifications.",
+      "Sequential Autoplay & MediaSession Sync: Favorites playlist features continuous autoplay that seamlessly advances to the next track upon completion, fully synced with lockscreen, smartwatch, and earphone gestures.",
+      "Batch Download All Favorites: One-click zero-disk sequential batch downloading for your entire favorites collection with intelligent 3-second rate-limiting and progress tracking.",
+      "Backup Portability: Built-in Export and Import JSON tools allowing easy playlist backup and cross-device migration without requiring user accounts."
+    ]
+  },
+  {
     "version": "v1.19.7",
     "date": "2026-11-12",
     "type": "fix",

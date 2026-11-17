@@ -2123,6 +2123,30 @@
   font-weight: 600;
 }
 
+.tab-fav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(251, 191, 36, 0.22);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0 5px;
+  border-radius: 999px;
+  min-width: 17px;
+  height: 17px;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.search-mode-tab.active .tab-fav-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+
 /* ═══════════════════════════════════════════════════
    ARTIST SEARCH RESULTS
 ═══════════════════════════════════════════════════ */
@@ -5489,5 +5513,334 @@ details[open] .summary-caret {
   .mini-player {
     width: calc(100% - 32px);
     padding: 10px 18px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   FAVORITES SYSTEM & PLAYLIST (v1.20.0)
+═══════════════════════════════════════════════════ */
+
+/* Card action top row for Play + Star Favorite */
+.card-action-top-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.card-action-top-row .btn-card-play {
+  flex: 1;
+}
+
+.btn-card-fav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.btn-card-fav:hover {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.3);
+}
+
+.btn-card-fav.active {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.35);
+}
+
+.btn-card-fav.active svg,
+.btn-card-fav.active .fav-star-svg {
+  fill: #fbbf24;
+  stroke: #fbbf24;
+}
+
+/* Discography row favorite star button */
+.btn-track-action.btn-track-fav {
+  color: #94a3b8;
+  transition: all 0.22s ease;
+}
+
+.btn-track-action.btn-track-fav:hover {
+  border-color: rgba(251, 191, 36, 0.6);
+  color: #fbbf24;
+}
+
+.btn-track-action.btn-track-fav.active {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.35);
+}
+
+.btn-track-action.btn-track-fav.active svg {
+  fill: #fbbf24;
+  stroke: #fbbf24;
+}
+
+/* Favorites Section Layout */
+.favorites-section {
+  margin-top: 10px;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.favorites-header-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 22px;
+  background: rgba(18, 14, 34, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+}
+
+.favorites-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.favorites-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.favorites-header-icon {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5));
+}
+
+.favorites-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.favorites-count-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.18);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+.favorites-subtitle {
+  font-size: 0.82rem;
+  color: var(--clr-text-dim);
+  margin: 0;
+}
+
+.favorites-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-fav-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  font-family: inherit;
+}
+
+.btn-fav-play-all {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4);
+}
+
+.btn-fav-play-all:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.6);
+}
+
+.btn-fav-shuffle {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+
+.btn-fav-shuffle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-fav-download-all {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+}
+
+.btn-fav-download-all:hover {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: #4ade80;
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+}
+
+.favorites-more-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-fav-export,
+.btn-fav-import,
+.btn-fav-clear {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--clr-text-muted);
+}
+
+.btn-fav-export:hover,
+.btn-fav-import:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.btn-fav-clear:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.favorites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Empty State */
+.favorites-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 50px 20px;
+  background: rgba(18, 14, 34, 0.45);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  margin-top: 10px;
+}
+
+.favorites-empty-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: #fbbf24;
+  margin-bottom: 16px;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.15);
+}
+
+.favorites-empty-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 8px 0;
+}
+
+.favorites-empty-desc {
+  font-size: 0.88rem;
+  color: var(--clr-text-dim);
+  max-width: 440px;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.btn-fav-discover {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.88rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+  transition: all 0.25s ease;
+}
+
+.btn-fav-discover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+}
+
+/* Mobile Responsiveness for Favorites */
+@media (max-width: 580px) {
+  .favorites-header-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+  .favorites-actions-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .btn-fav-download-all {
+    grid-column: 1 / -1;
+  }
+  .favorites-more-dropdown {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .btn-fav-action {
+    justify-content: center;
+    padding: 8px 10px;
+  }
+  .search-mode-tab {
+    padding: 6px 11px;
+    font-size: 0.80rem;
+    gap: 5px;
   }
 }
