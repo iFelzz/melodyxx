@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.5",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Fix Mobile Floating Player Layout & Controls Alignment Consistency",
+    "highlights": [
+      "Rigid Row-1 Alignment: Locked playback transport buttons (Prev, Play/Pause, Next, Close) strictly to the top-right of the floating mini player across all mobile viewports.",
+      "Anti-Wrapping Title Truncation: Guaranteed that long song titles truncate with ellipsis without ever pushing transport controls onto an awkward new line on the left.",
+      "Compact Device Optimization: Tuned button and touch padding for extra-small viewports (≤380px) to prevent UI collisions with floating bubbles."
+    ]
+  },
+  {
     "version": "v1.20.4",
     "date": "2026-11-17",
     "type": "fix",

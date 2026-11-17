@@ -2013,35 +2013,59 @@
         height: auto;
         min-height: 68px;
         padding: 10px 14px;
-        gap: 8px 12px;
+        gap: 6px 10px;
         border-radius: 18px;
+        display: flex;
         flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
       }
 
       .mini-left {
-        flex: 1 1 auto;
-        max-width: calc(100% - 110px);
+        order: 1;
+        flex: 1 1 0%;
+        min-width: 0;
+        max-width: calc(100% - 146px);
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
 
       .mini-thumb {
         width: 40px;
         height: 40px;
         border-radius: 10px;
+        flex-shrink: 0;
+      }
+
+      .mini-info {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .mini-title {
         font-size: 0.82rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        line-height: 1.25;
       }
 
       .mini-artist {
         font-size: 0.70rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
       }
 
       .mini-center {
         order: 3;
-        flex: 1 1 100%;
+        flex: 0 0 100%;
         width: 100%;
-        padding: 4px 0 0;
+        padding: 2px 0 0;
         gap: 8px;
       }
 
@@ -2051,11 +2075,18 @@
 
       .mini-right {
         order: 2;
-        gap: 8px;
+        flex: 0 0 auto;
+        flex-shrink: 0;
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
 
       .mini-transport-group {
-        gap: 5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
       }
 
       .mini-btn.transport {
@@ -2075,6 +2106,42 @@
 
       .mini-volume {
         display: none;
+      }
+
+      @media (max-width: 380px) {
+        .mini-player {
+          padding: 8px 10px;
+          gap: 4px 6px;
+        }
+        .mini-left {
+          gap: 8px;
+          max-width: calc(100% - 138px);
+        }
+        .mini-thumb {
+          width: 36px;
+          height: 36px;
+        }
+        .mini-title {
+          font-size: 0.78rem;
+        }
+        .mini-artist {
+          font-size: 0.66rem;
+        }
+        .mini-transport-group {
+          gap: 3px;
+        }
+        .mini-btn.transport {
+          width: 26px;
+          height: 26px;
+        }
+        .mini-btn.primary {
+          width: 32px;
+          height: 32px;
+        }
+        .mini-close {
+          width: 26px;
+          height: 26px;
+        }
       }
 
       footer.app-footer {
