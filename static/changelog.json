@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.20.3",
+    "date": "2026-11-17",
+    "type": "fix",
+    "title": "Immediate Audio Silence & Visual Buffering Feedback on Track Switching",
+    "highlights": [
+      "Immediate Audio Cutoff on Track Change: Eliminated audio dissonance and overlap by immediately silencing previous playback whenever Next, Previous, or a new track is selected.",
+      "Visual Buffering State & Neon Spinner: Mini player center play/pause button transforms into a rotating SVG spinner, seekbar dims, and the time counter displays a pulsating 'Buffering…' status while fetching the stream.",
+      "Card Loading Synchronization: Active track card in Favorites list and search results shows a synchronized loading spinner and 'Buffering…' indicator.",
+      "Switching Debounce & Connection Stall Recovery: Implemented a 350ms rapid-click debounce guard on Next/Prev controls and integrated 'waiting'/'canplay' events to handle network latency smoothly."
+    ]
+  },
+  {
     "version": "v1.20.2",
     "date": "2026-11-17",
     "type": "fix",

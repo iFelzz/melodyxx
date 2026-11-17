@@ -1692,6 +1692,66 @@
       transform: scale(0.94);
     }
 
+    /* Mini player buffering / loading state feedback */
+    .mini-spin-anim {
+      animation: mini-rotate-kf 0.8s linear infinite;
+      transform-origin: center center;
+    }
+
+    @keyframes mini-rotate-kf {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .mini-player.loading .mini-seek-wrap input[type=range] {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .mini-player.loading #mini-current {
+      color: #c084fc;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      animation: mini-buffering-pulse 1.1s ease-in-out infinite alternate;
+    }
+
+    @keyframes mini-buffering-pulse {
+      0% {
+        opacity: 0.45;
+        color: #a855f7;
+      }
+      100% {
+        opacity: 1;
+        color: #f3e8ff;
+        text-shadow: 0 0 10px rgba(192, 132, 252, 0.7);
+      }
+    }
+
+    .mini-player.loading .mini-btn.primary {
+      box-shadow: 0 0 22px rgba(168, 85, 247, 0.8), 0 0 0 2px rgba(192, 132, 252, 0.4);
+    }
+
+    .mini-btn.transport.is-disabled {
+      opacity: 0.4;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    .mini-player.loading .mini-thumb {
+      animation: mini-thumb-buffering 1.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes mini-thumb-buffering {
+      0% {
+        opacity: 0.75;
+        filter: brightness(0.9);
+      }
+      100% {
+        opacity: 1;
+        filter: brightness(1.15) drop-shadow(0 0 8px rgba(168, 85, 247, 0.5));
+      }
+    }
+
     /* Integrated In-Player Volume Control */
     .mini-volume {
       display: flex;
