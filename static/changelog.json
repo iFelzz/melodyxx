@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.4",
+    "date": "2026-11-17",
+    "type": "fix",
+    "title": "Fix Play/Pause State Sync & Resume Button Text on Player Pause",
+    "highlights": [
+      "Unified Global Playback Synchronization: Replaced fragmented component state tracking with `syncAllPlaybackButtons()`, ensuring cards in Favorites, Search Results, and Discography accurately reflect play/pause state in real-time.",
+      "Multi-Property Track Matching: Enhanced track matching across IDs, YouTube URLs, and preview URLs (`isTrackMatching`), guaranteeing active cards cleanly switch to 'Resume' when paused from the floating player.",
+      "Equalizer State Continuity: Allowed subtle frozen equalizer indicator when paused and prevented search card event handlers from leaking onto Favorites cards."
+    ]
+  },
+  {
     "version": "v1.20.3",
     "date": "2026-11-17",
     "type": "fix",

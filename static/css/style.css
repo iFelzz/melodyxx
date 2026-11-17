@@ -1297,7 +1297,8 @@
       margin-left: 2px;
     }
 
-    .btn-card-play.playing .play-equalizer {
+    .btn-card-play.playing .play-equalizer,
+    .btn-card-play.paused .play-equalizer {
       display: inline-flex;
     }
 
