@@ -1800,38 +1800,59 @@
       updateMediaSessionMetadata(track.title, track.artist, track.thumbnail || '/static/logo.png');
       setMiniLoading(true, 'Buffering…');
 
-      if (track.preview_url) {
-        // Direct audio preview (e.g. Apple Music CDN)
-        audioPlayer.src = track.preview_url;
-        audioPlayer.play().catch(e => {
-          console.warn('Autoplay prevented:', e);
-          setMiniLoading(false);
-        });
-      } else if (track.url) {
-        // YouTube audio stream preview via /api/preview
-        const targetTrackId = currentPlayingTrackId;
-        fetch(`/api/preview?url=${encodeURIComponent(track.url)}`)
-          .then(res => res.json())
-          .then(data => {
-            if (!data.stream_url) throw new Error('Stream URL unavailable');
-            if (currentPlayingTrackId !== targetTrackId) return; // Stale track clicked
-            audioPlayer.src = data.stream_url;
+      // Resolve full audio stream (prioritize direct YouTube URL, fallback to "Artist - Title" search query)
+      const targetQueryOrUrl = (track.url || '').trim() || `${track.artist} - ${track.title}`;
+      const targetTrackId = currentPlayingTrackId;
+
+      fetch(`/api/preview?url=${encodeURIComponent(targetQueryOrUrl)}`)
+        .then(res => {
+          if (!res.ok) throw new Error(`Preview stream error (${res.status})`);
+          return res.json();
+        })
+        .then(data => {
+          if (!data || !data.stream_url) throw new Error('Stream URL unavailable');
+          if (currentPlayingTrackId !== targetTrackId) return; // Stale track clicked
+
+          // If backend resolved a full YouTube URL for an artist track, persist it in the favorite item
+          if (data.youtube_url && !track.url) {
+            track.url = data.youtube_url;
+            try {
+              const favs = getFavorites();
+              const fItem = favs.find(f => (f.id && f.id === track.id) || (f.title === track.title && f.artist === track.artist));
+              if (fItem) {
+                fItem.url = data.youtube_url;
+                saveFavorites(favs);
+              }
+            } catch (_) {}
+          }
+
+          audioPlayer.src = data.stream_url;
+          audioPlayer.play().catch(e => {
+            console.warn('Autoplay prevented:', e);
+            setMiniLoading(false);
+          });
+        })
+        .catch(err => {
+          console.error('[Favorites Playback] Full stream error:', err);
+          // Fallback to 30s preview snippet only if full YouTube stream fails
+          if (track.preview_url && currentPlayingTrackId === targetTrackId) {
+            audioPlayer.src = track.preview_url;
             audioPlayer.play().catch(e => {
-              console.warn('Autoplay prevented:', e);
+              console.warn('Fallback preview play prevented:', e);
               setMiniLoading(false);
             });
-          })
-          .catch(err => {
-            console.error('[Favorites Autoplay] Stream error:', err);
-            setMiniLoading(false);
-            toast('warning', `Could not play preview for "${track.title}". Auto-skipping to next...`);
-            setTimeout(() => {
-              if (isFavoritesAutoplay && currentQueueIndex === index) {
-                playAdjacentTrack(1);
-              }
-            }, 1200);
-          });
-      }
+            toast('info', `Full track streaming unavailable; playing preview snippet.`);
+            return;
+          }
+
+          setMiniLoading(false);
+          toast('warning', `Could not play "${track.title}". Auto-skipping to next...`);
+          setTimeout(() => {
+            if (isFavoritesAutoplay && currentQueueIndex === index) {
+              playAdjacentTrack(1);
+            }
+          }, 1200);
+        });
     }
 
     function renderFavorites(filterQuery = '') {
@@ -4161,7 +4182,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.5';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.6';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4445,7 +4466,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.5');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.6');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

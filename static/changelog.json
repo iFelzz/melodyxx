@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.20.6",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Resolve Full-Length Audio Streams for Artist Discography Favorites",
+    "highlights": [
+      "Full-Length Playback for Artist Favorites: Prevented 30-second Apple Music preview snippet from being mistakenly played in Favorites by dynamically resolving full-length audio streams via YouTube.",
+      "Query-Based Preview Endpoint: Enhanced `/api/preview` to support artist/title search queries alongside direct URLs, resolving and proxying full-length audio with HTTP 206 range seeking.",
+      "Automatic URL Persistence: Automatically saved resolved YouTube URLs back into local favorite items to optimize subsequent playback and batch downloads.",
+      "Resilient Fallback: Preserved 30-second preview clips as a graceful fallback only when full stream extraction fails."
+    ]
+  },
+  {
     "version": "v1.20.5",
     "date": "2026-11-18",
     "type": "fix",

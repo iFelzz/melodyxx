@@ -1099,11 +1099,20 @@ async def search(request: Request, q: str, limit: int = 10):
         logger.exception("Unexpected error during search")
         raise HTTPException(status_code=500, detail=str(exc))
 
+def _normalize_preview_target(target: str) -> str:
+    cleaned = (target or "").strip()
+    if not cleaned:
+        return ""
+    if cleaned.startswith("http://") or cleaned.startswith("https://") or cleaned.startswith("ytsearch"):
+        return cleaned
+    return f"ytsearch1:{cleaned} audio"
+
 @app.get("/api/preview")
 @limiter.limit("60/minute")
 async def preview(request: Request, url: str):
     """
     Extract best direct audio stream URL for in-browser audio playback.
+    Supports direct YouTube URLs as well as Artist/Title search queries.
     Returns a same-origin proxy streaming URL. Cached for up to 10 minutes.
     """
     if not is_allowed_origin_or_referer(request):
@@ -1119,29 +1128,47 @@ async def preview(request: Request, url: str):
     analytics.record_preview(title="", ip=client_ip, cf_country=cf_country, user_agent=ua)
 
     cached = _preview_cache.get(clean_url)
+    webpage_url = ""
     if not cached:
         ydl_opts = {
             **_get_base_ytdl_opts(),
             "format": "bestaudio/best",
+            "extract_flat": False,
         }
 
         try:
+            target_clean = _normalize_preview_target(clean_url)
             def _extract():
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    return ydl.extract_info(clean_url, download=False)
+                    return ydl.extract_info(target_clean, download=False)
 
             info = await asyncio.to_thread(_extract)
+            if not info:
+                raise HTTPException(status_code=404, detail="No video information found")
+            if "entries" in info and info["entries"]:
+                info = info["entries"][0]
+
             stream_url = info.get("url")
             if not stream_url:
                 raise HTTPException(status_code=404, detail="Stream URL not found")
 
+            webpage_url = info.get("webpage_url") or ""
             _preview_cache.set(clean_url, stream_url)
+            if webpage_url and webpage_url != clean_url:
+                _preview_cache.set(webpage_url, stream_url)
+        except HTTPException:
+            raise
         except Exception as exc:
             logger.error("Preview error: %s", exc)
             raise HTTPException(status_code=500, detail=f"Failed to extract preview: {str(exc)}")
+    else:
+        stream_url = cached
 
     encoded = urllib.parse.quote(clean_url)
-    return {"stream_url": f"/api/preview/stream?url={encoded}"}
+    resp = {"stream_url": f"/api/preview/stream?url={encoded}"}
+    if webpage_url:
+        resp["youtube_url"] = webpage_url
+    return resp
 
 @app.api_route("/api/preview/stream", methods=["GET", "HEAD"])
 async def preview_stream(request: Request, url: str):
@@ -1162,16 +1189,27 @@ async def preview_stream(request: Request, url: str):
         ydl_opts = {
             **_get_base_ytdl_opts(),
             "format": "bestaudio/best",
+            "extract_flat": False,
         }
         try:
+            target_clean = _normalize_preview_target(clean_url)
             def _extract():
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    return ydl.extract_info(clean_url, download=False)
+                    return ydl.extract_info(target_clean, download=False)
             info = await asyncio.to_thread(_extract)
+            if not info:
+                raise HTTPException(status_code=404, detail="No audio information found")
+            if "entries" in info and info["entries"]:
+                info = info["entries"][0]
             stream_url = info.get("url")
             if not stream_url:
                 raise HTTPException(status_code=404, detail="Stream URL not found")
             _preview_cache.set(clean_url, stream_url)
+            webpage_url = info.get("webpage_url") or ""
+            if webpage_url and webpage_url != clean_url:
+                _preview_cache.set(webpage_url, stream_url)
+        except HTTPException:
+            raise
         except Exception as exc:
             logger.error("Preview stream extraction error: %s", exc)
             raise HTTPException(status_code=500, detail=f"Failed to extract preview stream: {str(exc)}")
@@ -1204,16 +1242,25 @@ async def preview_stream(request: Request, url: str):
             ydl_opts = {
                 **_get_base_ytdl_opts(),
                 "format": "bestaudio/best",
+                "extract_flat": False,
             }
             try:
+                target_clean = _normalize_preview_target(clean_url)
                 def _re_extract():
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        return ydl.extract_info(clean_url, download=False)
+                        return ydl.extract_info(target_clean, download=False)
                 info = await asyncio.to_thread(_re_extract)
+                if not info:
+                    raise HTTPException(status_code=404, detail="No audio information found on refresh")
+                if "entries" in info and info["entries"]:
+                    info = info["entries"][0]
                 stream_url = info.get("url")
                 if not stream_url:
                     raise HTTPException(status_code=404, detail="Stream URL not found on refresh")
                 _preview_cache.set(clean_url, stream_url)
+                webpage_url = info.get("webpage_url") or ""
+                if webpage_url and webpage_url != clean_url:
+                    _preview_cache.set(webpage_url, stream_url)
                 resp = await loop.run_in_executor(None, _open_upstream, stream_url)
             except Exception as re_err:
                 logger.error("Preview re-extraction failed: %s", re_err)
