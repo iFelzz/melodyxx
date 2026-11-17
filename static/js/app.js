@@ -2199,7 +2199,9 @@
     const $miniCurrent = document.getElementById('mini-current');
     const $miniDuration = document.getElementById('mini-duration');
     const $miniSeek = document.getElementById('mini-seek');
+    const $miniPrev = document.getElementById('mini-prev');
     const $miniPlayPause = document.getElementById('mini-playpause');
+    const $miniNext = document.getElementById('mini-next');
     const $miniPlayIcon = document.getElementById('mini-play-icon');
 
     // SVG paths for mini player icons
@@ -2736,6 +2738,13 @@
 
     // ── Mini player controls ──────────────────────────────────
 
+    if ($miniPrev) {
+      $miniPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playAdjacentTrack(-1);
+      });
+    }
+
     $miniPlayPause.addEventListener('click', () => {
       if (audioPlayer.paused) {
         audioPlayer.play();
@@ -2743,6 +2752,13 @@
         audioPlayer.pause();
       }
     });
+
+    if ($miniNext) {
+      $miniNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playAdjacentTrack(1);
+      });
+    }
 
     const $miniClose = document.getElementById('mini-close');
     if ($miniClose) {
@@ -3994,7 +4010,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.0';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.1';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4278,7 +4294,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.0');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.1');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

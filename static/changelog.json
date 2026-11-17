@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.1",
+    "date": "2026-11-17",
+    "type": "improvement",
+    "title": "Interactive Previous and Next Track Buttons on Mini Floating Player",
+    "highlights": [
+      "Transport Navigation Controls: Added sleek vector Previous (\u23ee\ufe0f) and Next (\u23ed\ufe0f) buttons to the floating mini audio player island bar.",
+      "Universal Queue Switching: One-click track skipping across Favorites playlists, YouTube search results, and Apple Music artist discographies.",
+      "Mobile-Optimized Touch Targets: Responsive sizing and calibrated touch target gaps ensuring smooth operation on smartphones and tablets."
+    ]
+  },
+  {
     "version": "v1.20.0",
     "date": "2026-11-17",
     "type": "feature",

@@ -1634,6 +1634,39 @@
       flex-shrink: 0;
     }
 
+    .mini-transport-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .mini-btn.transport {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 0;
+    }
+
+    .mini-btn.transport:hover {
+      background: rgba(168, 85, 247, 0.22);
+      border-color: rgba(168, 85, 247, 0.55);
+      color: #fff;
+      transform: scale(1.08);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+    }
+
+    .mini-btn.transport:active {
+      transform: scale(0.92);
+    }
+
     .mini-btn.primary {
       background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
       color: #ffffff;
@@ -1958,6 +1991,20 @@
       .mini-right {
         order: 2;
         gap: 8px;
+      }
+
+      .mini-transport-group {
+        gap: 5px;
+      }
+
+      .mini-btn.transport {
+        width: 28px;
+        height: 28px;
+      }
+
+      .mini-btn.transport svg {
+        width: 14px;
+        height: 14px;
       }
 
       .mini-btn.primary {

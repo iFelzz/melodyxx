@@ -145,7 +145,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.20.0" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.20.1" />
 </head>
 
 <body>
@@ -790,13 +790,29 @@
       <span class="mini-time-label" id="mini-duration">0:00</span>
     </div>
 
-    <!-- Right: Play/Pause, Volume, and Close Controls -->
+    <!-- Right: Transport (Prev, Play/Pause, Next), Volume, and Close Controls -->
     <div class="mini-right">
-      <button type="button" class="mini-btn primary" id="mini-playpause" aria-label="Play / Pause">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" id="mini-play-icon">
-          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-        </svg>
-      </button>
+      <div class="mini-transport-group">
+        <button type="button" class="mini-btn transport" id="mini-prev" aria-label="Previous Track" title="Previous track">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
+          </svg>
+        </button>
+
+        <button type="button" class="mini-btn primary" id="mini-playpause" aria-label="Play / Pause" title="Play / Pause">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" id="mini-play-icon" aria-hidden="true">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </button>
+
+        <button type="button" class="mini-btn transport" id="mini-next" aria-label="Next Track" title="Next track">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
+          </svg>
+        </button>
+      </div>
 
       <!-- Integrated In-Player Volume Control -->
       <div id="volume-control" class="mini-volume" title="Volume">
@@ -1200,7 +1216,7 @@
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.20.0" defer></script>
+  <script src="/static/js/app.js?v=1.20.1" defer></script>
 </body>
 
 </html>
