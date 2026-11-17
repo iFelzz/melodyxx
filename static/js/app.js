@@ -174,6 +174,15 @@
 
       saveFavorites(list);
       updateAllFavStarButtons(trackId, nowFav);
+
+      if (isFavoritesAutoplay && currentPlayingTrackId) {
+        favoritesQueue = [...list];
+        const newIdx = favoritesQueue.findIndex(t => String(t.id || t.url).trim() === String(currentPlayingTrackId).trim());
+        if (newIdx !== -1) {
+          currentQueueIndex = newIdx;
+        }
+      }
+
       if (searchMode === 'favorites') {
         renderFavorites();
       }
@@ -256,6 +265,7 @@
     } catch (_) {}
 
     let currentPlayingBtn = null;
+    let currentPlayingTrackId = null;
 
     // Batch download state
     const selectedTracks = new Map(); // trackId -> trackObj
@@ -545,6 +555,7 @@
             const data = await res.json();
 
             audioPlayer.src = data.stream_url;
+            currentPlayingTrackId = String(btn.dataset.url).trim();
             await audioPlayer.play();
 
             btn.classList.remove('loading');
@@ -1546,6 +1557,7 @@
 
           try {
             audioPlayer.src = prevUrl;
+            currentPlayingTrackId = String(btn.dataset.preview || btn.dataset.id || '').trim();
             await audioPlayer.play();
             btn.classList.remove('loading');
             btn.classList.add('playing');
@@ -1721,18 +1733,23 @@
 
       const track = favoritesQueue[index];
       if (!track) return;
+      currentPlayingTrackId = String(track.id || track.url).trim();
 
       // Update card active playing style in favorites list
       if ($favoritesList) {
-        $favoritesList.querySelectorAll('.card').forEach((c, idx) => {
-          c.classList.toggle('is-playing', idx === index);
+        $favoritesList.querySelectorAll('.card').forEach(c => {
+          const trackId = c.dataset.trackId;
+          const isThis = trackId && trackId === currentPlayingTrackId;
+          c.classList.toggle('is-playing', isThis);
+          c.classList.remove('is-paused');
           const pBtn = c.querySelector('.btn-fav-play');
           if (pBtn) {
-            pBtn.classList.toggle('playing', idx === index);
+            pBtn.classList.toggle('playing', isThis);
+            pBtn.classList.remove('paused');
             const pIcon = pBtn.querySelector('.btn-play-icon');
             const pLabel = pBtn.querySelector('.btn-play-label');
-            if (pIcon) pIcon.innerHTML = idx === index ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
-            if (pLabel) pLabel.textContent = idx === index ? 'Pause' : 'Play';
+            if (pIcon) pIcon.innerHTML = isThis ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
+            if (pLabel) pLabel.textContent = isThis ? 'Pause' : 'Play';
           }
         });
       }
@@ -1803,13 +1820,29 @@
       }
 
       if ($favoritesEmptyState) $favoritesEmptyState.style.display = 'none';
+      // Resynchronize currentQueueIndex with the actual playing track ID
+      if (currentPlayingTrackId) {
+        const foundIdx = filtered.findIndex(t => String(t.id || t.url).trim() === String(currentPlayingTrackId).trim());
+        if (foundIdx !== -1) {
+          currentQueueIndex = foundIdx;
+        }
+      }
+
       if ($favoritesList) {
         $favoritesList.style.display = 'flex';
         $favoritesList.innerHTML = filtered.map((item, idx) => {
           const cardId = `fav-card-${idx}`;
-          const isPlayingThis = isFavoritesAutoplay && currentQueueIndex === idx && !audioPlayer.paused;
+          const trackIdStr = String(item.id || item.url).trim();
+          const isTrackActive = currentPlayingTrackId && (trackIdStr === String(currentPlayingTrackId).trim());
+          const isPlayingThis = isTrackActive && !audioPlayer.paused;
+          const isPausedThis = isTrackActive && audioPlayer.paused;
+          const cardClass = isPlayingThis ? 'is-playing' : (isPausedThis ? 'is-paused' : '');
+          const btnClass = isPlayingThis ? 'playing' : (isPausedThis ? 'paused' : '');
+          const btnIcon = isPlayingThis ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
+          const btnLabel = isPlayingThis ? 'Pause' : (isPausedThis ? 'Resume' : 'Play');
+
           return `
-            <article class="card ${isPlayingThis ? 'is-playing' : ''}" id="${cardId}" role="listitem">
+            <article class="card ${cardClass}" id="${cardId}" data-track-id="${esc(trackIdStr)}" role="listitem">
               <div class="card-thumb-wrap">
                 <img class="card-thumb" src="${esc(item.thumbnail || '/static/logo.png')}" alt="${esc(item.title)}" loading="lazy" onerror="this.src='/static/logo.png'">
                 ${item.duration ? `<span class="card-duration">${esc(item.duration)}</span>` : ''}
@@ -1823,12 +1856,12 @@
               </div>
               <div class="card-action">
                 <div class="card-action-top-row">
-                  <button type="button" class="btn-card-play btn-fav-play ${isPlayingThis ? 'playing' : ''}" data-index="${idx}" title="Play Track">
-                    <span class="btn-play-icon">${isPlayingThis ? CARD_ICON_PAUSE : CARD_ICON_PLAY}</span>
-                    <span class="btn-play-label">${isPlayingThis ? 'Pause' : 'Play'}</span>
+                  <button type="button" class="btn-card-play btn-fav-play ${btnClass}" data-index="${idx}" data-track-id="${esc(trackIdStr)}" title="Play Track">
+                    <span class="btn-play-icon">${btnIcon}</span>
+                    <span class="btn-play-label">${btnLabel}</span>
                     <span class="play-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
                   </button>
-                  <button type="button" class="btn-card-fav active" data-id="${esc(item.id || item.url)}" data-title="${esc(item.title)}" title="Remove from Favorites">
+                  <button type="button" class="btn-card-fav active" data-id="${esc(trackIdStr)}" data-title="${esc(item.title)}" title="Remove from Favorites">
                     ${renderStarSvg(true)}
                   </button>
                 </div>
@@ -1846,7 +1879,11 @@
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const idx = parseInt(btn.dataset.index, 10);
-            if (isFavoritesAutoplay && currentQueueIndex === idx) {
+            const item = filtered[idx];
+            if (!item) return;
+            const trackIdStr = String(item.id || item.url).trim();
+
+            if (currentPlayingTrackId && currentPlayingTrackId === trackIdStr) {
               if (audioPlayer.paused) {
                 audioPlayer.play();
               } else {
@@ -1854,6 +1891,7 @@
               }
               return;
             }
+
             favoritesQueue = [...filtered];
             playFavoriteQueueTrack(idx);
           });
@@ -2569,6 +2607,20 @@
       $miniPlayer.classList.remove('playing');
       document.body.classList.remove('player-open');
       ambientGlowVisualizer.stop();
+      currentPlayingTrackId = null;
+      if ($favoritesList) {
+        $favoritesList.querySelectorAll('.card').forEach(c => {
+          c.classList.remove('is-playing', 'is-paused');
+          const pBtn = c.querySelector('.btn-fav-play');
+          if (pBtn) {
+            pBtn.classList.remove('playing', 'paused');
+            const pIcon = pBtn.querySelector('.btn-play-icon');
+            const pLabel = pBtn.querySelector('.btn-play-label');
+            if (pIcon) pIcon.innerHTML = CARD_ICON_PLAY;
+            if (pLabel) pLabel.textContent = 'Play';
+          }
+        });
+      }
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'none';
       }
@@ -2651,6 +2703,26 @@
         currentPlayingBtn.classList.remove('loading');
       }
       updateCurrentPlayingBtn(true);
+
+      // Sync active state in Favorites view
+      if ($favoritesList && currentPlayingTrackId) {
+        $favoritesList.querySelectorAll('.card').forEach(c => {
+          const trackId = c.dataset.trackId;
+          const isThis = trackId && trackId === currentPlayingTrackId;
+          c.classList.toggle('is-playing', isThis);
+          c.classList.remove('is-paused');
+          const pBtn = c.querySelector('.btn-fav-play');
+          if (pBtn) {
+            pBtn.classList.toggle('playing', isThis);
+            pBtn.classList.remove('paused');
+            const pIcon = pBtn.querySelector('.btn-play-icon');
+            const pLabel = pBtn.querySelector('.btn-play-label');
+            if (pIcon) pIcon.innerHTML = isThis ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
+            if (pLabel) pLabel.textContent = isThis ? 'Pause' : 'Play';
+          }
+        });
+      }
+
       ambientGlowVisualizer.start();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
@@ -2688,6 +2760,26 @@
       if (!audioPlayer.ended) {
         updateCurrentPlayingBtn(false);
       }
+
+      // Sync paused state in Favorites view
+      if ($favoritesList && currentPlayingTrackId && !audioPlayer.ended) {
+        $favoritesList.querySelectorAll('.card').forEach(c => {
+          const trackId = c.dataset.trackId;
+          const isThis = trackId && trackId === currentPlayingTrackId;
+          c.classList.remove('is-playing');
+          c.classList.toggle('is-paused', isThis);
+          const pBtn = c.querySelector('.btn-fav-play');
+          if (pBtn) {
+            pBtn.classList.remove('playing');
+            pBtn.classList.toggle('paused', isThis);
+            const pIcon = pBtn.querySelector('.btn-play-icon');
+            const pLabel = pBtn.querySelector('.btn-play-label');
+            if (pIcon) pIcon.innerHTML = CARD_ICON_PLAY;
+            if (pLabel) pLabel.textContent = isThis ? 'Resume' : 'Play';
+          }
+        });
+      }
+
       ambientGlowVisualizer.stop();
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
@@ -4010,7 +4102,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.1';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.2';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4294,7 +4386,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.1');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.2');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

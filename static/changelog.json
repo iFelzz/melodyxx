@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.2",
+    "date": "2026-11-17",
+    "type": "fix",
+    "title": "Fix Active Playing Track State Mismatch on Adding New Favorites",
+    "highlights": [
+      "Track ID Based State Synchronization: Upgraded active playback indicator in Favorites to bind to unique track ID/URL rather than array index, preventing newly unshifted favorites from mistakenly showing as active playing.",
+      "Dynamic Queue Index Preservation: Preserved and recomputed current playlist queue index whenever items are added or removed during active playback.",
+      "Bi-Directional Play/Pause Card Sync: Synchronized play/pause button labels and visualizer aura on favorite cards with global audio player events in real-time."
+    ]
+  },
+  {
     "version": "v1.20.1",
     "date": "2026-11-17",
     "type": "improvement",
