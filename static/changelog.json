@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.23.2",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Zero-Compiler Dependency Setup & Python 3.15+ Auto-Fallback",
+    "highlights": [
+      "MSVC Build Requirement Elimination: Switched uvicorn[standard] to pure uvicorn, eliminating PyYAML and its Cython C-extension compilation, removing any requirement for Microsoft Visual C++ 14.0 build tools.",
+      "Prefer-Binary Pip Installation: Configured start.bat and start.sh with --prefer-binary flag to prevent pip from ever building wheels from source during automated startup.",
+      "Automated Fallback Pipeline: Added multi-stage fallback install and pre-flight module import verification in startup scripts, ensuring self-healing environment setup without user intervention."
+    ]
+  },
+  {
     "version": "v1.23.1",
     "date": "2026-11-18",
     "type": "docs",

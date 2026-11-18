@@ -28,7 +28,16 @@ fi
 
 # ── Install dependencies ─────────────────────────────────
 echo "[SETUP] Memeriksa dependencies..."
-venv/bin/pip install -r requirements.txt --quiet --disable-pip-version-check
+if ! venv/bin/pip install -r requirements.txt --prefer-binary --quiet --disable-pip-version-check; then
+    echo "[WARN] Instalasi requirements.txt gagal, mencoba fallback instalasi otomatis..."
+    venv/bin/pip install fastapi uvicorn yt-dlp python-multipart slowapi --prefer-binary --quiet --disable-pip-version-check
+fi
+
+# Verifikasi dependencies utama terpasang
+if ! venv/bin/python -c "import fastapi, uvicorn, yt_dlp, slowapi" &>/dev/null; then
+    echo "[ERROR] Gagal menginstal dependencies utama."
+    exit 1
+fi
 
 # ── Cek FFmpeg ───────────────────────────────────────────
 if [ -f "ffmpeg/bin/ffmpeg" ]; then

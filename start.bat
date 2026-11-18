@@ -31,9 +31,16 @@ if not exist "venv\Scripts\python.exe" (
 
 :: ── Install/update dependencies ──────────────────────────
 echo [SETUP] Memeriksa dependencies...
-venv\Scripts\pip.exe install -r requirements.txt --quiet --disable-pip-version-check
+venv\Scripts\pip.exe install -r requirements.txt --prefer-binary --disable-pip-version-check
 if %errorlevel% neq 0 (
-    echo [ERROR] Gagal install dependencies.
+    echo [WARN] Instalasi requirements.txt gagal, mencoba fallback instalasi otomatis...
+    venv\Scripts\pip.exe install fastapi uvicorn yt-dlp python-multipart slowapi --prefer-binary --disable-pip-version-check
+)
+
+:: Verifikasi dependencies utama terpasang
+venv\Scripts\python.exe -c "import fastapi, uvicorn, yt_dlp, slowapi" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] Gagal menginstal dependencies utama.
     pause
     exit /b 1
 )
