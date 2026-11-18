@@ -109,10 +109,22 @@
       }
     }
 
-    function isFavorite(idOrUrl) {
-      if (!idOrUrl) return false;
-      const cleanId = String(idOrUrl).trim();
+    function isFavorite(idOrUrlOrTrack) {
+      if (!idOrUrlOrTrack) return false;
       const list = getFavorites();
+      if (typeof idOrUrlOrTrack === 'object') {
+        const tId = String(idOrUrlOrTrack.id || idOrUrlOrTrack.url || '').trim();
+        if (tId && list.some(item => (item.id && String(item.id).trim() === tId) || (item.url && String(item.url).trim() === tId))) {
+          return true;
+        }
+        if (idOrUrlOrTrack.title && idOrUrlOrTrack.artist) {
+          const matchTitle = String(idOrUrlOrTrack.title).trim().toLowerCase();
+          const matchArtist = String(idOrUrlOrTrack.artist).trim().toLowerCase();
+          return list.some(item => item.title && item.artist && item.title.trim().toLowerCase() === matchTitle && item.artist.trim().toLowerCase() === matchArtist);
+        }
+        return false;
+      }
+      const cleanId = String(idOrUrlOrTrack).trim();
       return list.some(item => (item.id && String(item.id).trim() === cleanId) || (item.url && String(item.url).trim() === cleanId));
     }
 
@@ -134,8 +146,23 @@
       return `<svg class="fav-star-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
     }
 
+    function updateMiniFavButton() {
+      if (!$miniFavBtn) return;
+      const track = currentPlayingTrackData;
+      const trackId = currentPlayingTrackId || (track && (track.id || track.url));
+      const isFav = isFavorite(trackId) || (track ? isFavorite(track) : false);
+      $miniFavBtn.classList.toggle('active', isFav);
+      $miniFavBtn.innerHTML = renderStarSvg(isFav);
+      const label = isFav ? 'Remove from favorites' : 'Add to favorites';
+      $miniFavBtn.setAttribute('aria-label', label);
+      $miniFavBtn.setAttribute('title', label);
+    }
+
     function updateAllFavStarButtons(trackId, isFav) {
-      if (!trackId) return;
+      if (!trackId) {
+        updateMiniFavButton();
+        return;
+      }
       const cleanId = String(trackId).trim();
       document.querySelectorAll('.btn-card-fav, .btn-track-fav').forEach(btn => {
         const bId = String(btn.dataset.id || btn.dataset.url || '').trim();
@@ -147,13 +174,20 @@
           btn.setAttribute('aria-label', title);
         }
       });
+      updateMiniFavButton();
     }
 
     function toggleFavorite(track) {
       if (!track) return false;
       const list = getFavorites();
       const trackId = track.id || track.url;
-      const existingIndex = list.findIndex(item => (item.id && item.id === trackId) || (item.url && item.url === trackId));
+      const existingIndex = list.findIndex(item =>
+        (item.id && trackId && item.id === trackId) ||
+        (item.url && track.url && item.url === track.url) ||
+        (item.title && track.title && item.artist && track.artist &&
+         item.title.trim().toLowerCase() === track.title.trim().toLowerCase() &&
+         item.artist.trim().toLowerCase() === track.artist.trim().toLowerCase())
+      );
 
       let nowFav = false;
       if (existingIndex !== -1) {
@@ -172,7 +206,7 @@
           added_at: Date.now()
         });
         nowFav = true;
-        toast('success', `Saved "${track.title}" to Favorites! ⭐`);
+        toast('success', `Saved "${track.title}" to Favorites.`);
       }
 
       saveFavorites(list);
@@ -275,6 +309,7 @@
 
     let currentPlayingBtn = null;
     let currentPlayingTrackId = null;
+    let currentPlayingTrackData = null;
 
     // Batch download state
     const selectedTracks = new Map(); // trackId -> trackObj
@@ -579,6 +614,14 @@
       isFavoritesAutoplay = false; // Disengage favorites playlist queue
       activeSearchTrackIndex = index;
       currentPlayingTrackId = String(item.url || item.id || '').trim();
+      currentPlayingTrackData = {
+        id: item.url || item.id,
+        url: item.url || '',
+        title: item.title,
+        artist: item.channel || item.artist,
+        thumbnail: item.thumbnail,
+        duration: item.duration
+      };
 
       // Engage buffering lock immediately before pausing audio
       isTrackSwitching = true;
@@ -1883,6 +1926,16 @@
           btn.classList.add('loading');
           currentPlayingBtn = btn;
           currentPlayingTrackId = String(btn.dataset.preview || btn.dataset.id || '').trim();
+          currentPlayingTrackData = {
+            id: btn.dataset.id || btn.dataset.preview,
+            url: btn.dataset.url || '',
+            title: btn.dataset.title,
+            artist: btn.dataset.artist,
+            album: btn.dataset.album || '',
+            duration: btn.dataset.duration || '',
+            thumbnail: btn.dataset.art,
+            preview_url: btn.dataset.preview
+          };
 
           showMiniPlayer(btn.dataset.title, btn.dataset.artist, btn.dataset.art);
           setMiniLoading(true, 'Buffering…');
@@ -2076,6 +2129,15 @@
       const track = favoritesQueue[index];
       if (!track) return;
       currentPlayingTrackId = String(track.id || track.url || track.preview_url || '').trim();
+      currentPlayingTrackData = {
+        id: track.id || track.url,
+        url: track.url || '',
+        title: track.title,
+        artist: track.artist,
+        thumbnail: track.thumbnail,
+        duration: track.duration,
+        preview_url: track.preview_url
+      };
 
       // Immediately engage buffering state & track switching lock
       isTrackSwitching = true;
@@ -2655,6 +2717,7 @@
     const $miniPlayPause = document.getElementById('mini-playpause');
     const $miniNext = document.getElementById('mini-next');
     const $miniPlayIcon = document.getElementById('mini-play-icon');
+    const $miniFavBtn = document.getElementById('mini-fav-btn');
 
     // SVG paths for mini player icons
     const MINI_ICON_PLAY = 'M8 5v14l11-7z';
@@ -3099,6 +3162,7 @@
 
       updateMediaSessionMetadata(title, artist, thumb);
       ambientGlowVisualizer.start();
+      updateMiniFavButton();
     }
 
     function hideMiniPlayer() {
@@ -3108,6 +3172,7 @@
       document.body.classList.remove('player-open');
       ambientGlowVisualizer.stop();
       currentPlayingTrackId = null;
+      currentPlayingTrackData = null;
       if ($favoritesList) {
         $favoritesList.querySelectorAll('.card').forEach(c => {
           c.classList.remove('is-playing', 'is-paused');
@@ -3355,6 +3420,44 @@
       $miniNext.addEventListener('click', (e) => {
         e.stopPropagation();
         playAdjacentTrack(1);
+      });
+    }
+
+    if ($miniFavBtn) {
+      $miniFavBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        let track = currentPlayingTrackData;
+        const activeId = currentPlayingTrackId || (track && (track.id || track.url));
+
+        if (!track || !track.title) {
+          const allFavs = getFavorites();
+          track = allFavs.find(t => (t.id || t.url) === activeId) || track;
+        }
+
+        if (!track || !track.title) {
+          const title = $miniTitle ? $miniTitle.textContent.trim() : '';
+          const artist = $miniArtist ? $miniArtist.textContent.trim() : '';
+          const thumb = $miniThumb ? $miniThumb.src : '';
+          const duration = $miniDuration ? $miniDuration.textContent.trim() : '';
+          if (title && title !== '—') {
+            track = {
+              id: activeId || title,
+              url: (currentPlayingTrackData && currentPlayingTrackData.url) || '',
+              title: title,
+              artist: artist,
+              thumbnail: thumb,
+              duration: duration,
+              preview_url: (currentPlayingTrackData && currentPlayingTrackData.preview_url) || ''
+            };
+          }
+        }
+
+        if (track && track.title && track.title !== '—') {
+          toggleFavorite(track);
+          if ($favoritesList && document.getElementById('tab-favorites') && document.getElementById('tab-favorites').classList.contains('active')) {
+            renderFavorites();
+          }
+        }
       });
     }
 
@@ -4611,7 +4714,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.21.0';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.0';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4895,7 +4998,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.21.0');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.0');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.22.0",
+    "date": "2026-11-18",
+    "type": "feature",
+    "title": "In-Player Favorite Star Button with Bidirectional State Sync",
+    "highlights": [
+      "Floating Mini Player Favorite Button: Integrated a glowing neon gold star button directly into the bottom audio player next to the song title and artist info, allowing users to instantly favorite or unfavorite any currently playing track.",
+      "Bidirectional State Synchronization: Toggling favorite status in the player immediately synchronizes and updates favorite buttons across matching song cards, album track rows, and the Favorites count badge in real time.",
+      "Universal Metadata Persistence: Accurately preserves complete track details (title, artist, artwork, duration, and stream URL) regardless of whether the track originated from Search, Favorites, or Artist Discography.",
+      "Full Multi-Resolution Responsive Design: Fluidly scales and centers the favorite button for desktop, tablet, and compact mobile screens without UI overlap or horizontal overflow."
+    ]
+  },
+  {
     "version": "v1.21.0",
     "date": "2026-11-18",
     "type": "feature",

@@ -1646,6 +1646,48 @@
       text-overflow: ellipsis;
     }
 
+    .mini-fav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.65);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+      padding: 0;
+      margin-left: 2px;
+    }
+
+    .mini-fav-btn:hover {
+      background: rgba(168, 85, 247, 0.22);
+      border-color: rgba(168, 85, 247, 0.55);
+      color: #fbbf24;
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+    }
+
+    .mini-fav-btn:active {
+      transform: scale(0.92);
+    }
+
+    .mini-fav-btn.active {
+      background: rgba(251, 191, 36, 0.12);
+      border-color: rgba(251, 191, 36, 0.5);
+      color: #fbbf24;
+      box-shadow: 0 0 14px rgba(251, 191, 36, 0.35);
+    }
+
+    .mini-fav-btn.active .fav-star-svg {
+      fill: #fbbf24;
+      stroke: #fbbf24;
+      filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.65));
+    }
+
     /* Center section: In-Card Integrated Seekbar & Time */
     .mini-center {
       flex: 1.5;
@@ -2200,14 +2242,31 @@
         display: none;
       }
 
+      .mini-fav-btn {
+        width: 30px;
+        height: 30px;
+      }
+      .mini-fav-btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
       @media (max-width: 380px) {
         .mini-player {
           padding: 8px 10px;
           gap: 4px 6px;
         }
         .mini-left {
-          gap: 8px;
+          gap: 6px;
           max-width: calc(100% - 138px);
+        }
+        .mini-fav-btn {
+          width: 26px;
+          height: 26px;
+        }
+        .mini-fav-btn svg {
+          width: 13px;
+          height: 13px;
         }
         .mini-thumb {
           width: 36px;
