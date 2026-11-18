@@ -1094,15 +1094,26 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
         for entry in entries:
             if not entry:
                 continue
-            duration_sec = entry.get("duration") or 0
+            video_id = entry.get("id") or ""
+            # Strict video filtering: YouTube video IDs are 11 chars. Ignore channels & playlists.
+            if not video_id or len(video_id) != 11:
+                continue
+            if entry.get("_type") in ("playlist", "channel", "multi_video"):
+                continue
+
+            duration_sec = entry.get("duration")
+            # Valid music videos have a positive duration (channels or live events have None or 0)
+            if duration_sec is None or duration_sec <= 0:
+                continue
+
             minutes, seconds = divmod(int(duration_sec), 60)
             results.append({
-                "id":        entry.get("id", ""),
-                "url":       f"https://www.youtube.com/watch?v={entry.get('id', '')}",
+                "id":        video_id,
+                "url":       f"https://www.youtube.com/watch?v={video_id}",
                 "title":     entry.get("title", "Unknown Title"),
                 "channel":   entry.get("uploader") or entry.get("channel", "Unknown"),
                 "duration":  f"{minutes}:{seconds:02d}",
-                "thumbnail": entry.get("thumbnail") or f"https://i.ytimg.com/vi/{entry.get('id', '')}/hqdefault.jpg",
+                "thumbnail": entry.get("thumbnail") or f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg",
                 "views":     entry.get("view_count", 0),
             })
 

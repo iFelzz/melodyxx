@@ -263,6 +263,8 @@
     let currentSearchOffset = 0;
     let hasMoreSearchResults = false;
     let isLoadingMoreResults = false;
+    let activePlaybackSource = null; // 'favorites' | 'search' | 'artist' | null
+    let activeSearchTrackIndex = -1;
     let currentPreferredQuality = '320';
     try {
       currentPreferredQuality = localStorage.getItem('melodyxx_quality') || localStorage.getItem('listen_now_quality') || '320';
@@ -543,6 +545,84 @@
     </article>`;
     }
 
+    // ── Search Results Playback Engine ───────────────────────
+
+    async function playSearchTrack(item, index) {
+      if (!item) return;
+
+      activePlaybackSource = 'search';
+      isFavoritesAutoplay = false; // Disengage favorites playlist queue
+      activeSearchTrackIndex = index;
+      currentPlayingTrackId = String(item.url || item.id || '').trim();
+
+      // Immediately silence previous stream
+      try {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+      } catch (_) {}
+
+      // If item is on another page, navigate there so card is in DOM
+      const pageOfItem = Math.floor(index / itemsPerPage) + 1;
+      if (currentPage !== pageOfItem) {
+        currentPage = pageOfItem;
+        renderPage();
+      }
+
+      resetCurrentPlayingBtn();
+
+      const btn = document.getElementById(`btn-play-${index}`);
+      if (btn) {
+        btn.classList.add('loading');
+        const iconSpan = btn.querySelector('.btn-play-icon');
+        const textSpan = btn.querySelector('.btn-play-label');
+        if (iconSpan) iconSpan.innerHTML = CARD_ICON_SPIN;
+        if (textSpan) textSpan.textContent = 'Buffering…';
+        currentPlayingBtn = btn;
+      }
+
+      showMiniPlayer(item.title, item.channel || item.artist, item.thumbnail);
+      setMiniLoading(true, 'Buffering…');
+      updateMediaSessionMetadata(item.title, item.channel || item.artist, item.thumbnail);
+
+      const targetId = currentPlayingTrackId;
+
+      try {
+        const res = await fetch(`/api/preview?url=${encodeURIComponent(item.url)}`);
+        if (!res.ok) throw new Error('Preview not found');
+        const data = await res.json();
+
+        if (currentPlayingTrackId !== targetId) return; // Stale track clicked
+
+        audioPlayer.src = data.stream_url;
+        await audioPlayer.play();
+
+        if (btn) {
+          btn.classList.remove('loading');
+          btn.classList.add('playing');
+          const iconSpan = btn.querySelector('.btn-play-icon');
+          const textSpan = btn.querySelector('.btn-play-label');
+          if (iconSpan) iconSpan.innerHTML = CARD_ICON_PAUSE;
+          if (textSpan) textSpan.textContent = 'Pause';
+          const card = btn.closest('.card');
+          if (card) card.classList.add('is-playing');
+        }
+      } catch (err) {
+        console.error('[Search Playback Error]', err);
+        setMiniLoading(false);
+        if (btn) {
+          btn.classList.remove('loading', 'playing');
+          const iconSpan = btn.querySelector('.btn-play-icon');
+          const textSpan = btn.querySelector('.btn-play-label');
+          if (iconSpan) iconSpan.innerHTML = CARD_ICON_PLAY;
+          if (textSpan) textSpan.textContent = 'Play';
+          const card = btn.closest('.card');
+          if (card) card.classList.remove('is-playing', 'is-paused');
+        }
+        currentPlayingBtn = null;
+        toast('error', 'Preview unavailable for this video.');
+      }
+    }
+
     // ── Pagination Logic ─────────────────────────────────────
 
     function renderPage() {
@@ -584,8 +664,10 @@
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
 
+          const trackUrl = String(btn.dataset.url || '').trim();
+
           // Same button clicked: toggle play/pause without losing reference
-          if (currentPlayingBtn === btn) {
+          if (currentPlayingTrackId === trackUrl && activePlaybackSource === 'search') {
             if (audioPlayer.paused) {
               audioPlayer.play();
             } else {
@@ -594,52 +676,15 @@
             return;
           }
 
-          // Immediately silence previous stream
-          try {
-            audioPlayer.pause();
-            audioPlayer.currentTime = 0;
-          } catch (_) {}
+          const index = allSearchResults.findIndex(item => item.url === trackUrl || item.id === trackUrl);
+          const item = index >= 0 ? allSearchResults[index] : {
+            url: btn.dataset.url,
+            title: btn.dataset.title,
+            channel: btn.dataset.artist,
+            thumbnail: btn.dataset.thumb
+          };
 
-          resetCurrentPlayingBtn();
-
-          btn.classList.add('loading');
-          const iconSpan = btn.querySelector('.btn-play-icon');
-          const textSpan = btn.querySelector('.btn-play-label');
-          if (iconSpan) iconSpan.innerHTML = CARD_ICON_SPIN;
-          if (textSpan) textSpan.textContent = 'Buffering…';
-
-          currentPlayingBtn = btn;
-          showMiniPlayer(btn.dataset.title, btn.dataset.artist, btn.dataset.thumb);
-          setMiniLoading(true, 'Buffering…');
-
-          try {
-            const res = await fetch(`/api/preview?url=${encodeURIComponent(btn.dataset.url)}`);
-            if (!res.ok) throw new Error('Preview not found');
-            const data = await res.json();
-
-            if (currentPlayingBtn !== btn) return;
-
-            audioPlayer.src = data.stream_url;
-            currentPlayingTrackId = String(btn.dataset.url).trim();
-            await audioPlayer.play();
-
-            btn.classList.remove('loading');
-            btn.classList.add('playing');
-            if (iconSpan) iconSpan.innerHTML = CARD_ICON_PAUSE;
-            if (textSpan) textSpan.textContent = 'Pause';
-            const card = btn.closest('.card');
-            if (card) card.classList.add('is-playing');
-          } catch (err) {
-            console.error(err);
-            setMiniLoading(false);
-            btn.classList.remove('loading', 'playing');
-            if (iconSpan) iconSpan.innerHTML = CARD_ICON_PLAY;
-            if (textSpan) textSpan.textContent = 'Play';
-            const card = btn.closest('.card');
-            if (card) card.classList.remove('is-playing', 'is-paused');
-            currentPlayingBtn = null;
-            toast('error', 'Preview unavailable for this video.');
-          }
+          await playSearchTrack(item, index >= 0 ? index : 0);
         });
       });
 
@@ -1696,6 +1741,9 @@
           // Different button clicked: reset previous active button icon back to PLAY
           resetCurrentPlayingBtn();
 
+          activePlaybackSource = 'artist';
+          isFavoritesAutoplay = false;
+
           // Immediately give loading feedback!
           btn.innerHTML = TRACK_ICON_SPIN;
           btn.classList.add('loading');
@@ -1878,6 +1926,7 @@
       if (!favoritesQueue || index < 0 || index >= favoritesQueue.length) return;
       currentQueueIndex = index;
       isFavoritesAutoplay = true;
+      activePlaybackSource = 'favorites';
 
       const track = favoritesQueue[index];
       if (!track) return;
@@ -2520,7 +2569,7 @@
 
     // ── Media Session API Integration (Lockscreen, Smartwatch & TWS) ──
 
-    function playAdjacentTrack(direction) {
+    async function playAdjacentTrack(direction) {
       if (isTrackSwitching) return;
       isTrackSwitching = true;
       setTimeout(() => { isTrackSwitching = false; }, 350);
@@ -2531,20 +2580,61 @@
         audioPlayer.currentTime = 0;
       } catch (_) {}
 
-      if (isFavoritesAutoplay && favoritesQueue.length > 0 && currentQueueIndex >= 0) {
+      // 1. Favorites Playback Mode
+      if (activePlaybackSource === 'favorites' && isFavoritesAutoplay && favoritesQueue.length > 0 && currentQueueIndex >= 0) {
         let nextIndex = currentQueueIndex + direction;
         if (nextIndex < 0) nextIndex = favoritesQueue.length - 1;
         if (nextIndex >= favoritesQueue.length) nextIndex = 0;
         playFavoriteQueueTrack(nextIndex);
         return;
       }
-      if (!currentPlayingBtn) return;
-      const isTrackList = currentPlayingBtn.classList.contains('btn-track-play');
+
+      // 2. Search Results Playback Mode
+      if (activePlaybackSource === 'search' && allSearchResults.length > 0) {
+        let currentIndex = activeSearchTrackIndex;
+        if (currentIndex < 0 || currentIndex >= allSearchResults.length) {
+          currentIndex = allSearchResults.findIndex(item => item.url === currentPlayingTrackId || item.id === currentPlayingTrackId);
+        }
+        if (currentIndex === -1) currentIndex = 0;
+
+        let nextIndex = currentIndex + direction;
+        if (nextIndex < 0) {
+          nextIndex = allSearchResults.length - 1;
+        } else if (nextIndex >= allSearchResults.length) {
+          if (hasMoreSearchResults && typeof loadMoreSearchResults === 'function') {
+            await loadMoreSearchResults();
+            if (nextIndex < allSearchResults.length) {
+              await playSearchTrack(allSearchResults[nextIndex], nextIndex);
+              return;
+            }
+          }
+          nextIndex = 0;
+        }
+
+        const nextItem = allSearchResults[nextIndex];
+        if (nextItem) {
+          await playSearchTrack(nextItem, nextIndex);
+          setTimeout(() => {
+            const card = document.getElementById(`card-${nextIndex}`);
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 100);
+        }
+        return;
+      }
+
+      // 3. Artist Discography Mode (or DOM button fallback)
+      const isTrackList = currentPlayingBtn && currentPlayingBtn.classList.contains('btn-track-play');
       const selector = isTrackList ? '.btn-track-play' : '.btn-card-play';
       const allPlayBtns = Array.from(document.querySelectorAll(selector));
       if (allPlayBtns.length <= 1) return;
 
-      const currentIndex = allPlayBtns.indexOf(currentPlayingBtn);
+      let currentIndex = -1;
+      if (currentPlayingBtn) {
+        currentIndex = allPlayBtns.indexOf(currentPlayingBtn);
+      }
+      if (currentIndex === -1 && currentPlayingTrackId) {
+        currentIndex = allPlayBtns.findIndex(b => isTrackMatching(b, currentPlayingTrackId));
+      }
       if (currentIndex === -1) return;
 
       let nextIndex = currentIndex + direction;
@@ -2978,8 +3068,8 @@
       $miniPlayer.classList.remove('playing');
       ambientGlowVisualizer.stop();
 
-      // Autoplay next track if in favorites queue
-      if (isFavoritesAutoplay && favoritesQueue.length > 0 && currentQueueIndex >= 0) {
+      // Autoplay next track based on active playback context
+      if (activePlaybackSource === 'favorites' && isFavoritesAutoplay && favoritesQueue.length > 0 && currentQueueIndex >= 0) {
         const nextIndex = currentQueueIndex + 1;
         if (nextIndex < favoritesQueue.length) {
           playFavoriteQueueTrack(nextIndex);
@@ -2989,6 +3079,12 @@
           isFavoritesAutoplay = false;
           currentQueueIndex = -1;
         }
+      } else if (activePlaybackSource === 'search' && allSearchResults.length > 0) {
+        playAdjacentTrack(1);
+        return;
+      } else if (activePlaybackSource === 'artist') {
+        playAdjacentTrack(1);
+        return;
       }
 
       hideMiniPlayer();
@@ -3102,6 +3198,9 @@
         audioPlayer.currentTime = 0;
         hideMiniPlayer();
         resetCurrentPlayingBtn();
+        isFavoritesAutoplay = false;
+        activePlaybackSource = null;
+        activeSearchTrackIndex = -1;
       });
     }
 
@@ -4344,7 +4443,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.9';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.10';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4628,7 +4727,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.9');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.10');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

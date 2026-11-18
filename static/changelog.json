@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.10",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Unified Playback Queue Context & Non-Video Channel Filtering",
+    "highlights": [
+      "Queue Context Isolation: Separated and isolated playback contexts (Search Results vs Favorites vs Artist Discography) so that Next/Previous controls always navigate within the currently active playlist queue and never jump to an unintended playlist.",
+      "YouTube Channel & Playlist Filter: Filtered out non-video entries (channels with 24-character IDs and 0:00 duration) from /api/search to guarantee all search cards are valid, playable music videos.",
+      "Resilient Track Switching: Ensured that clicking any search result card or artist track cleanly disengages favorite autoplay queues, silences the previous stream, and instantly plays the selected track."
+    ]
+  },
+  {
     "version": "v1.20.9",
     "date": "2026-11-18",
     "type": "feature",
