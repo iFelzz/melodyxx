@@ -1030,11 +1030,12 @@ async def reset_stats(request: Request, key: Optional[str] = None):
     return JSONResponse(content={"success": True, "message": "Analytics metrics have been reset successfully."})
 
 @app.get("/api/search")
-@limiter.limit("30/minute")
-async def search(request: Request, q: str, limit: int = 10):
+@limiter.limit("60/minute")
+async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
     """
     Search YouTube and return video results with metadata.
-    Rate-limited: 30 req/min.
+    Supports slice-based pagination via limit & offset.
+    Rate-limited: 60 req/min.
     """
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Query parameter 'q' is required.")
@@ -1045,21 +1046,39 @@ async def search(request: Request, q: str, limit: int = 10):
     analytics.record_search(q.strip(), ip=client_ip, cf_country=cf_country, user_agent=ua)
 
     limit = min(max(1, limit), 50)
+    offset = max(0, offset)
     q_stripped = q.strip()
     is_url = q_stripped.startswith("http://") or q_stripped.startswith("https://")
-    search_query = q_stripped if is_url else f"ytsearch{limit}:{q_stripped}"
 
-    cache_key = f"{q_stripped.lower()}::{limit}"
+    if is_url:
+        if offset > 0:
+            return JSONResponse(content={"results": [], "has_more": False, "offset": offset, "limit": limit})
+        search_query = q_stripped
+        slice_items = None
+    else:
+        start_item = offset + 1
+        end_item = offset + limit
+        search_query = f"ytsearch{end_item}:{q_stripped}"
+        slice_items = f"{start_item}-{end_item}"
+
+    cache_key = f"{q_stripped.lower()}::{offset}::{limit}"
     if not is_url:
         cached = _search_cache.get(cache_key)
         if cached:
-            return JSONResponse(content={"results": cached})
+            return JSONResponse(content={
+                "results": cached,
+                "has_more": len(cached) == limit,
+                "offset": offset,
+                "limit": limit
+            })
 
     ydl_opts = {
         **_get_base_ytdl_opts(),
         "extract_flat": True,
         "skip_download": True,
     }
+    if slice_items:
+        ydl_opts["playlist_items"] = slice_items
 
     try:
         def _search():
@@ -1068,7 +1087,7 @@ async def search(request: Request, q: str, limit: int = 10):
 
         info = await asyncio.to_thread(_search)
         if not info:
-            return JSONResponse(content={"results": []})
+            return JSONResponse(content={"results": [], "has_more": False, "offset": offset, "limit": limit})
 
         entries = info.get("entries") if "entries" in info else [info]
         results = []
@@ -1090,7 +1109,12 @@ async def search(request: Request, q: str, limit: int = 10):
         if not is_url:
             _search_cache.set(cache_key, results)
 
-        return JSONResponse(content={"results": results})
+        return JSONResponse(content={
+            "results": results,
+            "has_more": len(results) == limit,
+            "offset": offset,
+            "limit": limit
+        })
 
     except yt_dlp.utils.DownloadError as exc:
         logger.error("yt-dlp Search Error: %s", exc)

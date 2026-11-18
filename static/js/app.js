@@ -259,6 +259,10 @@
     let allSearchResults = [];
     let currentPage = 1;
     let itemsPerPage = 10;
+    let currentSearchQuery = '';
+    let currentSearchOffset = 0;
+    let hasMoreSearchResults = false;
+    let isLoadingMoreResults = false;
     let currentPreferredQuality = '320';
     try {
       currentPreferredQuality = localStorage.getItem('melodyxx_quality') || localStorage.getItem('listen_now_quality') || '320';
@@ -556,11 +560,24 @@
 
       // Update pagination UI
       $pageCurrent.textContent = currentPage;
-      $pageTotal.textContent = totalPages;
+      $pageTotal.textContent = hasMoreSearchResults ? `${totalPages}+` : totalPages;
       $btnPrev.disabled = currentPage === 1;
-      $btnNext.disabled = currentPage === totalPages;
 
-      $paginationControls.style.display = allSearchResults.length > itemsPerPage ? 'flex' : 'none';
+      if (currentPage < totalPages) {
+        $btnNext.disabled = false;
+        $btnNext.innerHTML = 'Next &rarr;';
+        $btnNext.title = 'Next Page';
+      } else if (currentPage === totalPages && hasMoreSearchResults) {
+        $btnNext.disabled = isLoadingMoreResults;
+        $btnNext.innerHTML = isLoadingMoreResults ? 'Loading…' : 'Next &rarr;';
+        $btnNext.title = `Load more results (Page ${currentPage + 1})`;
+      } else {
+        $btnNext.disabled = true;
+        $btnNext.innerHTML = 'Next &rarr;';
+        $btnNext.title = '';
+      }
+
+      $paginationControls.style.display = (allSearchResults.length > itemsPerPage || hasMoreSearchResults) ? 'flex' : 'none';
 
       // Attach preview player handlers (scoped to search results grid)
       $grid.querySelectorAll('.btn-card-play').forEach(btn => {
@@ -649,20 +666,88 @@
       });
     }
 
+    async function loadMoreSearchResults() {
+      if (isLoadingMoreResults || !hasMoreSearchResults || !currentSearchQuery) return;
+      isLoadingMoreResults = true;
+
+      $btnNext.disabled = true;
+      $btnNext.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; animation: spin 0.8s linear infinite; margin-right: 4px;">
+          <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.25)"></circle>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-linecap="round"></path>
+        </svg>Loading…
+      `;
+
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(currentSearchQuery)}&limit=50&offset=${currentSearchOffset}`);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || `HTTP ${res.status}`);
+        }
+
+        const newItems = data.results || [];
+        if (newItems.length === 0) {
+          hasMoreSearchResults = false;
+          toast('info', 'No more search results available.');
+        } else {
+          // Deduplicate against existing allSearchResults
+          const existingIds = new Set(allSearchResults.map(item => item.id || item.url));
+          const filteredNewItems = newItems.filter(item => {
+            const id = item.id || item.url;
+            return id && !existingIds.has(id);
+          });
+
+          currentSearchOffset += newItems.length;
+          hasMoreSearchResults = Boolean(data.has_more && newItems.length >= 50);
+
+          if (filteredNewItems.length > 0) {
+            allSearchResults = allSearchResults.concat(filteredNewItems);
+            currentPage++;
+            $count.textContent = hasMoreSearchResults ? `${allSearchResults.length}+ results` : `${allSearchResults.length} results`;
+            toast('success', `Loaded ${filteredNewItems.length} more songs.`);
+          } else if (!hasMoreSearchResults) {
+            toast('info', 'No more new search results found.');
+          } else {
+            toast('info', 'Fetching additional songs…');
+            isLoadingMoreResults = false;
+            return await loadMoreSearchResults();
+          }
+        }
+      } catch (err) {
+        console.error('[Load More Search Error]', err);
+        toast('error', err.message || 'Failed to load more results.');
+      } finally {
+        isLoadingMoreResults = false;
+        renderPage();
+        const $resultsCount = document.getElementById('results-count');
+        if ($resultsCount) {
+          $resultsCount.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+
     $btnPrev.addEventListener('click', () => {
       if (currentPage > 1) {
         currentPage--;
         renderPage();
-        document.getElementById('results-count').scrollIntoView({ behavior: 'smooth' });
+        const $resultsCount = document.getElementById('results-count');
+        if ($resultsCount) {
+          $resultsCount.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     });
 
-    $btnNext.addEventListener('click', () => {
+    $btnNext.addEventListener('click', async () => {
       const totalPages = Math.ceil(allSearchResults.length / itemsPerPage);
       if (currentPage < totalPages) {
         currentPage++;
         renderPage();
-        document.getElementById('results-count').scrollIntoView({ behavior: 'smooth' });
+        const $resultsCount = document.getElementById('results-count');
+        if ($resultsCount) {
+          $resultsCount.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else if (currentPage === totalPages && hasMoreSearchResults && !isLoadingMoreResults) {
+        await loadMoreSearchResults();
       }
     });
 
@@ -914,8 +999,13 @@
       $loadingText.textContent = 'Searching for songs…';
       $searchBtn.disabled = true;
 
+      currentSearchQuery = q;
+      currentSearchOffset = 0;
+      hasMoreSearchResults = false;
+      isLoadingMoreResults = false;
+
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=50`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=50&offset=0`);
         const data = await res.json();
 
         if (!res.ok) {
@@ -929,7 +1019,11 @@
           return;
         }
 
-        $count.textContent = `${allSearchResults.length} results`;
+        currentSearchOffset = allSearchResults.length;
+        const isUrl = q.trim().startsWith('http://') || q.trim().startsWith('https://');
+        hasMoreSearchResults = !isUrl && Boolean(data.has_more !== false && allSearchResults.length >= 50);
+
+        $count.textContent = hasMoreSearchResults ? `${allSearchResults.length}+ results` : `${allSearchResults.length} results`;
         showState('results');
 
         currentPage = 1;
@@ -4250,7 +4344,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.8';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.9';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4534,7 +4628,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.8');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.9');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
