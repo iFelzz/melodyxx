@@ -145,7 +145,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.22.0" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.22.1" />
 </head>
 
 <body>
@@ -570,11 +570,17 @@
               </svg>
             </div>
             <h3 class="favorites-empty-title">Your Favorites is Empty</h3>
-            <p class="favorites-empty-desc">Search for songs or browse artist discographies and click the ⭐ Star button on any track to add it to your collection.</p>
-            <button type="button" class="btn-fav-discover" id="btn-fav-discover">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-              <span>Discover Music</span>
-            </button>
+            <p class="favorites-empty-desc">Search for songs or browse artist discographies and click the star button on any track to add it to your collection, or import a saved playlist.</p>
+            <div class="favorites-empty-actions">
+              <button type="button" class="btn-fav-discover" id="btn-fav-discover">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                <span>Discover Music</span>
+              </button>
+              <button type="button" class="btn-fav-empty-import" id="btn-fav-empty-import" title="Import playlist from JSON file">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Import Playlist</span>
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1222,7 +1228,7 @@
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.22.0" defer></script>
+  <script src="/static/js/app.js?v=1.22.1" defer></script>
 </body>
 
 </html>

@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.22.1",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Enable Playlist Import on Empty Favorites & Add In-Card Import CTA",
+    "highlights": [
+      "Top Bar Import on Empty State: Kept the actions bar visible with an active Import button when Favorites is empty (while hiding track-dependent actions), allowing users to restore backups at any time.",
+      "In-Card Import CTA: Added a dedicated, glassmorphic 'Import Playlist' button inside the empty state card right next to 'Discover Music'.",
+      "Flexible JSON Playlist Parser: Upgraded file parser to support multiple backup formats (raw arrays, or objects containing favorites, tracks, playlist, or songs) and auto-sanitize metadata.",
+      "Iconography Standard Compliance: Removed system emoji from empty state description in accordance with Melodyxx vector SVG iconography standards."
+    ]
+  },
+  {
     "version": "v1.22.0",
     "date": "2026-11-18",
     "type": "feature",

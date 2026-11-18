@@ -75,6 +75,7 @@
     const $favImportInput = document.getElementById('fav-import-input');
     const $btnFavClear = document.getElementById('btn-fav-clear');
     const $btnFavDiscover = document.getElementById('btn-fav-discover');
+    const $btnFavEmptyImport = document.getElementById('btn-fav-empty-import');
 
     // Batch Action Bar DOM refs
     const $batchActionBar = document.getElementById('batch-action-bar');
@@ -2250,11 +2251,17 @@
           $favoritesList.innerHTML = '';
           $favoritesList.style.display = 'none';
         }
-        if ($favoritesActionsBar) $favoritesActionsBar.style.display = 'none';
+        if ($favoritesActionsBar) {
+          $favoritesActionsBar.style.display = 'flex';
+          $favoritesActionsBar.classList.add('is-empty');
+        }
         return;
       }
 
-      if ($favoritesActionsBar) $favoritesActionsBar.style.display = 'flex';
+      if ($favoritesActionsBar) {
+        $favoritesActionsBar.style.display = 'flex';
+        $favoritesActionsBar.classList.remove('is-empty');
+      }
 
       if (filtered.length === 0) {
         if ($favoritesEmptyState) $favoritesEmptyState.style.display = 'none';
@@ -2500,31 +2507,60 @@
       $btnFavImport.addEventListener('click', () => {
         $favImportInput.click();
       });
+    }
 
+    if ($btnFavEmptyImport && $favImportInput) {
+      $btnFavEmptyImport.addEventListener('click', () => {
+        $favImportInput.click();
+      });
+    }
+
+    if ($favImportInput) {
       $favImportInput.addEventListener('change', (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (evt) => {
           try {
-            const imported = JSON.parse(evt.target.result);
-            if (!Array.isArray(imported)) throw new Error('Invalid JSON array');
+            const parsed = JSON.parse(evt.target.result);
+            const imported = Array.isArray(parsed)
+              ? parsed
+              : (parsed && Array.isArray(parsed.favorites) ? parsed.favorites
+              : (parsed && Array.isArray(parsed.tracks) ? parsed.tracks
+              : (parsed && Array.isArray(parsed.playlist) ? parsed.playlist
+              : (parsed && Array.isArray(parsed.songs) ? parsed.songs : null))));
+            if (!imported || !Array.isArray(imported)) throw new Error('Invalid JSON playlist array');
+
             const existing = getFavorites();
             const existingIds = new Set(existing.map(x => String(x.id || x.url).trim()));
             let addedCount = 0;
             imported.forEach(item => {
-              const id = String(item.id || item.url || '').trim();
+              if (!item) return;
+              const id = String(item.id || item.url || `${item.artist || ''} - ${item.title || ''}`).trim();
               if (id && !existingIds.has(id)) {
-                existing.push(item);
+                existing.push({
+                  id: item.id || item.url || id,
+                  url: item.url || '',
+                  title: item.title || 'Unknown Title',
+                  artist: item.artist || item.channel || 'Unknown Artist',
+                  album: item.album || '',
+                  duration: item.duration || '',
+                  thumbnail: item.thumbnail || item.artwork_url || '',
+                  preview_url: item.preview_url || '',
+                  added_at: item.added_at || Date.now()
+                });
                 existingIds.add(id);
                 addedCount++;
               }
             });
             saveFavorites(existing);
             renderFavorites();
-            toast('success', `Imported ${addedCount} new songs into Favorites!`);
+            updateFavoritesBadge();
+            updateMiniFavButton();
+            toast('success', `Imported ${addedCount} song${addedCount === 1 ? '' : 's'} into Favorites.`);
           } catch (err) {
-            toast('error', 'Failed to import JSON: invalid format.');
+            console.error('Import favorites error:', err);
+            toast('error', 'Failed to import JSON: invalid playlist format.');
           }
           $favImportInput.value = '';
         };
@@ -4714,7 +4750,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.0';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.1';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4998,7 +5034,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.0');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.1');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
