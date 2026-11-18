@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.23.0",
+    "date": "2026-11-18",
+    "type": "feature",
+    "title": "Custom Glassmorphic Confirmation Modal Dialog",
+    "highlights": [
+      "Custom UI Confirmation Modal: Replaced raw browser confirm() popups with a dedicated, dark glassmorphic dialog matching Melodyxx's glowing neon aesthetic.",
+      "Destructive Action Safeguards: Clear Favorites now presents an intuitive warning card with crimson badge, item counter, and distinct 'Clear All' vs 'Cancel' buttons.",
+      "Accessible & Fluid Interaction: Supports Escape key closing, backdrop click dismissal, auto-focus, and smooth scale/fade animations.",
+      "Mobile-Optimized Responsive Layout: Seamlessly adapts button layouts and touch targets for mobile, tablet, and desktop screens without viewport clipping."
+    ]
+  },
+  {
     "version": "v1.22.2",
     "date": "2026-11-18",
     "type": "fix",

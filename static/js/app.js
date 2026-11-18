@@ -2580,15 +2580,108 @@
       });
     }
 
+    /**
+     * Custom Melodyxx Confirmation Dialog Modal
+     * Replaces native browser confirm() with sleek glowing glassmorphism UI.
+     */
+    function showConfirmDialog({
+      title = 'Are you sure?',
+      subtitle = 'Confirmation',
+      message = '',
+      confirmText = 'Confirm',
+      cancelText = 'Cancel',
+      isDanger = false,
+      onConfirm = null,
+      onCancel = null
+    }) {
+      const $modal = document.getElementById('confirm-modal');
+      const $title = document.getElementById('confirm-modal-title');
+      const $subtitle = document.getElementById('confirm-modal-subtitle');
+      const $message = document.getElementById('confirm-modal-message');
+      const $badge = document.getElementById('confirm-modal-icon-badge');
+      const $btnAction = document.getElementById('btn-confirm-action');
+      const $btnCancel = document.getElementById('btn-confirm-cancel');
+      const $btnClose = document.getElementById('btn-confirm-close');
+      if (!$modal || !$title || !$message || !$btnAction) return;
+
+      $title.textContent = title;
+      if ($subtitle) $subtitle.textContent = subtitle;
+      $message.innerHTML = message;
+      $btnAction.textContent = confirmText;
+      if ($btnCancel) $btnCancel.textContent = cancelText;
+
+      if ($badge) {
+        $badge.classList.toggle('danger', isDanger);
+      }
+      $btnAction.classList.toggle('danger', isDanger);
+
+      function closeModal() {
+        $modal.classList.add('closing');
+        setTimeout(() => {
+          $modal.setAttribute('aria-hidden', 'true');
+          $modal.classList.remove('closing');
+        }, 120);
+        document.removeEventListener('keydown', handleKey);
+      }
+
+      function handleKey(e) {
+        if (e.key === 'Escape') {
+          closeModal();
+          if (onCancel) onCancel();
+        }
+      }
+
+      $btnAction.onclick = () => {
+        closeModal();
+        if (onConfirm) onConfirm();
+      };
+
+      if ($btnCancel) {
+        $btnCancel.onclick = () => {
+          closeModal();
+          if (onCancel) onCancel();
+        };
+      }
+
+      if ($btnClose) {
+        $btnClose.onclick = () => {
+          closeModal();
+          if (onCancel) onCancel();
+        };
+      }
+
+      $modal.onclick = (e) => {
+        if (e.target === $modal) {
+          closeModal();
+          if (onCancel) onCancel();
+        }
+      };
+
+      document.addEventListener('keydown', handleKey);
+      $modal.setAttribute('aria-hidden', 'false');
+      if ($btnAction) $btnAction.focus();
+    }
+
     if ($btnFavClear) {
       $btnFavClear.addEventListener('click', () => {
         const favs = getFavorites();
         if (favs.length === 0) return;
-        if (confirm(`Remove all ${favs.length} songs from your Favorites?`)) {
-          saveFavorites([]);
-          renderFavorites();
-          toast('info', 'All favorites cleared.');
-        }
+
+        showConfirmDialog({
+          title: 'Clear All Favorites?',
+          subtitle: 'Permanent action',
+          message: `Are you sure you want to remove all <strong>${favs.length}</strong> song${favs.length === 1 ? '' : 's'} from your Favorites collection? This action cannot be undone.`,
+          confirmText: 'Clear All',
+          cancelText: 'Cancel',
+          isDanger: true,
+          onConfirm: () => {
+            saveFavorites([]);
+            renderFavorites();
+            updateFavoritesBadge();
+            updateMiniFavButton();
+            toast('info', 'All favorites cleared.');
+          }
+        });
       });
     }
 
@@ -4762,7 +4855,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.2';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.23.0';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5046,7 +5139,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.2');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.23.0');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
