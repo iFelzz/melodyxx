@@ -1690,7 +1690,7 @@
 
     /* Center section: Two-Tier Balanced Deck (Transport Top, Scrubber Bottom) */
     .mini-center {
-      flex: 1 1 420px;
+      flex: 1 1 440px;
       max-width: 480px;
       display: flex;
       flex-direction: column;
@@ -1702,9 +1702,101 @@
     }
 
     .mini-transport-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 2px;
+    }
+
+    /* Base Mini Transport Buttons */
+    .mini-btn {
+      border: none;
+      background: none;
+      outline: none;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      padding: 0;
+      transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* Circular Prev / Next Transport Controls */
+    .mini-btn.transport {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #c4b5fd;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .mini-btn.transport svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .mini-btn.transport:hover {
+      background: rgba(168, 85, 247, 0.25);
+      border-color: rgba(168, 85, 247, 0.55);
+      color: #ffffff;
+      transform: scale(1.1);
+      box-shadow: 0 0 14px rgba(168, 85, 247, 0.45);
+    }
+
+    .mini-btn.transport:hover svg {
+      transform: scale(1.08);
+    }
+
+    .mini-btn.transport:active {
+      transform: scale(0.92);
+    }
+
+    /* Primary Play / Pause Glowing Purple Button */
+    .mini-btn.primary {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #c026d3 100%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      box-shadow:
+        0 0 20px rgba(168, 85, 247, 0.7),
+        0 0 35px rgba(147, 51, 234, 0.35),
+        0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .mini-btn.primary svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .mini-btn.primary:hover {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.08);
+      box-shadow:
+        0 0 28px rgba(192, 132, 252, 0.95),
+        0 0 45px rgba(168, 85, 247, 0.5),
+        0 6px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .mini-btn.primary:hover svg {
+      transform: scale(1.06);
+    }
+
+    .mini-btn.primary:active {
+      transform: scale(0.94);
     }
 
     .mini-progress-row {
@@ -1772,7 +1864,30 @@
       transition: opacity 0.2s, transform 0.2s;
     }
 
+    .mini-seek-wrap input[type=range]::-moz-range-track {
+      background: transparent;
+      border: none;
+    }
+
+    .mini-seek-wrap input[type=range]::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: none;
+      background: #f3e8ff;
+      box-shadow: 0 0 10px #c084fc, 0 0 16px rgba(168, 85, 247, 0.9);
+      cursor: pointer;
+      opacity: 0.9;
+      transform: scale(1);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
     .mini-seek-wrap:hover input[type=range]::-webkit-slider-thumb {
+      opacity: 1;
+      transform: scale(1.25);
+    }
+
+    .mini-seek-wrap:hover input[type=range]::-moz-range-thumb {
       opacity: 1;
       transform: scale(1.25);
     }

@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.24.2",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Restored Glowing Circular Transport Controls in Floating Mini Player",
+    "highlights": [
+      "Spotify-Style Circular Controls: Restored full CSS styling for Play/Pause, Previous, and Next buttons matching the approved preview design.",
+      "Vibrant Purple Neon Glow: Re-applied signature multi-layer purple gradient (`linear-gradient(135deg, #7c3aed, #9333ea, #c026d3)`) with 44px circular footprint and hover aura to the main Play button.",
+      "Sleek Glassmorphism Prev/Next Buttons: Restored 34px circular translucent buttons with light violet icons, responsive scaling, and smooth hover feedback.",
+      "Firefox Cross-Browser Compatibility: Added `-moz-range-track` and `-moz-range-thumb` slider styling for consistent cross-browser scrubbing."
+    ]
+  },
+  {
     "version": "v1.24.1",
     "date": "2026-11-18",
     "type": "fix",
