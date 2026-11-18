@@ -5,7 +5,7 @@
 
   <p>
     <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-7c3aed.svg" alt="License: AGPL v3" /></a>
-    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.23.0-a855f7.svg" alt="Version: 1.23.0" /></a>
+    <a href="https://github.com/iFelzz/melodyxx/releases"><img src="https://img.shields.io/badge/Version-1.23.1-a855f7.svg" alt="Version: 1.23.1" /></a>
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.11+-3776ab.svg" alt="Python: 3.11+" /></a>
     <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.111.0-009688.svg" alt="FastAPI" /></a>
     <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-enabled-2496ED.svg" alt="Docker" /></a>
@@ -26,9 +26,9 @@
 
 ## Overview
 
-Melodyxx is a high-performance audio extraction web application designed for fast, seamless music discovery and downloads. Built on a cobalt-style zero-disk streaming architecture, it pipes audio on the fly directly from YouTube CDNs through FFmpeg into client downloads with zero temporary files written to server storage.
+Melodyxx is a high-performance audio extraction and streaming web application designed for fast, seamless music discovery and downloads. Built on a cobalt-style zero-disk streaming architecture, it pipes audio on the fly directly from YouTube CDNs through FFmpeg into client downloads with zero temporary files written to server storage.
 
-Melodyxx automatically resolves and embeds official 800x800 album art from Apple Music, synchronizes ID3v2 metadata frames, and provides a full artist discography browser with sequential batch downloading capabilities.
+Melodyxx automatically resolves and embeds official 800x800 album art from Apple Music, synchronizes ID3v2 metadata frames, provides a full artist discography browser, local favorites playlist with continuous autoplay, in-player favorite synchronization, on-demand infinite search pagination, and sequential batch downloading capabilities.
 
 ---
 
@@ -45,19 +45,33 @@ Melodyxx automatically resolves and embeds official 800x800 album art from Apple
 * **Automatic title cleaning**: Sanitizes YouTube noise tags like `[Official Video]`, `(MV)`, `4K 60FPS`, `Lyric Video`, and release channels.
 * **Auto-fallback streaming**: Automatically falls back to clean audio streams if cover art CDNs experience latency, preventing stalled or 0 KB files.
 
+### Local Favorites Playlist & Continuous Autoplay
+* **Browser-persistent collection**: Save favorite songs directly to your browser's local storage with zero account required.
+* **Continuous sequential autoplay**: Seamlessly plays through your favorites list in sequence with automatic track advancing and shuffle mode.
+* **Batch playlist download**: Download all favorite tracks at once using the controlled sequential queue.
+* **Backup export & import**: Export your favorites to a standalone JSON file and import backups at any time, even on an empty playlist.
+* **Custom confirmation modal**: Destructive actions (like clearing all favorites) feature a custom glassmorphism confirmation dialog instead of raw browser popups.
+
+### Persistent Floating Audio Player
+* **In-player favorite toggle**: Star or unstar currently playing songs directly inside the bottom player with live bidirectional synchronization across all track cards and tab counters.
+* **Ambient glow visualizer**: Dynamic neon canvas glow that reacts to audio playback.
+* **Integrated controls**: Interactive seekbar, duration timer, volume slider, track metadata, and previous/next transport buttons.
+* **Zero-latency feedback**: Instant visual loading state (`Buffering…` spinner) on click before audio streams connect.
+
+### On-Demand Infinite Search Pagination
+* **Infinite query continuation**: Smooth slice-based pagination that queries subsequent batches from YouTube CDNs on demand when advancing beyond loaded pages.
+* **Smart numeric pagination**: Interactive glowing numeric page buttons with smart ellipsis (`[1], [2], [3]...`) for direct navigation.
+* **First & Last quick jump**: Dedicated `« First` and `Last »` buttons to navigate deep search results instantly.
+* **Direct prompt jump**: Click the current page indicator to type and jump straight to any page number.
+
 ### Artist Discography Browser
 * **Dual search mode**: Switch seamlessly between individual track search and Apple Music artist discography catalog.
 * **Top tracks & full discography**: Browse popular tracks (up to 200 songs) and studio albums/EPs with complete tracklists.
 * **Smart deduplication**: Consolidates track listings to favor official studio album releases while preserving remixes, acoustic versions, and language variants.
 
 ### Sequential Batch Downloader
-* Multi-select individual songs or full album tracklists.
-* Controlled sequential queue downloads each track in order, avoiding browser download pop-up blocking and server connection flooding.
-* Interactive progress drawer with live status, percentage, count, and retry options.
-
-### Audio Preview Player & Quality Selector
-* **Persistent in-browser preview**: Built-in glassmorphism mini player with live seekbar, volume control, and track-row synchronization.
-* **Quality selection**: Choose between 128 kbps (Data Saver), 192 kbps (Standard), 320 kbps (High Quality), or native M4A.
+* **Controlled queue pipeline**: Multi-select individual songs or full album tracklists and download them in a controlled sequence to prevent browser pop-up blocking and server connection flooding.
+* **Interactive progress drawer**: Live percentage, progress bar, track counter, cancellation, and retry failed tracks options.
 
 ### Security & Hotlink Protection
 * **Token-gated streaming**: Direct access to `/api/stream` requires a cryptographically secure token issued by `/api/download` with a 15-minute time-to-live window.
@@ -95,6 +109,8 @@ melodyxx/
 │       └── ffprobe.exe     # Bundled FFprobe binary (Windows)
 └── static/
     ├── index.html          # Application markup & UI layout
+    ├── stats.html          # Internal analytics dashboard markup
+    ├── changelog.json      # Structured historical release log data
     ├── css/
     │   └── style.css       # Violet neon glassmorphism stylesheet
     ├── js/
@@ -157,17 +173,21 @@ For Portainer deployments:
 |---|---|---|
 | `GET` | `/` | Web application user interface |
 | `GET` | `/api/version` | Current semantic version and git commit metadata |
+| `GET` | `/api/changelog` | Historical release logs, highlights, and version notes |
 | `GET` | `/api/health` | System status, active stream count, and zero-disk verification |
 | `GET` | `/api/storage` | Active memory cache metrics and streaming statistics |
-| `GET` | `/api/search?q=&limit=` | YouTube audio search with metadata extraction |
+| `GET` | `/api/search?q=&limit=&offset=` | YouTube audio search with slice-based infinite pagination |
+| `GET` | `/api/suggest?q=` | Fast YouTube query auto-completion suggestions |
 | `GET` | `/api/artist/search?q=&limit=` | Apple Music artist catalog search |
 | `GET` | `/api/artist/{id}/discography` | Artist discography, popular songs, and album catalog |
 | `GET` | `/api/album/{id}/tracks` | Tracklist extraction for a specific album or EP |
 | `GET` | `/api/preview?url=` | Audio preview stream extraction for in-browser playback |
 | `POST` | `/api/download` | Pre-resolve stream, fetch official artwork, and issue download token |
 | `GET` | `/api/stream?token=&quality=` | Token-authorized on-the-fly MP3 audio streaming pipe |
+| `POST` | `/api/report` | User issue and feedback reporter with Telegram bot integration |
 | `GET` | `/stats` | Internal analytics & metrics dashboard |
 | `GET` | `/api/stats` | Streaming, bandwidth & concurrency metrics (JSON) |
+| `GET` | `/api/stats/live` | Real-time live analytics stream (SSE) |
 | `POST` | `/api/stats/reset` | Reset analytics counters (Admin key required) |
 
 ---

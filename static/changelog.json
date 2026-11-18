@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.23.1",
+    "date": "2026-11-18",
+    "type": "docs",
+    "title": "Comprehensive Documentation & Architecture Specifications Update",
+    "highlights": [
+      "Feature Showcase Expansion: Updated README.md with complete architectural specifications for Local Favorites, In-Player Favorite Sync, Infinite Pagination, and Custom Modal Dialogs.",
+      "API Reference Synchronization: Documented missing backend endpoints including /api/suggest, /api/report, /api/changelog, and /api/stats/live.",
+      "Project Structure Modernization: Reflected new assets including historical release logs and analytics dashboard markup."
+    ]
+  },
+  {
     "version": "v1.23.0",
     "date": "2026-11-18",
     "type": "feature",
