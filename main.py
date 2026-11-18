@@ -1107,11 +1107,20 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
                 continue
 
             minutes, seconds = divmod(int(duration_sec), 60)
+            raw_title = entry.get("title", "Unknown Title")
+            raw_channel = entry.get("uploader") or entry.get("channel") or entry.get("creator") or entry.get("artist") or ""
+            if not raw_channel or raw_channel.strip().lower() in ("unknown", "unknown artist", ""):
+                parsed_art, _ = metadata_resolver.parse_artist_and_title(raw_title, uploader="")
+                if parsed_art and parsed_art.lower() not in ("unknown", "unknown artist"):
+                    raw_channel = parsed_art
+                else:
+                    raw_channel = "YouTube Music"
+
             results.append({
                 "id":        video_id,
                 "url":       f"https://www.youtube.com/watch?v={video_id}",
-                "title":     entry.get("title", "Unknown Title"),
-                "channel":   entry.get("uploader") or entry.get("channel", "Unknown"),
+                "title":     raw_title,
+                "channel":   raw_channel,
                 "duration":  f"{minutes}:{seconds:02d}",
                 "thumbnail": entry.get("thumbnail") or f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg",
                 "views":     entry.get("view_count", 0),

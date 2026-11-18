@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.24.1",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Intelligent Title-Based Artist Extraction & Auto-Healing for Favorites",
+    "highlights": [
+      "Auto-Healing for Stored Favorites: Automatically inspects existing local favorites on load and repairs any 'Unknown' or missing artist entries by parsing patterns like 'Artist - Title' directly from the track title.",
+      "Smart Fallback in Search API: Upgraded backend /api/search to automatically extract artist names using metadata_resolver when YouTube flat extraction yields empty or 'Unknown' uploader channels.",
+      "Clean UI Metadata Rendering: Ensured search result cards, in-player metadata, and lockscreen MediaSession controls always display clean artist names instead of raw 'Unknown' placeholders."
+    ]
+  },
+  {
     "version": "v1.24.0",
     "date": "2026-11-18",
     "type": "feature",

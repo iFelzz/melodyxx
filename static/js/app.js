@@ -88,10 +88,61 @@
     let currentQueueIndex = -1;
     let isFavoritesAutoplay = false;
 
+    /**
+     * Intelligently parses artist name from video title if YouTube metadata returned 'Unknown'.
+     * Supports:
+     *   - 'Artist - Title' / 'Artist – Title' / 'Artist : Title'
+     *   - 'Artist "Song Title" MV' / "Artist 'Song Title'"
+     */
+    function extractArtistFromTitle(title) {
+      if (!title) return '';
+      const raw = String(title).trim();
+      // 1. Check for separators ' - ', ' – ', ' — ', ' : '
+      const seps = [' - ', ' – ', ' — ', ' : '];
+      for (const sep of seps) {
+        if (raw.includes(sep)) {
+          const parts = raw.split(sep);
+          let cand = parts[0].trim();
+          cand = cand.replace(/\[[^\]]*\]|\([^\)]*\)/g, '').trim();
+          cand = cand.replace(/^(MV|M\/V|Official|Audio)\s+/i, '').trim();
+          cand = cand.replace(/\s+(VEVO|Official|Topic)$/i, '').trim();
+          if (cand && cand.length >= 2 && cand.length <= 60) {
+            return cand;
+          }
+        }
+      }
+      // 2. Check for quotes e.g. TWICE "What is Love?" M/V or NewJeans 'Super Shy'
+      const quoteMatch = raw.match(/^([^"'\u2018\u2019\u201c\u201d]+)\s*["'\u2018\u2019\u201c\u201d]/);
+      if (quoteMatch && quoteMatch[1]) {
+        let cand = quoteMatch[1].trim();
+        cand = cand.replace(/\[[^\]]*\]|\([^\)]*\)/g, '').trim();
+        if (cand && cand.length >= 2 && cand.length <= 60) {
+          return cand;
+        }
+      }
+      return '';
+    }
+
     function getFavorites() {
       try {
         const raw = localStorage.getItem(FAV_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        const list = raw ? JSON.parse(raw) : [];
+        let modified = false;
+        list.forEach(item => {
+          if (!item) return;
+          const art = String(item.artist || item.channel || '').trim();
+          if (!art || art.toLowerCase() === 'unknown' || art.toLowerCase() === 'unknown artist') {
+            const parsed = extractArtistFromTitle(item.title);
+            if (parsed) {
+              item.artist = parsed;
+              modified = true;
+            }
+          }
+        });
+        if (modified) {
+          try { localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(list)); } catch (_) {}
+        }
+        return list;
       } catch (e) {
         console.warn('[Favorites] Failed to read from localStorage:', e);
         return [];
@@ -195,11 +246,16 @@
         list.splice(existingIndex, 1);
         toast('info', `Removed "${track.title}" from Favorites.`);
       } else {
+        const rawArt = track.artist || track.channel || '';
+        const cleanArt = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
+          ? (extractArtistFromTitle(track.title) || 'Unknown Artist')
+          : rawArt;
+
         list.unshift({
           id: trackId,
           url: track.url || '',
           title: track.title || 'Unknown Title',
-          artist: track.artist || track.channel || 'Unknown Artist',
+          artist: cleanArt,
           album: track.album || '',
           duration: track.duration || '',
           thumbnail: track.thumbnail || track.artwork_url || '',
@@ -530,6 +586,10 @@
       const cardId = `card-${index}`;
       const btnId = `btn-dl-${index}`;
       const playBtnId = `btn-play-${index}`;
+      const rawChan = item.channel || item.artist || '';
+      const displayChannel = (!rawChan || rawChan.trim().toLowerCase() === 'unknown' || rawChan.trim().toLowerCase() === 'unknown artist')
+        ? (extractArtistFromTitle(item.title) || 'YouTube Music')
+        : rawChan;
 
       return `
     <article class="card" id="${cardId}" data-url="${esc(item.url)}" data-id="${esc(item.id)}" role="listitem" aria-label="${esc(item.title)}">
@@ -548,7 +608,7 @@
       <div class="card-info">
         <h3 class="card-title" title="${esc(item.title)}">${esc(item.title)}</h3>
         <div class="card-meta">
-          <span class="card-channel" aria-label="Channel: ${esc(item.channel)}">${esc(item.channel)}</span>
+          <span class="card-channel" aria-label="Channel: ${esc(displayChannel)}">${esc(displayChannel)}</span>
           ${views ? `<span class="card-views" aria-label="${views}">${views}</span>` : ''}
         </div>
       </div>
@@ -561,7 +621,7 @@
             id="${playBtnId}"
             data-url="${esc(item.url)}"
             data-title="${esc(item.title)}"
-            data-artist="${esc(item.channel)}"
+            data-artist="${esc(displayChannel)}"
             data-thumb="${esc(item.thumbnail)}"
             aria-label="Play Preview: ${esc(item.title)}"
             title="Play preview"
@@ -578,7 +638,7 @@
             id="btn-fav-${index}"
             data-url="${esc(item.url)}"
             data-title="${esc(item.title)}"
-            data-artist="${esc(item.channel)}"
+            data-artist="${esc(displayChannel)}"
             data-duration="${esc(item.duration)}"
             data-thumb="${esc(item.thumbnail)}"
             aria-label="${isFavorite(item.url) ? 'Remove from favorites' : 'Add to favorites'}"
@@ -615,11 +675,15 @@
       isFavoritesAutoplay = false; // Disengage favorites playlist queue
       activeSearchTrackIndex = index;
       currentPlayingTrackId = String(item.url || item.id || '').trim();
+      const rawArt = item.channel || item.artist || '';
+      const cleanArt = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
+        ? (extractArtistFromTitle(item.title) || 'YouTube Music')
+        : rawArt;
       currentPlayingTrackData = {
         id: item.url || item.id,
         url: item.url || '',
         title: item.title,
-        artist: item.channel || item.artist,
+        artist: cleanArt,
         thumbnail: item.thumbnail,
         duration: item.duration
       };
@@ -2142,11 +2206,15 @@
       const track = favoritesQueue[index];
       if (!track) return;
       currentPlayingTrackId = String(track.id || track.url || track.preview_url || '').trim();
+      const rawArt = track.artist || track.channel || '';
+      const cleanArt = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
+        ? (extractArtistFromTitle(track.title) || 'Unknown Artist')
+        : rawArt;
       currentPlayingTrackData = {
         id: track.id || track.url,
         url: track.url || '',
         title: track.title,
-        artist: track.artist,
+        artist: cleanArt,
         thumbnail: track.thumbnail,
         duration: track.duration,
         preview_url: track.preview_url
@@ -2314,6 +2382,11 @@
           const btnIcon = isPlayingThis ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
           const btnLabel = isPlayingThis ? 'Pause' : (isPausedThis ? 'Resume' : 'Play');
 
+          const rawArt = item.artist || item.channel || '';
+          const displayArtist = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
+            ? (extractArtistFromTitle(item.title) || 'Unknown Artist')
+            : rawArt;
+
           return `
             <article class="card ${cardClass}" id="${cardId}" data-track-id="${esc(trackIdStr)}" data-url="${esc(item.url || '')}" data-preview="${esc(item.preview_url || '')}" role="listitem">
               <div class="card-thumb-wrap">
@@ -2323,7 +2396,7 @@
               <div class="card-info">
                 <h3 class="card-title" title="${esc(item.title)}">${esc(item.title)}</h3>
                 <div class="card-meta">
-                  <span class="card-channel">${esc(item.artist)}</span>
+                  <span class="card-channel">${esc(displayArtist)}</span>
                   ${item.album ? `<span style="font-size:0.78rem;color:var(--clr-text-dim);">• ${esc(item.album)}</span>` : ''}
                 </div>
               </div>
@@ -2550,11 +2623,16 @@
               if (!item) return;
               const id = String(item.id || item.url || `${item.artist || ''} - ${item.title || ''}`).trim();
               if (id && !existingIds.has(id)) {
+                const rawArt = item.artist || item.channel || '';
+                const cleanArt = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
+                  ? (extractArtistFromTitle(item.title) || 'Unknown Artist')
+                  : rawArt;
+
                 existing.push({
                   id: item.id || item.url || id,
                   url: item.url || '',
                   title: item.title || 'Unknown Title',
-                  artist: item.artist || item.channel || 'Unknown Artist',
+                  artist: cleanArt,
                   album: item.album || '',
                   duration: item.duration || '',
                   thumbnail: item.thumbnail || item.artwork_url || '',
@@ -3024,9 +3102,12 @@
       if (!('mediaSession' in navigator)) return;
       try {
         const coverArt = thumb || window.location.origin + '/static/logo.png';
+        const cleanArt = (!artist || artist.trim().toLowerCase() === 'unknown' || artist.trim().toLowerCase() === 'unknown artist')
+          ? (extractArtistFromTitle(title) || 'Melodyxx Artist')
+          : artist;
         navigator.mediaSession.metadata = new MediaMetadata({
           title: title || 'Melodyxx Audio',
-          artist: artist || 'Melodyxx Artist',
+          artist: cleanArt,
           album: 'Melodyxx YouTube Audio Stream',
           artwork: [
             { src: coverArt, sizes: '96x96', type: 'image/jpeg' },
@@ -3279,7 +3360,10 @@
       syncFooterHeight();
       $miniTitle.textContent = title || '—';
       $miniTitle.title = title || '';
-      $miniArtist.textContent = artist || '';
+      const cleanArt = (!artist || artist.trim().toLowerCase() === 'unknown' || artist.trim().toLowerCase() === 'unknown artist')
+        ? (extractArtistFromTitle(title) || '')
+        : artist;
+      $miniArtist.textContent = cleanArt;
       $miniThumb.src = thumb || '/static/logo.png';
       $miniThumb.onerror = () => { $miniThumb.src = '/static/logo.png'; };
       $miniSeek.value = 0;
@@ -3577,7 +3661,10 @@
 
         if (!track || !track.title) {
           const title = $miniTitle ? $miniTitle.textContent.trim() : '';
-          const artist = $miniArtist ? $miniArtist.textContent.trim() : '';
+          let artist = $miniArtist ? $miniArtist.textContent.trim() : '';
+          if (!artist || artist.toLowerCase() === 'unknown' || artist.toLowerCase() === 'unknown artist') {
+            artist = extractArtistFromTitle(title) || 'Unknown Artist';
+          }
           const thumb = $miniThumb ? $miniThumb.src : '';
           const duration = $miniDuration ? $miniDuration.textContent.trim() : '';
           if (title && title !== '—') {
@@ -4855,7 +4942,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.24.0';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.24.1';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5139,7 +5226,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.24.0');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.24.1');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
