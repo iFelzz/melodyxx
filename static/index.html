@@ -145,7 +145,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.20.11" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.21.0" />
 </head>
 
 <body>
@@ -330,10 +330,13 @@
           <div class="results-grid" id="results-grid" role="list">
             <!-- Cards injected here -->
           </div>
-          <div class="pagination" id="pagination-controls" style="display: none;">
-            <button class="pagination-btn" id="btn-prev">Previous</button>
+          <div class="pagination" id="pagination-controls" style="display: none;" aria-label="Pagination Navigation">
+            <button type="button" class="pagination-btn" id="btn-first" title="First Page" aria-label="First page">&laquo; First</button>
+            <button type="button" class="pagination-btn" id="btn-prev" title="Previous Page" aria-label="Previous page">Previous</button>
+            <div class="pagination-pages" id="pagination-pages" role="navigation" aria-label="Page selection"></div>
             <div class="pagination-info">Page <span id="page-current">1</span> of <span id="page-total">1</span></div>
-            <button class="pagination-btn" id="btn-next">Next</button>
+            <button type="button" class="pagination-btn" id="btn-next" title="Next Page" aria-label="Next page">Next &rarr;</button>
+            <button type="button" class="pagination-btn" id="btn-last" title="Last Page" aria-label="Last page">Last &raquo;</button>
           </div>
         </section>
 
@@ -1216,7 +1219,7 @@
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.20.11" defer></script>
+  <script src="/static/js/app.js?v=1.21.0" defer></script>
 </body>
 
 </html>

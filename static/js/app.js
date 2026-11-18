@@ -20,8 +20,11 @@
     // Pagination elements
     const $limitSelect = document.getElementById('limit-select');
     const $paginationControls = document.getElementById('pagination-controls');
+    const $btnFirst = document.getElementById('btn-first');
     const $btnPrev = document.getElementById('btn-prev');
     const $btnNext = document.getElementById('btn-next');
+    const $btnLast = document.getElementById('btn-last');
+    const $paginationPages = document.getElementById('pagination-pages');
     const $pageCurrent = document.getElementById('page-current');
     const $pageTotal = document.getElementById('page-total');
     const $globalQualityGlider = document.getElementById('global-quality-glider');
@@ -633,6 +636,40 @@
 
     // ── Pagination Logic ─────────────────────────────────────
 
+    function getPaginationRange(current, total) {
+      if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1);
+      }
+      const pages = [];
+      pages.push(1);
+
+      let start = Math.max(2, current - 1);
+      let end = Math.min(total - 1, current + 1);
+
+      if (current <= 3) {
+        start = 2;
+        end = 4;
+      } else if (current >= total - 2) {
+        start = total - 3;
+        end = total - 1;
+      }
+
+      if (start > 2) {
+        pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < total - 1) {
+        pages.push('...');
+      }
+
+      pages.push(total);
+      return pages;
+    }
+
     function renderPage() {
       const totalPages = Math.ceil(allSearchResults.length / itemsPerPage) || 1;
 
@@ -648,8 +685,11 @@
 
       // Update pagination UI
       $pageCurrent.textContent = currentPage;
-      $pageTotal.textContent = hasMoreSearchResults ? `${totalPages}+` : totalPages;
-      $btnPrev.disabled = currentPage === 1;
+      $pageTotal.textContent = totalPages;
+
+      if ($btnFirst) $btnFirst.disabled = currentPage === 1;
+      if ($btnPrev) $btnPrev.disabled = currentPage === 1;
+      if ($btnLast) $btnLast.disabled = currentPage === totalPages;
 
       if (currentPage < totalPages) {
         $btnNext.disabled = false;
@@ -663,6 +703,50 @@
         $btnNext.disabled = true;
         $btnNext.innerHTML = 'Next &rarr;';
         $btnNext.title = '';
+      }
+
+      // Render smart numeric page jump buttons
+      if ($paginationPages) {
+        const pages = getPaginationRange(currentPage, totalPages);
+        $paginationPages.innerHTML = pages.map(p => {
+          if (p === '...') {
+            return `<span class="page-num ellipsis" aria-hidden="true">&hellip;</span>`;
+          }
+          const isActive = p === currentPage;
+          return `<button type="button" class="page-num ${isActive ? 'active' : ''}" data-page="${p}" aria-label="Page ${p}" ${isActive ? 'aria-current="page"' : ''}>${p}</button>`;
+        }).join('');
+
+        $paginationPages.querySelectorAll('.page-num[data-page]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const targetPage = parseInt(btn.dataset.page, 10);
+            if (!isNaN(targetPage) && targetPage !== currentPage) {
+              currentPage = targetPage;
+              renderPage();
+              const $resultsCount = document.getElementById('results-count');
+              if ($resultsCount) {
+                $resultsCount.scrollIntoView({ behavior: 'smooth' });
+              }
+            }
+          });
+        });
+      }
+
+      // Allow clicking on current page label to jump directly
+      if ($pageCurrent) {
+        $pageCurrent.style.cursor = 'pointer';
+        $pageCurrent.title = 'Click to jump directly to any page';
+        $pageCurrent.onclick = () => {
+          const input = prompt(`Jump directly to page (1 - ${totalPages}):`, currentPage);
+          if (input !== null) {
+            const p = parseInt(input, 10);
+            if (!isNaN(p) && p >= 1 && p <= totalPages && p !== currentPage) {
+              currentPage = p;
+              renderPage();
+              const $resultsCount = document.getElementById('results-count');
+              if ($resultsCount) $resultsCount.scrollIntoView({ behavior: 'smooth' });
+            }
+          }
+        };
       }
 
       $paginationControls.style.display = (allSearchResults.length > itemsPerPage || hasMoreSearchResults) ? 'flex' : 'none';
@@ -777,7 +861,7 @@
           if (filteredNewItems.length > 0) {
             allSearchResults = allSearchResults.concat(filteredNewItems);
             currentPage++;
-            $count.textContent = hasMoreSearchResults ? `${allSearchResults.length}+ results` : `${allSearchResults.length} results`;
+            $count.textContent = `${allSearchResults.length} results`;
             toast('success', `Loaded ${filteredNewItems.length} more songs.`);
           } else if (!hasMoreSearchResults) {
             toast('info', 'No more new search results found.');
@@ -798,6 +882,19 @@
           $resultsCount.scrollIntoView({ behavior: 'smooth' });
         }
       }
+    }
+
+    if ($btnFirst) {
+      $btnFirst.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage = 1;
+          renderPage();
+          const $resultsCount = document.getElementById('results-count');
+          if ($resultsCount) {
+            $resultsCount.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
     }
 
     $btnPrev.addEventListener('click', () => {
@@ -824,6 +921,20 @@
         await loadMoreSearchResults();
       }
     });
+
+    if ($btnLast) {
+      $btnLast.addEventListener('click', () => {
+        const totalPages = Math.ceil(allSearchResults.length / itemsPerPage);
+        if (currentPage < totalPages) {
+          currentPage = totalPages;
+          renderPage();
+          const $resultsCount = document.getElementById('results-count');
+          if ($resultsCount) {
+            $resultsCount.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+    }
 
     $limitSelect.addEventListener('change', (e) => {
       itemsPerPage = parseInt(e.target.value, 10);
@@ -1097,7 +1208,7 @@
         const isUrl = q.trim().startsWith('http://') || q.trim().startsWith('https://');
         hasMoreSearchResults = !isUrl && Boolean(data.has_more !== false && allSearchResults.length >= 50);
 
-        $count.textContent = hasMoreSearchResults ? `${allSearchResults.length}+ results` : `${allSearchResults.length} results`;
+        $count.textContent = `${allSearchResults.length} results`;
         showState('results');
 
         currentPage = 1;
@@ -4500,7 +4611,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.11';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.21.0';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4784,7 +4895,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.11');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.21.0');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

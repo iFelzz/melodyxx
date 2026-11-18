@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.21.0",
+    "date": "2026-11-18",
+    "type": "feature",
+    "title": "Direct Page Jump Navigation & Clean Count Formatting",
+    "highlights": [
+      "Numeric Page Jump Buttons: Added interactive, glowing violet numeric pagination buttons ([1], [2], [3]...) with smart ellipsis for larger page counts so users can jump directly to any page in one click.",
+      "First & Last Navigation: Added dedicated '« First' and 'Last »' buttons to quickly jump from deep pages (e.g. Page 6) directly back to Page 1 or to the latest loaded page.",
+      "Direct Prompt Jump: Enabled clicking on the current page indicator ('Page X of Y') to type and jump straight to any specific page number.",
+      "Clean Count Formatting: Removed all trailing plus signs ('+') from result counters and page totals for a cleaner, unified presentation."
+    ]
+  },
+  {
     "version": "v1.20.11",
     "date": "2026-11-18",
     "type": "fix",
