@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.7",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Instant Buffering State on Track Transition & Next/Prev Controls",
+    "highlights": [
+      "Instantaneous Buffering Feedback: Guaranteed that 'Buffering…' and the rotating neon spinner activate immediately upon clicking Next, Previous, or selecting an adjacent track.",
+      "Pause Event Guard during Track Switching: Prevented the internal audio pause event (triggered when silencing the previous stream) from prematurely wiping out the buffering spinner or resetting the active card to 'Resume'.",
+      "Synchronized Initial Mini-Player Display: Passed known track duration and preserved loading indicators during initial mini player render on track switch."
+    ]
+  },
+  {
     "version": "v1.20.6",
     "date": "2026-11-18",
     "type": "fix",

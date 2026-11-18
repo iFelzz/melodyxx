@@ -387,33 +387,51 @@
       // 1. Sync floating mini player icon & state
       if ($miniPlayer) {
         $miniPlayer.classList.toggle('playing', !!isPlaying);
+        if (isMiniLoading) {
+          $miniPlayer.classList.add('loading');
+        }
       }
       if (!isMiniLoading) {
         setMiniIcon(!isPlaying);
+      } else {
+        if ($miniPlayIcon) {
+          $miniPlayIcon.classList.add('mini-spin-anim');
+          $miniPlayIcon.innerHTML = MINI_ICON_SPIN;
+        }
+        if ($miniCurrent) $miniCurrent.textContent = 'Buffering…';
       }
 
       // 2. Sync all cards (both Search results in $grid and Favorites in $favoritesList)
       document.querySelectorAll('.card').forEach(card => {
         const isThis = activeId ? isTrackMatching(card, activeId) : false;
 
-        card.classList.toggle('is-playing', isThis && !!isPlaying);
-        card.classList.toggle('is-paused', isThis && !isPlaying);
+        card.classList.toggle('is-playing', isThis && !!isPlaying && !isMiniLoading);
+        card.classList.toggle('is-paused', isThis && !isPlaying && !isMiniLoading);
 
         const playBtn = card.querySelector('.btn-card-play, .btn-fav-play');
         if (playBtn) {
-          playBtn.classList.remove('loading');
-          playBtn.classList.toggle('playing', isThis && !!isPlaying);
-          playBtn.classList.toggle('paused', isThis && !isPlaying);
-
-          const iconSpan = playBtn.querySelector('.btn-play-icon');
-          const textSpan = playBtn.querySelector('.btn-play-label');
-
-          if (isThis) {
-            if (iconSpan) iconSpan.innerHTML = isPlaying ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
-            if (textSpan) textSpan.textContent = isPlaying ? 'Pause' : 'Resume';
+          if (isThis && isMiniLoading) {
+            playBtn.classList.add('loading');
+            playBtn.classList.remove('playing', 'paused');
+            const iconSpan = playBtn.querySelector('.btn-play-icon');
+            const textSpan = playBtn.querySelector('.btn-play-label');
+            if (iconSpan) iconSpan.innerHTML = CARD_ICON_SPIN;
+            if (textSpan) textSpan.textContent = 'Buffering…';
           } else {
-            if (iconSpan) iconSpan.innerHTML = CARD_ICON_PLAY;
-            if (textSpan) textSpan.textContent = 'Play';
+            playBtn.classList.remove('loading');
+            playBtn.classList.toggle('playing', isThis && !!isPlaying);
+            playBtn.classList.toggle('paused', isThis && !isPlaying);
+
+            const iconSpan = playBtn.querySelector('.btn-play-icon');
+            const textSpan = playBtn.querySelector('.btn-play-label');
+
+            if (isThis) {
+              if (iconSpan) iconSpan.innerHTML = isPlaying ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
+              if (textSpan) textSpan.textContent = isPlaying ? 'Pause' : 'Resume';
+            } else {
+              if (iconSpan) iconSpan.innerHTML = CARD_ICON_PLAY;
+              if (textSpan) textSpan.textContent = 'Play';
+            }
           }
         }
       });
@@ -1771,13 +1789,17 @@
       if (!track) return;
       currentPlayingTrackId = String(track.id || track.url || track.preview_url || '').trim();
 
+      // Immediately engage buffering state & track switching lock
+      isTrackSwitching = true;
+      setMiniLoading(true, 'Buffering…');
+
       // Immediately silence previous stream to eliminate audio dissonance
       try {
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
       } catch (_) {}
 
-      // Update card active loading style in favorites list
+      // Update card active loading style in favorites list immediately
       if ($favoritesList) {
         $favoritesList.querySelectorAll('.card').forEach(c => {
           const isThis = isTrackMatching(c, currentPlayingTrackId);
@@ -1785,9 +1807,8 @@
           c.classList.remove('is-paused');
           const pBtn = c.querySelector('.btn-fav-play');
           if (pBtn) {
-            pBtn.classList.toggle('playing', isThis);
+            pBtn.classList.remove('playing', 'paused');
             pBtn.classList.toggle('loading', isThis);
-            pBtn.classList.remove('paused');
             const pIcon = pBtn.querySelector('.btn-play-icon');
             const pLabel = pBtn.querySelector('.btn-play-label');
             if (pIcon) pIcon.innerHTML = isThis ? CARD_ICON_SPIN : CARD_ICON_PLAY;
@@ -1796,9 +1817,8 @@
         });
       }
 
-      showMiniPlayer(track.title, track.artist, track.thumbnail || '/static/logo.png');
+      showMiniPlayer(track.title, track.artist, track.thumbnail || '/static/logo.png', track.duration || '');
       updateMediaSessionMetadata(track.title, track.artist, track.thumbnail || '/static/logo.png');
-      setMiniLoading(true, 'Buffering…');
 
       // Resolve full audio stream (prioritize direct YouTube URL, fallback to "Artist - Title" search query)
       const targetQueryOrUrl = (track.url || '').trim() || `${track.artist} - ${track.title}`;
@@ -1827,8 +1847,11 @@
           }
 
           audioPlayer.src = data.stream_url;
-          audioPlayer.play().catch(e => {
+          audioPlayer.play().then(() => {
+            isTrackSwitching = false;
+          }).catch(e => {
             console.warn('Autoplay prevented:', e);
+            isTrackSwitching = false;
             setMiniLoading(false);
           });
         })
@@ -1837,14 +1860,18 @@
           // Fallback to 30s preview snippet only if full YouTube stream fails
           if (track.preview_url && currentPlayingTrackId === targetTrackId) {
             audioPlayer.src = track.preview_url;
-            audioPlayer.play().catch(e => {
+            audioPlayer.play().then(() => {
+              isTrackSwitching = false;
+            }).catch(e => {
               console.warn('Fallback preview play prevented:', e);
+              isTrackSwitching = false;
               setMiniLoading(false);
             });
             toast('info', `Full track streaming unavailable; playing preview snippet.`);
             return;
           }
 
+          isTrackSwitching = false;
           setMiniLoading(false);
           toast('warning', `Could not play "${track.title}". Auto-skipping to next...`);
           setTimeout(() => {
@@ -2692,7 +2719,7 @@
     ambientGlowVisualizer.init();
     initMediaSession();
 
-    function showMiniPlayer(title, artist, thumb) {
+    function showMiniPlayer(title, artist, thumb, duration = '') {
       syncFooterHeight();
       $miniTitle.textContent = title || '—';
       $miniTitle.title = title || '';
@@ -2701,12 +2728,21 @@
       $miniThumb.onerror = () => { $miniThumb.src = '/static/logo.png'; };
       $miniSeek.value = 0;
       $miniSeek.style.background = 'rgba(255, 255, 255, 0.12)';
-      if (!isMiniLoading) {
+      if (isMiniLoading) {
+        $miniCurrent.textContent = 'Buffering…';
+        if ($miniPlayIcon) {
+          $miniPlayIcon.classList.add('mini-spin-anim');
+          $miniPlayIcon.innerHTML = MINI_ICON_SPIN;
+        }
+      } else {
         $miniCurrent.textContent = '0:00';
         setMiniIcon(audioPlayer.paused);
       }
-      $miniDuration.textContent = '0:00';
+      $miniDuration.textContent = duration || '0:00';
       $miniPlayer.classList.add('show');
+      if (isMiniLoading) {
+        $miniPlayer.classList.add('loading');
+      }
       document.body.classList.add('player-open');
 
       updateMediaSessionMetadata(title, artist, thumb);
@@ -2817,11 +2853,14 @@
     });
 
     audioPlayer.addEventListener('error', (e) => {
+      isTrackSwitching = false;
       setMiniLoading(false);
+      syncAllPlaybackButtons(false);
       console.error('Audio playback error:', e);
     });
 
     audioPlayer.addEventListener('playing', () => {
+      isTrackSwitching = false;
       setMiniLoading(false);
       syncAllPlaybackButtons(true);
       ambientGlowVisualizer.start();
@@ -2857,6 +2896,10 @@
     });
 
     audioPlayer.addEventListener('pause', () => {
+      // If we are currently switching/buffering a track, ignore this pause event
+      // because it was caused by stopping the previous audio stream.
+      if (isMiniLoading || isTrackSwitching) return;
+
       setMiniLoading(false);
       syncAllPlaybackButtons(false);
       ambientGlowVisualizer.stop();
@@ -4182,7 +4225,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.6';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.7';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4466,7 +4509,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.6');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.7');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
