@@ -384,20 +384,36 @@
       const trackId = String(el.dataset.trackId || el.dataset.id || '').trim().toLowerCase();
       const url = String(el.dataset.url || '').trim().toLowerCase();
       const preview = String(el.dataset.preview || '').trim().toLowerCase();
-      return (trackId && trackId === t) || (url && url === t) || (preview && preview === t);
+      if ((trackId && trackId === t) || (url && url === t) || (preview && preview === t)) {
+        return true;
+      }
+      // If el is a card or container, inspect its children buttons or attributes
+      const child = el.querySelector ? el.querySelector('.btn-card-play, .btn-fav-play, .btn-track-play, [data-url], [data-track-id], [data-id]') : null;
+      if (child) {
+        const cTrackId = String(child.dataset.trackId || child.dataset.id || '').trim().toLowerCase();
+        const cUrl = String(child.dataset.url || '').trim().toLowerCase();
+        const cPreview = String(child.dataset.preview || '').trim().toLowerCase();
+        if ((cTrackId && cTrackId === t) || (cUrl && cUrl === t) || (cPreview && cPreview === t)) {
+          return true;
+        }
+      }
+      return false;
     }
 
     function syncAllPlaybackButtons(isPlaying) {
       const activeId = currentPlayingTrackId ? String(currentPlayingTrackId).trim() : '';
+      const isBuffering = isMiniLoading || isTrackSwitching;
 
       // 1. Sync floating mini player icon & state
       if ($miniPlayer) {
-        $miniPlayer.classList.toggle('playing', !!isPlaying);
-        if (isMiniLoading) {
+        $miniPlayer.classList.toggle('playing', !!isPlaying || isBuffering);
+        if (isBuffering) {
           $miniPlayer.classList.add('loading');
+        } else {
+          $miniPlayer.classList.remove('loading');
         }
       }
-      if (!isMiniLoading) {
+      if (!isBuffering) {
         setMiniIcon(!isPlaying);
       } else {
         if ($miniPlayIcon) {
@@ -411,12 +427,12 @@
       document.querySelectorAll('.card').forEach(card => {
         const isThis = activeId ? isTrackMatching(card, activeId) : false;
 
-        card.classList.toggle('is-playing', isThis && !!isPlaying && !isMiniLoading);
-        card.classList.toggle('is-paused', isThis && !isPlaying && !isMiniLoading);
+        card.classList.toggle('is-playing', isThis && (!!isPlaying || isBuffering));
+        card.classList.toggle('is-paused', isThis && !isPlaying && !isBuffering);
 
         const playBtn = card.querySelector('.btn-card-play, .btn-fav-play');
         if (playBtn) {
-          if (isThis && isMiniLoading && isTrackSwitching) {
+          if (isThis && isBuffering) {
             playBtn.classList.add('loading');
             playBtn.classList.remove('playing', 'paused');
             const iconSpan = playBtn.querySelector('.btn-play-icon');
@@ -445,9 +461,15 @@
       // 3. Sync Discography track rows
       document.querySelectorAll('.btn-track-play').forEach(btn => {
         const isThis = activeId ? isTrackMatching(btn, activeId) : false;
-        btn.classList.remove('loading');
-        btn.classList.toggle('playing', isThis && !!isPlaying);
-        btn.innerHTML = (isThis && !!isPlaying) ? TRACK_ICON_PAUSE : TRACK_ICON_PLAY;
+        if (isThis && isBuffering) {
+          btn.classList.add('loading');
+          btn.classList.remove('playing');
+          btn.innerHTML = TRACK_ICON_SPIN;
+        } else {
+          btn.classList.remove('loading');
+          btn.classList.toggle('playing', isThis && !!isPlaying);
+          btn.innerHTML = (isThis && !!isPlaying) ? TRACK_ICON_PAUSE : TRACK_ICON_PLAY;
+        }
       });
     }
 
@@ -471,7 +493,7 @@
       const playBtnId = `btn-play-${index}`;
 
       return `
-    <article class="card" id="${cardId}" role="listitem" aria-label="${esc(item.title)}">
+    <article class="card" id="${cardId}" data-url="${esc(item.url)}" data-id="${esc(item.id)}" role="listitem" aria-label="${esc(item.title)}">
       <div class="card-thumb-wrap">
         <img
           class="card-thumb"
@@ -555,6 +577,10 @@
       activeSearchTrackIndex = index;
       currentPlayingTrackId = String(item.url || item.id || '').trim();
 
+      // Engage buffering lock immediately before pausing audio
+      isTrackSwitching = true;
+      setMiniLoading(true, 'Buffering…');
+
       // Immediately silence previous stream
       try {
         audioPlayer.pause();
@@ -568,17 +594,13 @@
         renderPage();
       }
 
-      resetCurrentPlayingBtn();
-
       const btn = document.getElementById(`btn-play-${index}`);
       if (btn) {
-        btn.classList.add('loading');
-        const iconSpan = btn.querySelector('.btn-play-icon');
-        const textSpan = btn.querySelector('.btn-play-label');
-        if (iconSpan) iconSpan.innerHTML = CARD_ICON_SPIN;
-        if (textSpan) textSpan.textContent = 'Buffering…';
         currentPlayingBtn = btn;
       }
+
+      // Sync playback buttons so active card and mini player reflect loading state immediately
+      syncAllPlaybackButtons(false);
 
       showMiniPlayer(item.title, item.channel || item.artist, item.thumbnail);
       setMiniLoading(true, 'Buffering…');
@@ -596,28 +618,14 @@
         audioPlayer.src = data.stream_url;
         await audioPlayer.play();
 
-        if (btn) {
-          btn.classList.remove('loading');
-          btn.classList.add('playing');
-          const iconSpan = btn.querySelector('.btn-play-icon');
-          const textSpan = btn.querySelector('.btn-play-label');
-          if (iconSpan) iconSpan.innerHTML = CARD_ICON_PAUSE;
-          if (textSpan) textSpan.textContent = 'Pause';
-          const card = btn.closest('.card');
-          if (card) card.classList.add('is-playing');
-        }
+        isTrackSwitching = false;
+        setMiniLoading(false);
+        syncAllPlaybackButtons(true);
       } catch (err) {
         console.error('[Search Playback Error]', err);
+        isTrackSwitching = false;
         setMiniLoading(false);
-        if (btn) {
-          btn.classList.remove('loading', 'playing');
-          const iconSpan = btn.querySelector('.btn-play-icon');
-          const textSpan = btn.querySelector('.btn-play-label');
-          if (iconSpan) iconSpan.innerHTML = CARD_ICON_PLAY;
-          if (textSpan) textSpan.textContent = 'Play';
-          const card = btn.closest('.card');
-          if (card) card.classList.remove('is-playing', 'is-paused');
-        }
+        syncAllPlaybackButtons(false);
         currentPlayingBtn = null;
         toast('error', 'Preview unavailable for this video.');
       }
@@ -675,6 +683,27 @@
             }
             return;
           }
+
+          // INSTANT ZERO-LATENCY VISUAL FEEDBACK ON CLICK:
+          isTrackSwitching = true;
+          isMiniLoading = true;
+          currentPlayingTrackId = trackUrl;
+          currentPlayingBtn = btn;
+
+          btn.classList.remove('paused', 'playing');
+          btn.classList.add('loading');
+          const iconSpan = btn.querySelector('.btn-play-icon');
+          const textSpan = btn.querySelector('.btn-play-label');
+          if (iconSpan) iconSpan.innerHTML = CARD_ICON_SPIN;
+          if (textSpan) textSpan.textContent = 'Buffering…';
+          const card = btn.closest('.card');
+          if (card) {
+            card.classList.add('is-playing');
+            card.classList.remove('is-paused');
+          }
+
+          showMiniPlayer(btn.dataset.title, btn.dataset.artist, btn.dataset.thumb);
+          setMiniLoading(true, 'Buffering…');
 
           const index = allSearchResults.findIndex(item => item.url === trackUrl || item.id === trackUrl);
           const item = index >= 0 ? allSearchResults[index] : {
@@ -1732,6 +1761,21 @@
             return;
           }
 
+          // Lock track switching & buffering immediately before silencing previous stream
+          isTrackSwitching = true;
+          isMiniLoading = true;
+          activePlaybackSource = 'artist';
+          isFavoritesAutoplay = false;
+
+          // Immediately give loading feedback on button & player
+          btn.innerHTML = TRACK_ICON_SPIN;
+          btn.classList.add('loading');
+          currentPlayingBtn = btn;
+          currentPlayingTrackId = String(btn.dataset.preview || btn.dataset.id || '').trim();
+
+          showMiniPlayer(btn.dataset.title, btn.dataset.artist, btn.dataset.art);
+          setMiniLoading(true, 'Buffering…');
+
           // Immediately silence previous stream
           try {
             audioPlayer.pause();
@@ -1740,16 +1784,6 @@
 
           // Different button clicked: reset previous active button icon back to PLAY
           resetCurrentPlayingBtn();
-
-          activePlaybackSource = 'artist';
-          isFavoritesAutoplay = false;
-
-          // Immediately give loading feedback!
-          btn.innerHTML = TRACK_ICON_SPIN;
-          btn.classList.add('loading');
-          currentPlayingBtn = btn;
-          showMiniPlayer(btn.dataset.title, btn.dataset.artist, btn.dataset.art);
-          setMiniLoading(true, 'Buffering…');
 
           try {
             audioPlayer.src = prevUrl;
@@ -2129,7 +2163,9 @@
             const item = filtered[idx];
             if (!item) return;
 
-            if (currentPlayingTrackId && isTrackMatching(btn, currentPlayingTrackId)) {
+            const trackId = String(item.url || item.id || item.preview_url || '').trim();
+
+            if (currentPlayingTrackId && isTrackMatching(btn, currentPlayingTrackId) && activePlaybackSource === 'favorites') {
               if (audioPlayer.paused) {
                 audioPlayer.play();
               } else {
@@ -2137,6 +2173,27 @@
               }
               return;
             }
+
+            // INSTANT ZERO-LATENCY VISUAL FEEDBACK:
+            isTrackSwitching = true;
+            isMiniLoading = true;
+            currentPlayingTrackId = trackId;
+            currentPlayingBtn = btn;
+
+            btn.classList.remove('paused', 'playing');
+            btn.classList.add('loading');
+            const iconSpan = btn.querySelector('.btn-play-icon');
+            const textSpan = btn.querySelector('.btn-play-label');
+            if (iconSpan) iconSpan.innerHTML = CARD_ICON_SPIN;
+            if (textSpan) textSpan.textContent = 'Buffering…';
+            const card = btn.closest('.card');
+            if (card) {
+              card.classList.add('is-playing');
+              card.classList.remove('is-paused');
+            }
+
+            showMiniPlayer(item.title, item.artist, item.thumbnail || '/static/logo.png', item.duration || '');
+            setMiniLoading(true, 'Buffering…');
 
             favoritesQueue = [...filtered];
             playFavoriteQueueTrack(idx);
@@ -4443,7 +4500,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.10';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.11';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4727,7 +4784,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.10');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.11');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

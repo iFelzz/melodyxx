@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.11",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Instantaneous Zero-Latency Loading & Buffering Feedback on Play Click",
+    "highlights": [
+      "Zero-Latency Click Feedback: Applied synchronous, immediate UI transformation ('Buffering…' and rotating neon spinner) on the clicked card button in the exact same event loop frame before any asynchronous network calls or pauses take place.",
+      "Pause Event Guard: Pre-locked track switching state before pausing the previous audio stream, preventing native browser pause events from prematurely clearing the buffering animation or resetting the card back to 'Play'.",
+      "Card Dataset Matching: Enriched parent article cards with dataset attributes and upgraded isTrackMatching to inspect both card containers and child buttons so active loading states remain unshakeable across all tabs."
+    ]
+  },
+  {
     "version": "v1.20.10",
     "date": "2026-11-18",
     "type": "fix",
