@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.22.2",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Fix Infinite Search Pagination Next Button Deadlock on Page 5",
+    "highlights": [
+      "Candidate-Aware Has More Evaluation: Fixed has_more evaluation in /api/search to evaluate candidates before channel/playlist filtering so queries returning 48–49 filtered songs are never falsely flagged as exhausted.",
+      "Resilient Next Button Logic: Fixed frontend hasMoreSearchResults thresholds from strict 50 items to realistic batch sizes (>= 10), ensuring Next button remains enabled and clickable at the end of loaded pages.",
+      "Infinite Query Continuation: Clicking Next on the last loaded page (e.g. Page 5) smoothly triggers on-demand background search for the next offset (e.g. Page 6, items 51–100) and advances page seamlessly.",
+      "Smart Multi-Batch Direct Jump: Upgraded page number prompt jump to automatically fetch subsequent batches if user requests a page beyond current local cache."
+    ]
+  },
+  {
     "version": "v1.22.1",
     "date": "2026-11-18",
     "type": "fix",

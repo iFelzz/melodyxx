@@ -1067,7 +1067,7 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
         if cached:
             return JSONResponse(content={
                 "results": cached,
-                "has_more": len(cached) == limit,
+                "has_more": len(cached) >= 10,
                 "offset": offset,
                 "limit": limit
             })
@@ -1117,12 +1117,15 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
                 "views":     entry.get("view_count", 0),
             })
 
+        # For non-URL search queries, more results exist if yt-dlp extracted candidate entries
+        has_more = not is_url and len(entries) >= 15 and len(results) > 0
+
         if not is_url:
             _search_cache.set(cache_key, results)
 
         return JSONResponse(content={
             "results": results,
-            "has_more": len(results) == limit,
+            "has_more": has_more,
             "offset": offset,
             "limit": limit
         })

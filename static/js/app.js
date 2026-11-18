@@ -779,15 +779,27 @@
       if ($pageCurrent) {
         $pageCurrent.style.cursor = 'pointer';
         $pageCurrent.title = 'Click to jump directly to any page';
-        $pageCurrent.onclick = () => {
-          const input = prompt(`Jump directly to page (1 - ${totalPages}):`, currentPage);
+        $pageCurrent.onclick = async () => {
+          const promptLabel = hasMoreSearchResults ? `${totalPages}+` : totalPages;
+          const input = prompt(`Jump directly to page (1 - ${promptLabel}):`, currentPage);
           if (input !== null) {
             const p = parseInt(input, 10);
-            if (!isNaN(p) && p >= 1 && p <= totalPages && p !== currentPage) {
-              currentPage = p;
-              renderPage();
-              const $resultsCount = document.getElementById('results-count');
-              if ($resultsCount) $resultsCount.scrollIntoView({ behavior: 'smooth' });
+            if (!isNaN(p) && p >= 1 && p !== currentPage) {
+              if (p <= totalPages) {
+                currentPage = p;
+                renderPage();
+                const $resultsCount = document.getElementById('results-count');
+                if ($resultsCount) $resultsCount.scrollIntoView({ behavior: 'smooth' });
+              } else if (hasMoreSearchResults && !isLoadingMoreResults) {
+                while (p > Math.ceil(allSearchResults.length / itemsPerPage) && hasMoreSearchResults && !isLoadingMoreResults) {
+                  await loadMoreSearchResults();
+                }
+                const newTotal = Math.ceil(allSearchResults.length / itemsPerPage);
+                currentPage = Math.min(p, newTotal);
+                renderPage();
+                const $resultsCount = document.getElementById('results-count');
+                if ($resultsCount) $resultsCount.scrollIntoView({ behavior: 'smooth' });
+              }
             }
           }
         };
@@ -900,7 +912,7 @@
           });
 
           currentSearchOffset += newItems.length;
-          hasMoreSearchResults = Boolean(data.has_more && newItems.length >= 50);
+          hasMoreSearchResults = Boolean(data.has_more !== false && newItems.length >= 10);
 
           if (filteredNewItems.length > 0) {
             allSearchResults = allSearchResults.concat(filteredNewItems);
@@ -1250,7 +1262,7 @@
 
         currentSearchOffset = allSearchResults.length;
         const isUrl = q.trim().startsWith('http://') || q.trim().startsWith('https://');
-        hasMoreSearchResults = !isUrl && Boolean(data.has_more !== false && allSearchResults.length >= 50);
+        hasMoreSearchResults = !isUrl && (data.has_more === true || (data.has_more !== false && allSearchResults.length >= 10));
 
         $count.textContent = `${allSearchResults.length} results`;
         showState('results');
@@ -4750,7 +4762,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.1';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.2';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5034,7 +5046,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.1');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.22.2');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
