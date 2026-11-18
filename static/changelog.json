@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.20.8",
+    "date": "2026-11-18",
+    "type": "fix",
+    "title": "Preserve Card Pause Button & Playback State during Seekbar Scrubbing",
+    "highlights": [
+      "Seek State Isolation: Prevented native browser seek stalls and pause events during seekbar scrub/click from prematurely wiping out the 'Pause' button or turning it into 'Resume'.",
+      "Seeked & Canplay Event Synchronization: Added active synchronization listeners to 'seeked' and 'canplay' to guarantee the active card immediately restores its playing state and animated equalizer.",
+      "Window Scrub Release Guard: Integrated window mouseup/touchend handlers to ensure seek locks release cleanly even when the cursor or finger is lifted outside the mini player seekbar."
+    ]
+  },
+  {
     "version": "v1.20.7",
     "date": "2026-11-18",
     "type": "fix",

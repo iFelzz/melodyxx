@@ -410,7 +410,7 @@
 
         const playBtn = card.querySelector('.btn-card-play, .btn-fav-play');
         if (playBtn) {
-          if (isThis && isMiniLoading) {
+          if (isThis && isMiniLoading && isTrackSwitching) {
             playBtn.classList.add('loading');
             playBtn.classList.remove('playing', 'paused');
             const iconSpan = playBtn.querySelector('.btn-play-icon');
@@ -2831,7 +2831,7 @@
 
     audioPlayer.addEventListener('waiting', () => {
       setMiniLoading(true, 'Buffering…');
-      if (currentPlayingBtn) {
+      if (isTrackSwitching && currentPlayingBtn) {
         currentPlayingBtn.classList.add('loading');
         if (currentPlayingBtn.classList.contains('btn-track-play')) {
           currentPlayingBtn.innerHTML = TRACK_ICON_SPIN;
@@ -2840,8 +2840,6 @@
           const textSpan = currentPlayingBtn.querySelector('.btn-play-label');
           if (iconSpan) iconSpan.innerHTML = CARD_ICON_SPIN;
           if (textSpan) textSpan.textContent = 'Buffering…';
-        } else {
-          currentPlayingBtn.innerHTML = ICON_SPIN;
         }
       }
     });
@@ -2849,7 +2847,18 @@
     audioPlayer.addEventListener('canplay', () => {
       if (!audioPlayer.paused) {
         setMiniLoading(false);
+        syncAllPlaybackButtons(true);
       }
+    });
+
+    audioPlayer.addEventListener('seeked', () => {
+      isSeeking = false;
+      setMiniLoading(false);
+      syncAllPlaybackButtons(!audioPlayer.paused);
+      if (!audioPlayer.paused) {
+        ambientGlowVisualizer.start();
+      }
+      updateMediaSessionPosition();
     });
 
     audioPlayer.addEventListener('error', (e) => {
@@ -2896,9 +2905,9 @@
     });
 
     audioPlayer.addEventListener('pause', () => {
-      // If we are currently switching/buffering a track, ignore this pause event
-      // because it was caused by stopping the previous audio stream.
-      if (isMiniLoading || isTrackSwitching) return;
+      // If we are currently switching/buffering a track or seeking, ignore this pause event
+      // because it was caused by stream repositioning or track initialization.
+      if (isMiniLoading || isTrackSwitching || isSeeking || audioPlayer.seeking) return;
 
       setMiniLoading(false);
       syncAllPlaybackButtons(false);
@@ -2948,7 +2957,23 @@
       if (isFinite(audioPlayer.duration)) {
         audioPlayer.currentTime = audioPlayer.duration * $miniSeek.value / 100;
       }
+      if (!audioPlayer.paused) {
+        syncAllPlaybackButtons(true);
+      }
     });
+
+    window.addEventListener('mouseup', () => {
+      if (isSeeking) {
+        isSeeking = false;
+        if (!audioPlayer.paused) syncAllPlaybackButtons(true);
+      }
+    });
+    window.addEventListener('touchend', () => {
+      if (isSeeking) {
+        isSeeking = false;
+        if (!audioPlayer.paused) syncAllPlaybackButtons(true);
+      }
+    }, { passive: true });
 
     // ── Mini player controls ──────────────────────────────────
 
@@ -4225,7 +4250,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.7';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.8';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -4509,7 +4534,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.7');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.20.8');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
