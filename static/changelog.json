@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.24.0",
+    "date": "2026-11-18",
+    "type": "feature",
+    "title": "Modern Two-Tier Floating Audio Player Deck",
+    "highlights": [
+      "Spotify-Style Two-Tier Balanced Deck: Redesigned the floating player island with centered playback transport controls (Play/Pause, Prev, Next) on the top tier and an expanded, comfortable seekbar scrubber on the bottom tier.",
+      "Integrated In-Info Favorite Button: Relocated the favorite star toggle directly adjacent to the track title and artist, eliminating awkward floating gaps and streamlining single-click favoriting.",
+      "Ergonomic Scrubbing Experience: Doubled the seekbar scrub width for effortless track navigation and accurate timestamp adjustments on both mouse and touch devices.",
+      "Multi-Resolution Responsive Stacking: Implemented fluid responsive layouts that gracefully adapt on desktop, tablet, and mobile displays without UI collision or viewport clipping."
+    ]
+  },
+  {
     "version": "v1.23.2",
     "date": "2026-11-18",
     "type": "fix",

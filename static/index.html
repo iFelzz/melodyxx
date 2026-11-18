@@ -150,7 +150,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.23.2" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.24.0" />
 </head>
 
 <body>
@@ -927,9 +927,9 @@
 
   <audio id="global-player" style="display: none;"></audio>
 
-  <!-- Mini Now Playing Floating Island Bar -->
+  <!-- Mini Now Playing Floating Island Bar (Two-Tier Spotify-Style Deck) -->
   <div id="mini-player" class="mini-player" role="region" aria-label="Now Playing">
-    <!-- Left: Song Info (Thumbnail & Title/Artist) -->
+    <!-- Left: Song Info (Thumbnail, Title/Artist, and Favorite Star) -->
     <div class="mini-left">
       <img id="mini-thumb" class="mini-thumb" src="" alt="Now playing thumbnail">
       <div class="mini-info">
@@ -946,17 +946,9 @@
       </button>
     </div>
 
-    <!-- Center: In-Card Seekbar & Times -->
+    <!-- Center: Two-Tier Transport Controls (Top) & Wide Seekbar (Bottom) -->
     <div class="mini-center">
-      <span class="mini-time-label" id="mini-current">0:00</span>
-      <div class="mini-seek-wrap">
-        <input type="range" id="mini-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek audio">
-      </div>
-      <span class="mini-time-label" id="mini-duration">0:00</span>
-    </div>
-
-    <!-- Right: Transport (Prev, Play/Pause, Next), Volume, and Close Controls -->
-    <div class="mini-right">
+      <!-- Tier 1: Centered Play/Pause & Prev/Next Transport Controls -->
       <div class="mini-transport-group">
         <button type="button" class="mini-btn transport" id="mini-prev" aria-label="Previous Track"
           title="Previous track">
@@ -981,7 +973,18 @@
         </button>
       </div>
 
-      <!-- Integrated In-Player Volume Control -->
+      <!-- Tier 2: In-Card Wide Seekbar & Timestamps -->
+      <div class="mini-progress-row">
+        <span class="mini-time-label" id="mini-current">0:00</span>
+        <div class="mini-seek-wrap">
+          <input type="range" id="mini-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek audio">
+        </div>
+        <span class="mini-time-label" id="mini-duration">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right: Integrated Volume & Close Controls -->
+    <div class="mini-right">
       <div id="volume-control" class="mini-volume" title="Volume">
         <button type="button" class="mini-volume-btn" id="mini-mute-btn" aria-label="Mute / Unmute"
           title="Mute / Unmute">
@@ -1498,7 +1501,7 @@
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.23.2" defer></script>
+  <script src="/static/js/app.js?v=1.24.0" defer></script>
 </body>
 
 </html>
