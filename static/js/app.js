@@ -1,5 +1,8 @@
     'use strict';
 
+    // ── i18n Translation Helper ───────────────────────────────
+    const t = (key, params) => (window.i18n ? window.i18n.t(key, params) : (window.t ? window.t(key, params) : key));
+
     // ── DOM refs ──────────────────────────────────────────────
     const $form = document.getElementById('search-form');
     const $input = document.getElementById('search-input');
@@ -383,9 +386,9 @@
     /** Format view count to human-readable string */
     function formatViews(n) {
       if (!n || n === 0) return '';
-      if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M views`;
-      if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K views`;
-      return `${n} views`;
+      if (n >= 1_000_000) return t('views_million', { count: (n / 1_000_000).toFixed(1) });
+      if (n >= 1_000) return t('views_thousand', { count: (n / 1_000).toFixed(0) });
+      return t('views_count', { count: n });
     }
 
     let qualityGliderInit = false;
@@ -623,11 +626,11 @@
             data-title="${esc(item.title)}"
             data-artist="${esc(displayChannel)}"
             data-thumb="${esc(item.thumbnail)}"
-            aria-label="Play Preview: ${esc(item.title)}"
-            title="Play preview"
+            aria-label="${t('play_preview_title')}: ${esc(item.title)}"
+            title="${t('play_preview_title')}"
           >
             <span class="btn-play-icon">${CARD_ICON_PLAY}</span>
-            <span class="btn-play-label">Play</span>
+            <span class="btn-play-label" data-i18n="play">${t('play')}</span>
             <span class="play-equalizer" aria-hidden="true">
               <span></span><span></span><span></span>
             </span>
@@ -641,8 +644,8 @@
             data-artist="${esc(displayChannel)}"
             data-duration="${esc(item.duration)}"
             data-thumb="${esc(item.thumbnail)}"
-            aria-label="${isFavorite(item.url) ? 'Remove from favorites' : 'Add to favorites'}"
-            title="${isFavorite(item.url) ? 'Remove from favorites' : 'Add to favorites'}"
+            aria-label="${isFavorite(item.url) ? t('remove_from_favorites') : t('add_to_favorites')}"
+            title="${isFavorite(item.url) ? t('remove_from_favorites') : t('add_to_favorites')}"
           >
             ${renderStarSvg(isFavorite(item.url))}
           </button>
@@ -654,12 +657,12 @@
           data-title="${esc(item.title)}"
           data-quality="${currentPreferredQuality}"
           aria-label="Download MP3: ${esc(item.title)}"
-          title="Download as ${currentPreferredQuality}kbps MP3"
+          title="${t('download_as_kbps', { quality: currentPreferredQuality })}"
         >
           <div class="progress-fill" style="width: 0%"></div>
           <span class="btn-text">
             ${ICON_DOWNLOAD}
-            MP3
+            <span class="btn-dl-label" data-i18n="download_mp3">${t('download_mp3')}</span>
           </span>
         </button>
       </div>
@@ -801,15 +804,15 @@
 
       if (currentPage < totalPages) {
         $btnNext.disabled = false;
-        $btnNext.innerHTML = 'Next &rarr;';
+        $btnNext.innerHTML = `${t('page_next')}`;
         $btnNext.title = 'Next Page';
       } else if (currentPage === totalPages && hasMoreSearchResults) {
         $btnNext.disabled = isLoadingMoreResults;
-        $btnNext.innerHTML = isLoadingMoreResults ? 'Loading…' : 'Next &rarr;';
+        $btnNext.innerHTML = isLoadingMoreResults ? (t('buffering') || 'Loading…') : `${t('page_next')}`;
         $btnNext.title = `Load more results (Page ${currentPage + 1})`;
       } else {
         $btnNext.disabled = true;
-        $btnNext.innerHTML = 'Next &rarr;';
+        $btnNext.innerHTML = `${t('page_next')}`;
         $btnNext.title = '';
       }
 
@@ -966,7 +969,7 @@
         const newItems = data.results || [];
         if (newItems.length === 0) {
           hasMoreSearchResults = false;
-          toast('info', 'No more search results available.');
+          toast('info', t('toast_no_more_results'));
         } else {
           // Deduplicate against existing allSearchResults
           const existingIds = new Set(allSearchResults.map(item => item.id || item.url));
@@ -981,12 +984,12 @@
           if (filteredNewItems.length > 0) {
             allSearchResults = allSearchResults.concat(filteredNewItems);
             currentPage++;
-            $count.textContent = `${allSearchResults.length} results`;
-            toast('success', `Loaded ${filteredNewItems.length} more songs.`);
+            $count.textContent = t('results_count', { count: allSearchResults.length });
+            toast('success', t('toast_loaded_more_songs', { count: filteredNewItems.length }));
           } else if (!hasMoreSearchResults) {
-            toast('info', 'No more new search results found.');
+            toast('info', t('toast_no_more_new_results'));
           } else {
-            toast('info', 'Fetching additional songs…');
+            toast('info', t('toast_fetching_more'));
             isLoadingMoreResults = false;
             return await loadMoreSearchResults();
           }
@@ -1213,7 +1216,7 @@
           $tabModeFavorites.setAttribute('aria-selected', 'false');
         }
         updateSearchModeGlider();
-        $input.placeholder = 'Type the song title, or paste a YouTube URL...';
+        $input.placeholder = t('search_placeholder_songs');
         clearSelection();
         if (allSearchResults.length > 0) {
           showState('results');
@@ -1233,7 +1236,7 @@
           $tabModeFavorites.setAttribute('aria-selected', 'false');
         }
         updateSearchModeGlider();
-        $input.placeholder = 'Type artist or band name (e.g. Coldplay, Red Velvet, Alan Walker)…';
+        $input.placeholder = t('search_placeholder_artists');
         clearSelection();
         if (currentDiscography) {
           showState('artist-view');
@@ -1259,7 +1262,7 @@
           $tabModeArtists.classList.remove('active');
           $tabModeArtists.setAttribute('aria-selected', 'false');
           updateSearchModeGlider();
-          $input.placeholder = 'Search within your favorite songs...';
+          $input.placeholder = t('search_placeholder_favorites');
           clearSelection();
           showState('favorites');
           renderFavorites();
@@ -1328,7 +1331,7 @@
         const isUrl = q.trim().startsWith('http://') || q.trim().startsWith('https://');
         hasMoreSearchResults = !isUrl && (data.has_more === true || (data.has_more !== false && allSearchResults.length >= 10));
 
-        $count.textContent = `${allSearchResults.length} results`;
+        $count.textContent = t('results_count', { count: allSearchResults.length });
         showState('results');
 
         currentPage = 1;
@@ -1558,16 +1561,16 @@
 
       // Update count & load more button
       if (total > displayedArtistCount) {
-        $artistResultsCount.textContent = `Showing ${displayedArtistCount} of ${total} artists found`;
+        $artistResultsCount.textContent = t('artists_showing_count', { displayed: displayedArtistCount, total });
         if ($artistLoadMoreWrap) {
           $artistLoadMoreWrap.style.display = 'flex';
           const remaining = total - displayedArtistCount;
           if ($btnLoadMoreArtistsLabel) {
-            $btnLoadMoreArtistsLabel.textContent = `Load More Artists (+${Math.min(count, remaining)})`;
+            $btnLoadMoreArtistsLabel.textContent = t('load_more_artists', { count: Math.min(count, remaining) });
           }
         }
       } else {
-        $artistResultsCount.textContent = `${total} artist${total === 1 ? '' : 's'} found`;
+        $artistResultsCount.textContent = t('artists_found_count', { count: total });
         if ($artistLoadMoreWrap) {
           $artistLoadMoreWrap.style.display = 'none';
         }
@@ -1661,7 +1664,7 @@
       const visibleSongs = getVisibleTopSongs();
 
       if ($topSongsSubtitle) {
-        $topSongsSubtitle.textContent = `Showing ${visibleSongs.length} of ${allSongs.length} popular tracks`;
+        $topSongsSubtitle.textContent = t('showing_popular_tracks', { visible: visibleSongs.length, total: allSongs.length });
       }
 
       $topSongsList.innerHTML = visibleSongs.map(track => buildTrackRow(track)).join('');
@@ -1675,7 +1678,7 @@
       if (visibleSongs.length === 0) return;
 
       const allSelected = visibleSongs.every(t => selectedTracks.has(t.track_id));
-      $btnSelectAllTop.textContent = allSelected ? 'Deselect All' : 'Select All Popular Songs';
+      $btnSelectAllTop.textContent = allSelected ? t('deselect_all') : t('select_all_popular');
     }
 
     if ($topSongsLimitSelect) {
@@ -1879,7 +1882,7 @@
             // Check if all are already selected
             const allSelected = tracks.every(t => selectedTracks.has(t.track_id));
             tracks.forEach(t => toggleTrackSelection(t, !allSelected));
-            btn.textContent = !allSelected ? 'Deselect' : 'Select Album';
+            btn.textContent = !allSelected ? t('deselect_all') : t('select_album');
           }
         });
       });
@@ -2039,7 +2042,7 @@
             btn.classList.remove('loading', 'playing');
             btn.innerHTML = TRACK_ICON_PLAY;
             currentPlayingBtn = null;
-            toast('error', 'Audio preview could not be loaded.');
+            toast('error', t('toast_audio_preview_failed'));
           }
         });
       });
@@ -2077,10 +2080,10 @@
             if (!data || !data.download_url) throw new Error('Download URL not found.');
 
             triggerDownload(data.download_url, data.filename);
-            toast('success', `Downloading <strong>${esc(track.artist)} - ${esc(track.title)}</strong>`);
+            toast('success', t('toast_downloading_track', { artist: esc(track.artist), title: esc(track.title) }));
           } catch (err) {
             console.error(err);
-            toast('error', `Download failed: ${err.message}`);
+            toast('error', t('toast_download_failed', { error: err.message }));
           } finally {
             btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`;
             btn.disabled = false;
@@ -2152,7 +2155,7 @@
       if (count > 0 && !isBatchDownloading) {
         $batchActionBar.style.display = 'flex';
         $batchCount.textContent = count;
-        $btnBatchDlText.textContent = `Download Selected (${count})`;
+        $btnBatchDlText.textContent = t('download_selected', { count });
       } else {
         $batchActionBar.style.display = 'none';
       }
@@ -2298,13 +2301,13 @@
               isTrackSwitching = false;
               setMiniLoading(false);
             });
-            toast('info', `Full track streaming unavailable; playing preview snippet.`);
+            toast('info', t('toast_full_stream_unavailable'));
             return;
           }
 
           isTrackSwitching = false;
           setMiniLoading(false);
-          toast('warning', `Could not play "${track.title}". Auto-skipping to next...`);
+          toast('warning', t('toast_could_not_play', { title: track.title }));
           setTimeout(() => {
             if (isFavoritesAutoplay && currentQueueIndex === index) {
               playAdjacentTrack(1);
@@ -2321,7 +2324,7 @@
         : allFavs;
 
       if ($favoritesCountPill) {
-        $favoritesCountPill.textContent = `${allFavs.length} song${allFavs.length === 1 ? '' : 's'}`;
+        $favoritesCountPill.textContent = t('favorites_count', { count: allFavs.length });
       }
       updateFavoritesBadge();
 
@@ -2349,7 +2352,7 @@
           $favoritesList.style.display = 'flex';
           $favoritesList.innerHTML = `
             <div style="text-align: center; padding: 40px 20px; color: var(--clr-text-dim);">
-              <p>No favorites match "<strong>${esc(filterQuery)}</strong>"</p>
+              <p>${t('fav_no_matches', { query: esc(filterQuery) })}</p>
             </div>
           `;
         }
@@ -2380,7 +2383,7 @@
           const cardClass = isPlayingThis ? 'is-playing' : (isPausedThis ? 'is-paused' : '');
           const btnClass = isPlayingThis ? 'playing' : (isPausedThis ? 'paused' : '');
           const btnIcon = isPlayingThis ? CARD_ICON_PAUSE : CARD_ICON_PLAY;
-          const btnLabel = isPlayingThis ? 'Pause' : (isPausedThis ? 'Resume' : 'Play');
+          const btnLabel = isPlayingThis ? t('pause') : (isPausedThis ? t('resume') : t('play'));
 
           const rawArt = item.artist || item.channel || '';
           const displayArtist = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
@@ -2402,18 +2405,18 @@
               </div>
               <div class="card-action">
                 <div class="card-action-top-row">
-                  <button type="button" class="btn-card-play btn-fav-play ${btnClass}" data-index="${idx}" data-track-id="${esc(trackIdStr)}" data-url="${esc(item.url || '')}" data-preview="${esc(item.preview_url || '')}" title="Play Track">
+                  <button type="button" class="btn-card-play btn-fav-play ${btnClass}" data-index="${idx}" data-track-id="${esc(trackIdStr)}" data-url="${esc(item.url || '')}" data-preview="${esc(item.preview_url || '')}" title="${btnLabel}">
                     <span class="btn-play-icon">${btnIcon}</span>
-                    <span class="btn-play-label">${btnLabel}</span>
+                    <span class="btn-play-label" data-i18n="${isPlayingThis ? 'pause' : (isPausedThis ? 'resume' : 'play')}">${btnLabel}</span>
                     <span class="play-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
                   </button>
-                  <button type="button" class="btn-card-fav active" data-id="${esc(trackIdStr)}" data-title="${esc(item.title)}" title="Remove from Favorites">
+                  <button type="button" class="btn-card-fav active" data-id="${esc(trackIdStr)}" data-title="${esc(item.title)}" title="${t('remove_from_favorites')}">
                     ${renderStarSvg(true)}
                   </button>
                 </div>
-                <button type="button" class="btn-download btn-fav-dl" data-index="${idx}" title="Download MP3">
+                <button type="button" class="btn-download btn-fav-dl" data-index="${idx}" title="${t('download_as_kbps', { quality: currentPreferredQuality })}">
                   <div class="progress-fill" style="width: 0%"></div>
-                  <span class="btn-text">${ICON_DOWNLOAD} MP3</span>
+                  <span class="btn-text">${ICON_DOWNLOAD} <span class="btn-dl-label" data-i18n="download_mp3">${t('download_mp3')}</span></span>
                 </button>
               </div>
             </article>
@@ -2508,7 +2511,7 @@
               }, 2000);
             } catch (err) {
               console.error(err);
-              toast('error', `Download failed: ${err.message}`);
+              toast('error', t('toast_download_failed', { error: err.message }));
               if (fill) fill.style.width = '0%';
               btn.disabled = false;
             }
@@ -2522,12 +2525,12 @@
       $btnFavPlayAll.addEventListener('click', () => {
         const favs = getFavorites();
         if (favs.length === 0) {
-          toast('info', 'Your Favorites list is empty.');
+          toast('info', t('toast_fav_empty'));
           return;
         }
         favoritesQueue = [...favs];
         playFavoriteQueueTrack(0);
-        toast('info', `Playing all ${favs.length} favorite songs.`);
+        toast('info', t('toast_playing_all_fav', { count: favs.length }));
       });
     }
 
@@ -2535,7 +2538,7 @@
       $btnFavShuffle.addEventListener('click', () => {
         const favs = getFavorites();
         if (favs.length === 0) {
-          toast('info', 'Your Favorites list is empty.');
+          toast('info', t('toast_fav_empty'));
           return;
         }
         // Fisher-Yates shuffle
@@ -2546,7 +2549,7 @@
         }
         favoritesQueue = shuffled;
         playFavoriteQueueTrack(0);
-        toast('info', `Shuffled and playing ${shuffled.length} favorite songs.`);
+        toast('info', t('toast_shuffled_fav', { count: shuffled.length }));
       });
     }
 
@@ -2554,7 +2557,7 @@
       $btnFavDownloadAll.addEventListener('click', () => {
         const favs = getFavorites();
         if (favs.length === 0) {
-          toast('info', 'Your Favorites list is empty.');
+          toast('info', t('toast_fav_empty'));
           return;
         }
         const queueTracks = favs.map(item => ({
@@ -2573,7 +2576,7 @@
       $btnFavExport.addEventListener('click', () => {
         const favs = getFavorites();
         if (favs.length === 0) {
-          toast('info', 'No favorite songs to export.');
+          toast('info', t('toast_no_fav_export'));
           return;
         }
         const blob = new Blob([JSON.stringify(favs, null, 2)], { type: 'application/json' });
@@ -2584,7 +2587,7 @@
         a.download = `melodyxx-favorites-${dateStr}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        toast('success', `Exported ${favs.length} favorites to JSON.`);
+        toast('success', t('toast_exported_fav', { count: favs.length }));
       });
     }
 
@@ -2647,10 +2650,10 @@
             renderFavorites();
             updateFavoritesBadge();
             updateMiniFavButton();
-            toast('success', `Imported ${addedCount} song${addedCount === 1 ? '' : 's'} into Favorites.`);
+            toast('success', t('toast_imported_fav', { count: addedCount, plural: addedCount === 1 ? '' : 's' }));
           } catch (err) {
             console.error('Import favorites error:', err);
-            toast('error', 'Failed to import JSON: invalid playlist format.');
+            toast('error', t('toast_import_invalid'));
           }
           $favImportInput.value = '';
         };
@@ -2746,18 +2749,18 @@
         if (favs.length === 0) return;
 
         showConfirmDialog({
-          title: 'Clear All Favorites?',
-          subtitle: 'Permanent action',
-          message: `Are you sure you want to remove all <strong>${favs.length}</strong> song${favs.length === 1 ? '' : 's'} from your Favorites collection? This action cannot be undone.`,
-          confirmText: 'Clear All',
-          cancelText: 'Cancel',
+          title: t('confirm_clear_fav_title'),
+          subtitle: t('confirm_clear_fav_subtitle'),
+          message: t('confirm_clear_fav_message', { count: favs.length }),
+          confirmText: t('confirm_btn_clear_all'),
+          cancelText: t('confirm_btn_cancel'),
           isDanger: true,
           onConfirm: () => {
             saveFavorites([]);
             renderFavorites();
             updateFavoritesBadge();
             updateMiniFavButton();
-            toast('info', 'All favorites cleared.');
+            toast('info', t('toast_all_fav_cleared'));
           }
         });
       });
@@ -2766,7 +2769,7 @@
     async function startBatchDownload(customQueue = null) {
       if (!customQueue && selectedTracks.size === 0) return;
       if (isBatchDownloading) {
-        toast('info', 'Batch download is already in progress!');
+        toast('info', t('toast_batch_in_progress'));
         return;
       }
 
@@ -2787,7 +2790,7 @@
 
       for (let i = 0; i < total; i++) {
         if (cancelBatchDownload) {
-          toast('info', 'Batch download cancelled.');
+          toast('info', t('toast_batch_cancelled'));
           break;
         }
 
@@ -2795,11 +2798,11 @@
         const trackNum = i + 1;
 
         // Update UI progress
-        $batchProgressTitle.textContent = `Downloading (${trackNum}/${total})`;
+        $batchProgressTitle.textContent = t('downloading_progress', { current: trackNum, total });
         $batchProgressSub.textContent = `${track.artist} - ${track.title}`;
         $batchProgressFill.style.width = `${Math.round(((i) / total) * 100)}%`;
         $batchProgressCount.textContent = `${trackNum} / ${total}`;
-        $batchProgressStatus.textContent = 'Resolving stream…';
+        $batchProgressStatus.textContent = t('preparing_queue');
 
         let attempt = 0;
         let downloaded = false;
@@ -2827,7 +2830,7 @@
             } catch (_) {}
 
             if (res.status === 429) {
-              $batchProgressStatus.textContent = 'Rate limit hit, waiting 5s before retry…';
+              $batchProgressStatus.textContent = t('batch_rate_limit');
               await new Promise(r => setTimeout(r, 5000));
               continue;
             }
@@ -2838,25 +2841,25 @@
             triggerDownload(data.download_url, data.filename);
             downloaded = true;
             successCount++;
-            $batchProgressStatus.textContent = 'Stream dispatched!';
+            $batchProgressStatus.textContent = t('batch_stream_dispatched');
 
             // Automatically uncheck and deselect successful track from selection state
             toggleTrackSelection(track, false);
           } catch (err) {
             console.warn(`[Batch DL Attempt ${attempt}] ${track.title}:`, err);
             if (attempt < 2 && !cancelBatchDownload) {
-              $batchProgressStatus.textContent = 'Retrying…';
+              $batchProgressStatus.textContent = t('batch_retrying');
               await new Promise(r => setTimeout(r, 2000));
             } else {
               failedTracks.push(track);
-              $batchProgressStatus.textContent = 'Failed';
+              $batchProgressStatus.textContent = t('batch_failed');
             }
           }
         }
 
         // Safe inter-download delay (3s) to avoid download manager thrashing & socket exhaustion
         if (i < total - 1 && !cancelBatchDownload) {
-          $batchProgressStatus.textContent = 'Pacing next download (3s)…';
+          $batchProgressStatus.textContent = t('batch_pacing');
           await new Promise(r => setTimeout(r, 3000));
         }
       }
@@ -2865,10 +2868,10 @@
       if ($batchSpinner) $batchSpinner.style.display = 'none';
 
       if (failedTracks.length === 0) {
-        $batchProgressTitle.textContent = 'Completed!';
-        $batchProgressSub.textContent = `All ${successCount} track${successCount === 1 ? '' : 's'} downloaded successfully.`;
+        $batchProgressTitle.textContent = t('batch_completed');
+        $batchProgressSub.textContent = t('batch_all_downloaded', { count: successCount });
         if ($batchProgressStatus) {
-          $batchProgressStatus.innerHTML = `All downloads finished &bull; <button type="button" id="btn-batch-support" style="background:none;border:none;color:var(--accent-glow, #c084fc);cursor:pointer;font-weight:600;text-decoration:underline;padding:0;font-size:inherit;">Support Server</button>`;
+          $batchProgressStatus.innerHTML = `All downloads finished &bull; <button type="button" id="btn-batch-support" style="background:none;border:none;color:var(--accent-glow, #c084fc);cursor:pointer;font-weight:600;text-decoration:underline;padding:0;font-size:inherit;">${t('batch_support_server')}</button>`;
           const $btnBatchSupport = document.getElementById('btn-batch-support');
           if ($btnBatchSupport) {
             $btnBatchSupport.addEventListener('click', () => {
@@ -2876,7 +2879,7 @@
             });
           }
         }
-        toast('success', `Finished downloading all ${successCount} tracks!`);
+        toast('success', t('toast_finished_download_all', { count: successCount }));
 
         setTimeout(() => {
           $batchProgressWidget.style.display = 'none';
@@ -2886,16 +2889,16 @@
       } else {
         // Keep failed tracks selected so the user can see what failed and retry them
         isBatchDownloading = false;
-        $batchProgressTitle.textContent = 'Batch Incomplete';
-        $batchProgressSub.textContent = `${successCount} downloaded, ${failedTracks.length} failed.`;
+        $batchProgressTitle.textContent = t('batch_incomplete');
+        $batchProgressSub.textContent = t('batch_summary_failed', { success: successCount, failed: failedTracks.length });
         $batchProgressStatus.textContent = 'Failed tracks kept in queue';
         if ($btnBatchRetryText) {
-          $btnBatchRetryText.textContent = `Retry Failed Tracks (${failedTracks.length})`;
+          $btnBatchRetryText.textContent = t('batch_retry_btn', { count: failedTracks.length });
         }
         if ($batchProgressActions) {
           $batchProgressActions.style.display = 'flex';
         }
-        toast('warning', `${failedTracks.length} track${failedTracks.length === 1 ? '' : 's'} failed. Click Retry to re-download.`);
+        toast('warning', t('toast_batch_some_failed', { count: failedTracks.length, plural: failedTracks.length === 1 ? '' : 's' }));
       }
     }
 
@@ -3533,7 +3536,7 @@
           playFavoriteQueueTrack(nextIndex);
           return;
         } else {
-          toast('info', 'Favorites playlist playback completed.');
+          toast('info', t('toast_fav_playback_completed'));
           isFavoritesAutoplay = false;
           currentQueueIndex = -1;
         }
@@ -3742,7 +3745,7 @@
 
         btn.classList.remove('loading');
         btn.classList.add('done');
-        toast('success', `Downloading <strong>${esc(item.title)}</strong> directly to your device!`);
+        toast('success', t('toast_downloading_direct', { title: esc(item.title) }));
 
         if (Notification.permission === 'granted') {
           new Notification('Download Started!', {
@@ -3774,7 +3777,7 @@
           btn.removeAttribute('disabled');
         }, 2500);
 
-        toast('error', `Download failed: ${err.message}`);
+        toast('error', t('toast_download_failed', { error: err.message }));
       }
     }
     // ── Form submit ───────────────────────────────────────────
@@ -4942,7 +4945,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.24.2';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.25.0';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5175,7 +5178,7 @@
         const remainingSec = getReportRemainingCooldownSec();
         if (remainingSec > 0) {
           const timeStr = formatCooldownTime(remainingSec);
-          toast('info', `Please wait <strong>${timeStr}</strong> before submitting another report.`);
+          toast('info', t('toast_report_wait', { time: timeStr }));
           syncReportCooldownUI();
           return;
         }
@@ -5184,7 +5187,7 @@
         if (!name) {
           $reportName?.classList.add('is-invalid');
           if ($reportNameError) $reportNameError.style.display = 'block';
-          toast('error', 'Please enter your name.');
+          toast('error', t('toast_report_enter_name'));
           if ($reportName) $reportName.focus();
           return;
         }
@@ -5193,14 +5196,14 @@
         if (!email || !isValidEmail(email)) {
           $reportEmail?.classList.add('is-invalid');
           if ($reportEmailError) $reportEmailError.style.display = 'block';
-          toast('error', 'Please enter a valid email address (e.g. name@example.com).');
+          toast('error', t('toast_report_enter_email'));
           if ($reportEmail) $reportEmail.focus();
           return;
         }
 
         const desc = ($reportDescription?.value || '').trim();
         if (desc.length < 8) {
-          toast('error', 'Please provide a description of at least 8 characters.');
+          toast('error', t('toast_report_enter_desc'));
           if ($reportDescription) $reportDescription.focus();
           return;
         }
@@ -5226,7 +5229,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.24.2');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.25.0');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
@@ -5242,7 +5245,7 @@
             throw new Error(data.detail || `Server returned error (${res.status})`);
           }
 
-          toast('success', 'Thank you! Your report has been submitted.');
+          toast('success', t('toast_report_success'));
           localStorage.setItem('melodyxx_last_report_ts', String(Date.now()));
           syncReportCooldownUI();
 
@@ -5257,7 +5260,7 @@
           closeBugReportModal();
 
         } catch (err) {
-          toast('error', err.message || 'Failed to submit report. Please try again.');
+          toast('error', err.message || t('toast_report_failed'));
         } finally {
           isReportSubmitting = false;
           if ($btnReportSubmit) $btnReportSubmit.disabled = false;
@@ -5347,9 +5350,9 @@
         } else {
           const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
           if (isIOS) {
-            toast('info', 'To install Melodyxx on iOS: Tap Share and select "Add to Home Screen".');
+            toast('info', t('toast_pwa_ios'));
           } else {
-            toast('info', 'Open your browser menu (⋮) and select "Install app" or "Add to Home screen".');
+            toast('info', t('toast_pwa_menu'));
           }
         }
       });
@@ -5357,7 +5360,7 @@
       window.addEventListener('appinstalled', () => {
         $btnInstallPwa.style.display = 'none';
         deferredInstallPrompt = null;
-        toast('success', 'Melodyxx installed successfully! You can launch it anytime from your home screen.');
+        toast('success', t('toast_pwa_success'));
       });
     }
 
@@ -5392,6 +5395,67 @@
           console.debug('[Version] Could not fetch live version:', err);
         });
     }
+
+    // ── Reactive Language Change Listener (i18n) ──────────────────
+    window.addEventListener('melodyxx:langchange', () => {
+      // 1. Update search placeholder
+      if ($input) {
+        if (searchMode === 'songs') $input.placeholder = t('search_placeholder_songs');
+        else if (searchMode === 'artists') $input.placeholder = t('search_placeholder_artists');
+        else if (searchMode === 'favorites') $input.placeholder = t('search_placeholder_favorites');
+      }
+
+      // 2. Refresh search results count & cards/pagination
+      if (allSearchResults && allSearchResults.length > 0) {
+        if ($count) $count.textContent = t('results_count', { count: allSearchResults.length });
+        renderPage();
+      }
+
+      // 3. Refresh artist results count & load more label
+      if (lastArtistSearchResults && lastArtistSearchResults.length > 0) {
+        const total = lastArtistSearchResults.length;
+        if (total > displayedArtistCount) {
+          if ($artistResultsCount) $artistResultsCount.textContent = t('artists_showing_count', { displayed: displayedArtistCount, total });
+          if ($btnLoadMoreArtistsLabel) {
+            const remaining = total - displayedArtistCount;
+            $btnLoadMoreArtistsLabel.textContent = t('load_more_artists', { count: Math.min(20, remaining) });
+          }
+        } else {
+          if ($artistResultsCount) $artistResultsCount.textContent = t('artists_found_count', { count: total });
+        }
+      }
+
+      // 4. Refresh discography stats & top songs header
+      if (currentDiscography) {
+        if ($topSongsSubtitle) {
+          const visibleSongs = getVisibleTopSongs();
+          $topSongsSubtitle.textContent = t('showing_popular_tracks', { visible: visibleSongs.length, total: (currentDiscography.top_songs || []).length });
+        }
+        updateSelectAllTopButton();
+        if ($albumsGrid) {
+          $albumsGrid.querySelectorAll('.btn-select-album').forEach(btn => {
+            const albumId = btn.dataset.albumId;
+            const albumObj = currentDiscography.albums?.find(a => a.album_id === albumId);
+            const tracks = albumObj?.tracks || [];
+            if (tracks.length > 0 && tracks.every(t => selectedTracks.has(t.track_id))) {
+              btn.textContent = t('deselect_all');
+            } else {
+              btn.textContent = t('select_album');
+            }
+          });
+        }
+      }
+
+      // 5. Refresh favorites
+      if (searchMode === 'favorites') {
+        renderFavorites();
+      } else {
+        updateFavoritesBadge();
+      }
+
+      // 6. Refresh batch action bar
+      updateBatchActionBar();
+    });
 
     updateFavoritesBadge();
 

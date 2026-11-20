@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.25.0",
+    "date": "2026-11-20",
+    "type": "feature",
+    "title": "Dual-Language Support (English & Bahasa Indonesia) with Custom Vector Flags",
+    "highlights": [
+      "Top-Left Language Switcher: Added an intuitive EN / ID toggle capsule in the top-left hero header with smooth violet glassmorphism styling and active pill indicators.",
+      "Custom Vector Flags: Styled crisp vector SVG flag icons for the United Kingdom (EN) and Indonesia (ID) strictly adhering to Melodyxx theme standards without system emojis.",
+      "Full Application Translation: Complete localization covering hero taglines, search tabs, placeholders, result counters, pagination, artist discographies, favorites management, floating player, batch downloading, and all system modals.",
+      "Persistent Language Preference: Automatically remembers user language selection in local storage across browser visits without requiring a page reload.",
+      "Reactive Real-Time Switching: Instant UI text and runtime toast updates on language switch without interrupting active audio streaming or batch downloads."
+    ]
+  },
+  {
     "version": "v1.24.2",
     "date": "2026-11-18",
     "type": "fix",

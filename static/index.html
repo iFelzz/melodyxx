@@ -150,7 +150,8 @@
   }
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.24.2" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.25.0" />
+  <script src="/static/js/i18n.js?v=1.25.0"></script>
 </head>
 
 <body>
@@ -167,12 +168,12 @@
       </svg>
     </div>
     <div class="update-banner-content">
-      <div class="update-banner-title">Update Available!</div>
+      <div class="update-banner-title" data-i18n="update_available_title">Update Available!</div>
       <div class="update-banner-desc">Melodyxx <span id="update-new-version" class="update-version-tag">v1.2.0</span> is
         ready. Refresh to update.</div>
     </div>
     <div class="update-banner-actions">
-      <button type="button" class="btn-update-reload" id="btn-update-reload">Refresh</button>
+      <button type="button" class="btn-update-reload" id="btn-update-reload" data-i18n="update_refresh">Refresh</button>
       <button type="button" class="btn-update-dismiss" id="btn-update-dismiss" aria-label="Dismiss">&times;</button>
     </div>
   </div>
@@ -185,7 +186,7 @@
         <path d="M20 6L9 17l-5-5" />
       </svg>
     </div>
-    <span class="reconnect-banner-text">Connected! You're back online.</span>
+    <span class="reconnect-banner-text" data-i18n="connected_toast">Connected! You're back online.</span>
   </div>
 
   <!-- Decorative background -->
@@ -196,16 +197,39 @@
 
     <!-- ── HERO / HEADER ── -->
     <header class="hero" role="banner">
+      <!-- Language Switcher Capsule (Top-Left) -->
+      <div class="lang-switch-wrap" id="lang-switch-wrap" role="group" aria-label="Language selection">
+        <button type="button" class="lang-btn active" data-lang="en" id="lang-btn-en" title="English" aria-pressed="true">
+          <svg class="flag-icon" viewBox="0 0 640 480" width="16" height="12" aria-hidden="true">
+            <path fill="#012169" d="M0 0h640v480H0z"/>
+            <path fill="#FFF" d="m75 0 244 181L562 0h78v62L400 241l240 178v61h-80L320 301 81 480H0v-60l239-178L0 64V0h75z"/>
+            <path fill="#C8102E" d="m424 281 216 159v40L369 281h55zm-184-82L0 15v-15l295 199h-55zM0 440l196-146h55L0 480v-40zm640-400L444 185h-55L640 0v40z"/>
+            <path fill="#FFF" d="M241 0v480h160V0H241zM0 160v160h640V160H0z"/>
+            <path fill="#C8102E" d="M267 0v480h107V0H267zM0 187v107h640V187H0z"/>
+          </svg>
+          <span>EN</span>
+        </button>
+        <button type="button" class="lang-btn" data-lang="id" id="lang-btn-id" title="Bahasa Indonesia" aria-pressed="false">
+          <svg class="flag-icon" viewBox="0 0 640 480" width="16" height="12" aria-hidden="true">
+            <g fill-rule="evenodd" stroke-width="1pt">
+              <rect fill="#e70011" width="640" height="240"/>
+              <rect fill="#ffffff" y="240" width="640" height="240"/>
+            </g>
+          </svg>
+          <span>ID</span>
+        </button>
+      </div>
+
       <!-- PWA Install Button -->
       <button type="button" class="btn-install-pwa" id="btn-install-pwa" style="display: none;"
-        title="Install Melodyxx App">
+        title="Install Melodyxx App" data-i18n-title="install_app_title">
         <svg class="install-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span>Install App</span>
+        <span data-i18n="install_app">Install App</span>
       </button>
 
       <div class="logo-wrap">
@@ -213,7 +237,7 @@
         <h1 class="logo-text">Melodyxx</h1>
       </div>
 
-      <p class="hero-tagline">
+      <p class="hero-tagline" data-i18n="app_tagline">
         Free YouTube to MP3 Downloader &amp; Discography Browser with official Apple Music artwork.
       </p>
 
@@ -228,7 +252,7 @@
             <circle cx="6" cy="18" r="3"></circle>
             <circle cx="18" cy="16" r="3"></circle>
           </svg>
-          <span>Songs</span>
+          <span data-i18n="tab_songs">Songs</span>
         </button>
         <button type="button" class="search-mode-tab" data-mode="artists" id="tab-mode-artists" role="tab"
           aria-selected="false">
@@ -237,7 +261,7 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span>Artists</span>
+          <span data-i18n="tab_artists">Artists</span>
         </button>
         <button type="button" class="search-mode-tab" data-mode="favorites" id="tab-mode-favorites" role="tab"
           aria-selected="false">
@@ -246,7 +270,7 @@
             <polygon
               points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
-          <span>Favorites</span>
+          <span data-i18n="tab_favorites">Favorites</span>
           <span class="tab-fav-badge" id="tab-fav-badge" style="display: none;">0</span>
         </button>
       </div>
@@ -259,8 +283,10 @@
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input id="search-input" type="search" name="q" placeholder="Search songs, artists, or paste a YouTube URL..."
+            data-i18n-placeholder="search_placeholder_songs" data-i18n-aria="search_aria_label"
             autocomplete="off" spellcheck="false" aria-label="Search keyword" required />
           <button type="button" id="btn-search-clear" class="btn-search-clear" aria-label="Clear search input"
+            data-i18n-title="search_clear_title" data-i18n-aria="search_clear_title"
             style="display: none;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -269,8 +295,8 @@
             </svg>
           </button>
         </div>
-        <button type="submit" id="search-btn" aria-label="Search">
-          <span>Search</span>
+        <button type="submit" id="search-btn" aria-label="Search" data-i18n-aria="search_btn">
+          <span data-i18n="search_btn">Search</span>
         </button>
 
         <!-- Live Autocomplete & Artist Recommendation Dropdown -->
@@ -286,7 +312,7 @@
         <!-- Loading spinner -->
         <div id="loading" role="status" aria-label="Searching…">
           <div class="spinner" aria-hidden="true"></div>
-          <p class="loading-text" id="loading-text">Searching for songs…</p>
+          <p class="loading-text" id="loading-text" data-i18n="searching_songs">Searching for songs…</p>
         </div>
 
         <!-- Empty state (default) -->
@@ -299,8 +325,8 @@
               <circle cx="18" cy="16" r="3" />
             </svg>
           </div>
-          <h3>Start searching</h3>
-          <p>Type a song title, artist name, or lyrics in the search box above.</p>
+          <h3 data-i18n="start_searching_title">Start searching</h3>
+          <p data-i18n="start_searching_desc">Type a song title, artist name, or lyrics in the search box above.</p>
         </div>
 
         <!-- Error state -->
@@ -313,8 +339,8 @@
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
           </div>
-          <h3>Search failed</h3>
-          <p id="error-msg">An error occurred. Please try again.</p>
+          <h3 data-i18n="search_failed_title">Search failed</h3>
+          <p id="error-msg" data-i18n="search_failed_desc">An error occurred. Please try again.</p>
         </div>
 
         <!-- No results state -->
@@ -327,20 +353,20 @@
               <line x1="8" y1="11" x2="14" y2="11" />
             </svg>
           </div>
-          <h3>No results found</h3>
-          <p>Try a different keyword.</p>
+          <h3 data-i18n="no_results_title">No results found</h3>
+          <p data-i18n="no_results_desc">Try a different keyword.</p>
         </div>
 
         <!-- Results -->
         <section id="results" aria-label="Search results">
           <div class="results-header-wrap">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span class="results-title">Search Results</span>
+              <span class="results-title" data-i18n="search_results_title">Search Results</span>
               <span class="results-count" id="results-count">0 results</span>
             </div>
             <div class="results-actions-bar">
               <div class="global-quality-wrap">
-                <span class="action-bar-label">Download Quality:</span>
+                <span class="action-bar-label" data-i18n="download_quality_label">Download Quality:</span>
                 <div class="global-quality-toggle" role="group" aria-label="Default audio quality">
                   <div class="global-quality-glider" id="global-quality-glider" aria-hidden="true"></div>
                   <button type="button" class="global-q-btn" data-quality="128"
@@ -352,7 +378,7 @@
                 </div>
               </div>
               <div class="limit-selector">
-                <label for="limit-select">Show:</label>
+                <label for="limit-select" data-i18n="show_per_page">Show:</label>
                 <select id="limit-select">
                   <option value="10">10 per page</option>
                   <option value="20">20 per page</option>
@@ -367,15 +393,15 @@
           </div>
           <div class="pagination" id="pagination-controls" style="display: none;" aria-label="Pagination Navigation">
             <button type="button" class="pagination-btn" id="btn-first" title="First Page"
-              aria-label="First page">&laquo; First</button>
+              data-i18n-title="page_first" aria-label="First page">&laquo; First</button>
             <button type="button" class="pagination-btn" id="btn-prev" title="Previous Page"
-              aria-label="Previous page">Previous</button>
+              data-i18n-title="page_prev" aria-label="Previous page">Previous</button>
             <div class="pagination-pages" id="pagination-pages" role="navigation" aria-label="Page selection"></div>
             <div class="pagination-info">Page <span id="page-current">1</span> of <span id="page-total">1</span></div>
-            <button type="button" class="pagination-btn" id="btn-next" title="Next Page" aria-label="Next page">Next
-              &rarr;</button>
-            <button type="button" class="pagination-btn" id="btn-last" title="Last Page" aria-label="Last page">Last
-              &raquo;</button>
+            <button type="button" class="pagination-btn" id="btn-next" title="Next Page"
+              data-i18n-title="page_next" aria-label="Next page">Next &rarr;</button>
+            <button type="button" class="pagination-btn" id="btn-last" title="Last Page"
+              data-i18n-title="page_last" aria-label="Last page">Last &raquo;</button>
           </div>
         </section>
 
@@ -384,7 +410,7 @@
           aria-label="Artist search results">
           <div class="results-header-wrap">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span class="results-title">Artists Found</span>
+              <span class="results-title" data-i18n="artists_found_title">Artists Found</span>
               <span class="results-count" id="artist-results-count">0 artists</span>
             </div>
           </div>
@@ -398,7 +424,7 @@
                 <line x1="12" y1="16" x2="12" y2="12"></line>
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
               </svg>
-              <span>Did you mean:</span>
+              <span data-i18n="did_you_mean">Did you mean:</span>
             </div>
             <div id="artist-suggestion-chips" class="suggestion-chips" role="group" aria-label="Suggested artists">
             </div>
@@ -414,7 +440,7 @@
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 5v14M5 12h14"></path>
               </svg>
-              <span id="btn-load-more-artists-label">Load More Artists</span>
+              <span id="btn-load-more-artists-label" data-i18n="load_more_artists">Load More Artists</span>
             </button>
           </div>
         </section>
@@ -426,7 +452,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            Back to Search Results
+            <span data-i18n="back_to_artists">Back to Search Results</span>
           </button>
 
           <!-- Artist Hero Banner -->
@@ -447,13 +473,13 @@
                     <span class="artist-genre-badge" id="artist-genre">Genre</span>
                   </div>
                   <h2 class="artist-name" id="artist-name">Artist Name</h2>
-                  <p class="artist-stats" id="artist-stats">Loading discography...</p>
+                  <p class="artist-stats" id="artist-stats" data-i18n="loading_discography">Loading discography...</p>
                 </div>
               </div>
 
               <!-- Extra Music Insights & Stats (Right Column) -->
               <div class="artist-extra-stats" id="artist-extra-stats">
-                <div class="stat-pill-card" title="Career Span / Release Years">
+                <div class="stat-pill-card" title="Career Span / Release Years" data-i18n-title="career_span_label">
                   <div class="stat-pill-icon" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                       stroke-linecap="round" stroke-linejoin="round">
@@ -464,12 +490,12 @@
                     </svg>
                   </div>
                   <div class="stat-pill-info">
-                    <span class="stat-pill-label">Career Span</span>
+                    <span class="stat-pill-label" data-i18n="career_span_label">Career Span</span>
                     <span class="stat-pill-val" id="artist-stat-career">—</span>
                   </div>
                 </div>
 
-                <div class="stat-pill-card" id="card-stat-latest" title="Most Recent Studio Album">
+                <div class="stat-pill-card" id="card-stat-latest" title="Most Recent Studio Album" data-i18n-title="latest_album_label">
                   <div class="stat-pill-icon" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                       stroke-linecap="round" stroke-linejoin="round">
@@ -478,12 +504,12 @@
                     </svg>
                   </div>
                   <div class="stat-pill-info">
-                    <span class="stat-pill-label">Latest Album</span>
+                    <span class="stat-pill-label" data-i18n="latest_album_label">Latest Album</span>
                     <span class="stat-pill-val" id="artist-stat-latest">—</span>
                   </div>
                 </div>
 
-                <div class="stat-pill-card" title="Estimated Total Playtime for Popular Tracks">
+                <div class="stat-pill-card" title="Estimated Total Playtime for Popular Tracks" data-i18n-title="total_music_label">
                   <div class="stat-pill-icon" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                       stroke-linecap="round" stroke-linejoin="round">
@@ -492,12 +518,12 @@
                     </svg>
                   </div>
                   <div class="stat-pill-info">
-                    <span class="stat-pill-label">Total Music</span>
+                    <span class="stat-pill-label" data-i18n="total_music_label">Total Music</span>
                     <span class="stat-pill-val" id="artist-stat-duration">—</span>
                   </div>
                 </div>
 
-                <div class="stat-pill-card" title="Estimated Total Audio Download Size">
+                <div class="stat-pill-card" title="Estimated Total Audio Download Size" data-i18n-title="est_size_label">
                   <div class="stat-pill-icon" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                       stroke-linecap="round" stroke-linejoin="round">
@@ -507,7 +533,7 @@
                     </svg>
                   </div>
                   <div class="stat-pill-info">
-                    <span class="stat-pill-label">Est. Size</span>
+                    <span class="stat-pill-label" data-i18n="est_size_label">Est. Size</span>
                     <span class="stat-pill-val" id="artist-stat-size">—</span>
                   </div>
                 </div>
@@ -523,7 +549,7 @@
                 <path
                   d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
               </svg>
-              Popular Songs
+              <span data-i18n="popular_tracks_tab">Popular Songs</span>
             </button>
             <button type="button" class="disco-tab" data-view="albums" id="tab-albums">
               <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -531,25 +557,25 @@
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
-              All Albums &amp; EPs
+              <span data-i18n="all_albums_tab">All Albums &amp; EPs</span>
             </button>
           </div>
 
           <!-- Top Songs Panel -->
           <div class="disco-panel" id="panel-top-songs">
             <div class="disco-panel-header">
-              <span class="panel-subtitle" id="top-songs-subtitle">Most popular songs</span>
+              <span class="panel-subtitle" id="top-songs-subtitle" data-i18n="most_popular_subtitle">Most popular songs</span>
               <div class="disco-top-actions">
                 <div class="disco-limit-wrap">
-                  <label for="top-songs-limit-select">Show:</label>
+                  <label for="top-songs-limit-select" data-i18n="show_per_page">Show:</label>
                   <select id="top-songs-limit-select" class="disco-select">
                     <option value="25">25 songs</option>
                     <option value="50">50 songs</option>
                     <option value="100" selected>100 songs</option>
-                    <option value="all">All songs</option>
+                    <option value="all" data-i18n="all_songs_option">All songs</option>
                   </select>
                 </div>
-                <button type="button" class="btn-select-all-top" id="btn-select-all-top">
+                <button type="button" class="btn-select-all-top" id="btn-select-all-top" data-i18n="select_all_popular">
                   Select All Popular Songs
                 </button>
               </div>
@@ -574,24 +600,24 @@
                   <polygon
                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
-                <h2 class="favorites-title">My Favorites</h2>
+                <h2 class="favorites-title" data-i18n="favorites_title">My Favorites</h2>
                 <span class="favorites-count-pill" id="favorites-count-pill">0 songs</span>
               </div>
-              <p class="favorites-subtitle">Stored locally in your browser. Autoplay sequentially or batch download all.
+              <p class="favorites-subtitle" data-i18n="favorites_subtitle">Stored locally in your browser. Autoplay sequentially or batch download all.
               </p>
             </div>
 
             <div class="favorites-actions-bar" id="favorites-actions-bar">
               <button type="button" class="btn-fav-action btn-fav-play-all" id="btn-fav-play-all"
-                title="Play all favorite songs in sequence">
+                title="Play all favorite songs in sequence" data-i18n-title="fav_play_all_title">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
-                <span>Play All</span>
+                <span data-i18n="fav_play_all">Play All</span>
               </button>
 
               <button type="button" class="btn-fav-action btn-fav-shuffle" id="btn-fav-shuffle"
-                title="Shuffle play favorites">
+                title="Shuffle play favorites" data-i18n-title="fav_shuffle_title">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="16 3 21 3 21 8" />
@@ -600,52 +626,52 @@
                   <line x1="15" y1="15" x2="21" y2="21" />
                   <line x1="4" y1="4" x2="9" y2="9" />
                 </svg>
-                <span>Shuffle</span>
+                <span data-i18n="fav_shuffle">Shuffle</span>
               </button>
 
               <button type="button" class="btn-fav-action btn-fav-download-all" id="btn-fav-download-all"
-                title="Download all favorite songs">
+                title="Download all favorite songs" data-i18n-title="fav_download_all_title">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span>Download All</span>
+                <span data-i18n="fav_download_all">Download All</span>
               </button>
 
               <div class="favorites-more-dropdown">
                 <button type="button" class="btn-fav-action btn-fav-export" id="btn-fav-export"
-                  title="Export favorites backup as JSON file">
+                  title="Export favorites backup as JSON file" data-i18n-title="fav_export_title">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  <span>Export</span>
+                  <span data-i18n="fav_export">Export</span>
                 </button>
 
                 <button type="button" class="btn-fav-action btn-fav-import" id="btn-fav-import"
-                  title="Import favorites from JSON file">
+                  title="Import favorites from JSON file" data-i18n-title="fav_import_title">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  <span>Import</span>
+                  <span data-i18n="fav_import">Import</span>
                 </button>
                 <input type="file" id="fav-import-input" accept=".json,application/json" style="display: none;" />
 
                 <button type="button" class="btn-fav-action btn-fav-clear" id="btn-fav-clear"
-                  title="Clear all favorites">
+                  title="Clear all favorites" data-i18n-title="fav_clear_title">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="3 6 5 6 21 6" />
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                   </svg>
-                  <span>Clear</span>
+                  <span data-i18n="fav_clear">Clear</span>
                 </button>
               </div>
             </div>
@@ -663,8 +689,8 @@
                   points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </div>
-            <h3 class="favorites-empty-title">Your Favorites is Empty</h3>
-            <p class="favorites-empty-desc">Search for songs or browse artist discographies and click the star button on
+            <h3 class="favorites-empty-title" data-i18n="fav_empty_title">Your Favorites is Empty</h3>
+            <p class="favorites-empty-desc" data-i18n="fav_empty_desc">Search for songs or browse artist discographies and click the star button on
               any track to add it to your collection, or import a saved playlist.</p>
             <div class="favorites-empty-actions">
               <button type="button" class="btn-fav-discover" id="btn-fav-discover">
@@ -674,17 +700,17 @@
                   <circle cx="6" cy="18" r="3"></circle>
                   <circle cx="18" cy="16" r="3"></circle>
                 </svg>
-                <span>Discover Music</span>
+                <span data-i18n="fav_discover_music">Discover Music</span>
               </button>
               <button type="button" class="btn-fav-empty-import" id="btn-fav-empty-import"
-                title="Import playlist from JSON file">
+                title="Import playlist from JSON file" data-i18n-title="fav_import_title">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span>Import Playlist</span>
+                <span data-i18n="fav_import_playlist">Import Playlist</span>
               </button>
             </div>
           </div>
@@ -703,8 +729,8 @@
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                 </svg>
               </div>
-              <h2 class="seo-card-title">Zero-Disk Fast Streaming</h2>
-              <p class="seo-card-text">
+              <h2 class="seo-card-title" data-i18n="seo_zero_disk_title">Zero-Disk Fast Streaming</h2>
+              <p class="seo-card-text" data-i18n="seo_zero_disk_desc">
                 Direct in-memory transcode piping. Audio streams straight to your device with 0 MB server disk storage
                 and zero pre-download waiting time.
               </p>
@@ -719,8 +745,8 @@
                   <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                 </svg>
               </div>
-              <h2 class="seo-card-title">Official Apple Music Art</h2>
-              <p class="seo-card-text">
+              <h2 class="seo-card-title" data-i18n="seo_art_title">Official Apple Music Art</h2>
+              <p class="seo-card-text" data-i18n="seo_art_desc">
                 Say goodbye to blurry YouTube thumbnails. Every track is embedded with official 800x800 HD square album
                 art and clean ID3v2 metadata.
               </p>
@@ -735,8 +761,8 @@
                   <line x1="12" x2="12" y1="19" y2="22" />
                 </svg>
               </div>
-              <h2 class="seo-card-title">Full Artist Discographies</h2>
-              <p class="seo-card-text">
+              <h2 class="seo-card-title" data-i18n="seo_disco_title">Full Artist Discographies</h2>
+              <p class="seo-card-text" data-i18n="seo_disco_desc">
                 Search any singer or band to explore their complete catalog of popular songs, albums, and EPs with
                 one-click sequential batch downloading.
               </p>
@@ -750,8 +776,8 @@
                   <polyline points="9 12 11 14 15 10" />
                 </svg>
               </div>
-              <h2 class="seo-card-title">100% Free &amp; Ad-Free</h2>
-              <p class="seo-card-text">
+              <h2 class="seo-card-title" data-i18n="seo_free_title">100% Free &amp; Ad-Free</h2>
+              <p class="seo-card-text" data-i18n="seo_free_desc">
                 No deceptive popup ads, no redirect loops, and no account registration. Fast, secure, and clean audio
                 conversions for desktop and mobile.
               </p>
@@ -766,8 +792,8 @@
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
               </div>
-              <h2 class="seo-card-title">Sequential Batch Queue</h2>
-              <p class="seo-card-text">
+              <h2 class="seo-card-title" data-i18n="seo_batch_title">Sequential Batch Queue</h2>
+              <p class="seo-card-text" data-i18n="seo_batch_desc">
                 Effortlessly select multiple songs or entire albums to download in order with real-time progress
                 indicators and automatic retry resilience.
               </p>
@@ -788,8 +814,8 @@
                   <line x1="17" x2="23" y1="16" y2="16" />
                 </svg>
               </div>
-              <h2 class="seo-card-title">HD Bitrate Selection</h2>
-              <p class="seo-card-text">
+              <h2 class="seo-card-title" data-i18n="seo_bitrate_title">HD Bitrate Selection</h2>
+              <p class="seo-card-text" data-i18n="seo_bitrate_desc">
                 Choose between 320kbps studio-grade fidelity, 192kbps balanced clarity, or 128kbps compact data saving
                 tailored to your listening needs.
               </p>
@@ -799,22 +825,22 @@
           <!-- FAQ Accordion -->
           <div class="seo-faq-card">
             <div class="seo-faq-header">
-              <span class="seo-badge-pill">FAQ</span>
-              <h2 class="seo-faq-title">Frequently Asked Questions</h2>
-              <p class="seo-faq-subtitle">Everything you need to know about downloading music with Melodyxx.</p>
+              <span class="seo-badge-pill" data-i18n="faq_badge">FAQ</span>
+              <h2 class="seo-faq-title" data-i18n="faq_title">Frequently Asked Questions</h2>
+              <p class="seo-faq-subtitle" data-i18n="faq_subtitle">Everything you need to know about downloading music with Melodyxx.</p>
             </div>
 
             <div class="seo-faq-list">
               <details class="faq-item">
                 <summary class="faq-summary">
-                  <span>How do I convert and download YouTube to MP3?</span>
+                  <span data-i18n="faq_q1">How do I convert and download YouTube to MP3?</span>
                   <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </summary>
                 <div class="faq-answer">
-                  <p>Type a song title or artist into the search box above, or paste any YouTube video link. Pick your
+                  <p data-i18n="faq_a1">Type a song title or artist into the search box above, or paste any YouTube video link. Pick your
                     desired audio quality (128k, 192k, or 320k), then click Download. Melodyxx instantly pipes the
                     converted MP3 file directly to your browser.</p>
                 </div>
@@ -822,14 +848,14 @@
 
               <details class="faq-item">
                 <summary class="faq-summary">
-                  <span>Are album covers and ID3 tags embedded in the audio?</span>
+                  <span data-i18n="faq_q2">Are album covers and ID3 tags embedded in the audio?</span>
                   <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </summary>
                 <div class="faq-answer">
-                  <p>Yes. Melodyxx automatically queries Apple Music to match track titles and embed official 800x800
+                  <p data-i18n="faq_a2">Yes. Melodyxx automatically queries Apple Music to match track titles and embed official 800x800
                     square cover artwork, song title, artist, album name, and release year directly into the ID3v2
                     metadata frames.</p>
                 </div>
@@ -837,14 +863,14 @@
 
               <details class="faq-item">
                 <summary class="faq-summary">
-                  <span>Can I download multiple songs or entire albums at once?</span>
+                  <span data-i18n="faq_q3">Can I download multiple songs or entire albums at once?</span>
                   <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </summary>
                 <div class="faq-answer">
-                  <p>Yes. Click the "Artists" search tab to explore discographies. Check the boxes next to the songs you
+                  <p data-i18n="faq_a3">Yes. Click the "Artists" search tab to explore discographies. Check the boxes next to the songs you
                     want—or click "Select All"—then hit "Download Selected" to sequentially download the entire batch.
                   </p>
                 </div>
@@ -852,14 +878,14 @@
 
               <details class="faq-item">
                 <summary class="faq-summary">
-                  <span>What is the highest audio quality bitrate available?</span>
+                  <span data-i18n="faq_q4">What is the highest audio quality bitrate available?</span>
                   <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </summary>
                 <div class="faq-answer">
-                  <p>Melodyxx offers 320kbps (best high-definition fidelity), 192kbps (optimal balance of size and
+                  <p data-i18n="faq_a4">Melodyxx offers 320kbps (best high-definition fidelity), 192kbps (optimal balance of size and
                     quality), and 128kbps (lightweight data saving). You can easily switch quality using the global
                     toggle at the top of the search results.</p>
                 </div>
@@ -881,12 +907,12 @@
             <a id="version-link" href="https://github.com/iFelzz/melodyxx" target="_blank" rel="noopener">v1.0.0</a>
           </span>
           <span class="footer-sep">&bull;</span>
-          <span class="footer-by">Built by <a href="https://github.com/iFelzz" target="_blank"
+          <span class="footer-by"><span data-i18n="footer_built_by">Built by</span> <a href="https://github.com/iFelzz" target="_blank"
               rel="noopener">iFelzz</a></span>
         </div>
         <div class="footer-right">
           <button type="button" class="footer-github-link footer-release-btn" id="btn-open-release-log"
-            title="Open Release Log &amp; What's New">
+            title="Open Release Log &amp; What's New" data-i18n-title="footer_release_log">
             <svg class="footer-github-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -895,29 +921,29 @@
               <line x1="16" y1="17" x2="8" y2="17"></line>
               <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
-            <span>Release Log</span>
+            <span data-i18n="footer_release_log">Release Log</span>
             <span class="release-footer-dot" id="release-log-badge" style="display: none;"
               aria-label="New update available"></span>
           </button>
           <span class="footer-sep">&bull;</span>
           <button type="button" class="footer-github-link footer-report-btn" id="btn-open-bug-report"
-            title="Report a Bug or Feedback">
+            title="Report a Bug or Feedback" data-i18n-title="footer_report_bug">
             <svg class="footer-github-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect width="8" height="14" x="8" y="6" rx="4" />
               <path d="m19 7-3 2M5 7l3 2M19 19l-3-2M5 19l3-2M20 13h-4M4 13h4M10 4l1 2M14 4l-1 2" />
             </svg>
-            <span>Report Bug</span>
+            <span data-i18n="footer_report_bug">Report Bug</span>
           </button>
           <span class="footer-sep">&bull;</span>
           <a href="https://github.com/iFelzz/melodyxx" target="_blank" rel="noopener" class="footer-github-link"
-            title="GitHub Repository">
+            title="GitHub Repository" data-i18n-title="footer_github">
             <svg class="footer-github-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"
               aria-hidden="true">
               <path
                 d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
             </svg>
-            <span>GitHub</span>
+            <span data-i18n="footer_github">GitHub</span>
           </a>
         </div>
       </div>
@@ -937,7 +963,7 @@
         <div class="mini-artist" id="mini-artist"></div>
       </div>
       <button type="button" class="mini-fav-btn" id="mini-fav-btn" aria-label="Add to favorites"
-        title="Add to favorites">
+        title="Add to favorites" data-i18n-title="add_to_favorites" data-i18n-aria="add_to_favorites">
         <svg class="fav-star-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polygon
@@ -951,7 +977,7 @@
       <!-- Tier 1: Centered Play/Pause & Prev/Next Transport Controls -->
       <div class="mini-transport-group">
         <button type="button" class="mini-btn transport" id="mini-prev" aria-label="Previous Track"
-          title="Previous track">
+          title="Previous track" data-i18n-title="player_prev_title" data-i18n-aria="player_prev_title">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <polygon points="19 20 9 12 19 4 19 20"></polygon>
             <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
@@ -959,13 +985,14 @@
         </button>
 
         <button type="button" class="mini-btn primary" id="mini-playpause" aria-label="Play / Pause"
-          title="Play / Pause">
+          title="Play / Pause" data-i18n-title="player_play_pause_title" data-i18n-aria="player_play_pause_title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" id="mini-play-icon" aria-hidden="true">
             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
           </svg>
         </button>
 
-        <button type="button" class="mini-btn transport" id="mini-next" aria-label="Next Track" title="Next track">
+        <button type="button" class="mini-btn transport" id="mini-next" aria-label="Next Track"
+          title="Next track" data-i18n-title="player_next_title" data-i18n-aria="player_next_title">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <polygon points="5 4 15 12 5 20 5 4"></polygon>
             <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
@@ -987,7 +1014,7 @@
     <div class="mini-right">
       <div id="volume-control" class="mini-volume" title="Volume">
         <button type="button" class="mini-volume-btn" id="mini-mute-btn" aria-label="Mute / Unmute"
-          title="Mute / Unmute">
+          title="Mute / Unmute" data-i18n-title="player_mute_title" data-i18n-aria="player_mute_title">
           <svg class="mini-vol-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -999,7 +1026,8 @@
         </div>
       </div>
 
-      <button type="button" class="mini-btn-close" id="mini-close" aria-label="Close Player" title="Close player">
+      <button type="button" class="mini-btn-close" id="mini-close" aria-label="Close Player"
+        title="Close player" data-i18n-title="player_close_title" data-i18n-aria="player_close_title">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1013,10 +1041,10 @@
   <div id="batch-action-bar" class="batch-action-bar" style="display: none;">
     <div class="batch-bar-left">
       <span class="batch-count-badge" id="batch-count">0</span>
-      <span class="batch-count-label">tracks selected</span>
+      <span class="batch-count-label" data-i18n="tracks_selected">tracks selected</span>
     </div>
     <div class="batch-bar-actions">
-      <button type="button" class="btn-batch-clear" id="btn-batch-clear">Deselect All</button>
+      <button type="button" class="btn-batch-clear" id="btn-batch-clear" data-i18n="deselect_all">Deselect All</button>
       <button type="button" class="btn-batch-download" id="btn-batch-download">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -1031,23 +1059,23 @@
     <div class="batch-progress-header">
       <div class="batch-progress-title-wrap">
         <div class="spinner-small" id="batch-spinner"></div>
-        <span class="batch-progress-title" id="batch-progress-title">Downloading Batch...</span>
+        <span class="batch-progress-title" id="batch-progress-title" data-i18n="downloading_batch">Downloading Batch...</span>
       </div>
       <button type="button" class="btn-batch-cancel" id="btn-batch-cancel" title="Cancel Queue"
-        aria-label="Cancel Queue">
+        data-i18n-title="batch_cancel_title" aria-label="Cancel Queue">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 6L6 18M6 6l12 12" />
         </svg>
       </button>
     </div>
-    <div class="batch-progress-sub" id="batch-progress-sub">Preparing queue...</div>
+    <div class="batch-progress-sub" id="batch-progress-sub" data-i18n="preparing_queue">Preparing queue...</div>
     <div class="batch-progress-track">
       <div class="batch-progress-fill" id="batch-progress-fill" style="width: 0%;"></div>
     </div>
     <div class="batch-progress-footer">
       <span id="batch-progress-count">0 / 0</span>
-      <span id="batch-progress-status">Sequential download</span>
+      <span id="batch-progress-status" data-i18n="sequential_download">Sequential download</span>
     </div>
     <div class="batch-progress-actions" id="batch-progress-actions" style="display: none;">
       <button type="button" class="btn-batch-retry" id="btn-batch-retry">
@@ -1055,9 +1083,9 @@
           <path d="M1 4v6h6M23 20v-6h-6" />
           <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
         </svg>
-        <span id="btn-batch-retry-text">Retry Failed Tracks</span>
+        <span id="btn-batch-retry-text" data-i18n="batch_retry_btn">Retry Failed Tracks</span>
       </button>
-      <button type="button" class="btn-batch-dismiss" id="btn-batch-dismiss">Dismiss</button>
+      <button type="button" class="btn-batch-dismiss" id="btn-batch-dismiss" data-i18n="batch_dismiss">Dismiss</button>
     </div>
   </div>
 
@@ -1078,10 +1106,10 @@
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
             </div>
-            <h2 class="release-modal-title" id="release-modal-title">Release Log</h2>
-            <span class="release-whats-new-pill">What's New</span>
+            <h2 class="release-modal-title" id="release-modal-title" data-i18n="release_log_title">Release Log</h2>
+            <span class="release-whats-new-pill" data-i18n="release_whats_new">What's New</span>
           </div>
-          <p class="release-modal-subtitle">Changelog and version history across Melodyxx releases.</p>
+          <p class="release-modal-subtitle" data-i18n="release_subtitle">Changelog and version history across Melodyxx releases.</p>
         </div>
         <button type="button" class="btn-release-close" id="btn-release-close" aria-label="Close release log">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -1100,7 +1128,7 @@
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
           <input type="text" id="release-search-input" class="release-search-input"
-            placeholder="Search changelog, features, fixes..." autocomplete="off" />
+            placeholder="Search changelog, features, fixes..." data-i18n-placeholder="release_search_placeholder" autocomplete="off" />
           <button type="button" id="release-search-clear" class="release-search-clear" style="display: none;"
             aria-label="Clear search">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -1112,9 +1140,9 @@
         </div>
         <div class="release-filter-row">
           <div class="release-version-select-wrap">
-            <span class="release-filter-label">Jump to:</span>
+            <span class="release-filter-label" data-i18n="release_jump_to">Jump to:</span>
             <select id="release-version-select" class="release-version-select" aria-label="Jump to version">
-              <option value="all">All Releases</option>
+              <option value="all" data-i18n="release_all_releases">All Releases</option>
             </select>
             <svg class="release-select-arrow" viewBox="0 0 24 24" width="12" height="12" fill="none"
               stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
@@ -1123,34 +1151,34 @@
             </svg>
           </div>
           <div class="release-type-chips" id="release-type-chips">
-            <button type="button" class="release-type-chip active" data-type="all">All</button>
-            <button type="button" class="release-type-chip" data-type="feature">Features</button>
-            <button type="button" class="release-type-chip" data-type="improvement">Improvements</button>
-            <button type="button" class="release-type-chip" data-type="fix">Fixes</button>
+            <button type="button" class="release-type-chip active" data-type="all" data-i18n="release_filter_all">All</button>
+            <button type="button" class="release-type-chip" data-type="feature" data-i18n="release_filter_feature">Features</button>
+            <button type="button" class="release-type-chip" data-type="improvement" data-i18n="release_filter_improvement">Improvements</button>
+            <button type="button" class="release-type-chip" data-type="fix" data-i18n="release_filter_fix">Fixes</button>
           </div>
         </div>
       </div>
       <div class="release-modal-body" id="release-modal-body">
         <div class="release-loading-state" id="release-loading">
           <div class="spinner-small"></div>
-          <span>Loading release notes…</span>
+          <span data-i18n="release_loading">Loading release notes…</span>
         </div>
       </div>
       <div class="release-modal-footer">
         <span class="release-footer-note" id="release-footer-count">34 Releases • SemVer 2.0.0</span>
         <div class="release-footer-actions">
           <button type="button" class="btn-release-scroll-top" id="btn-release-scroll-top" style="display: none;"
-            title="Scroll to top">
+            title="Scroll to top" data-i18n-title="release_scroll_top">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="12" y1="19" x2="12" y2="5"></line>
               <polyline points="5 12 12 5 19 12"></polyline>
             </svg>
-            <span>Top</span>
+            <span data-i18n="release_scroll_top">Top</span>
           </button>
           <a href="https://github.com/iFelzz/melodyxx/releases" target="_blank" rel="noopener"
             class="release-github-tag-link">
-            <span>GitHub Releases</span>
+            <span data-i18n="release_github">GitHub Releases</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
@@ -1178,8 +1206,8 @@
             </svg>
           </div>
           <div>
-            <h2 class="support-modal-title" id="support-modal-title">Support Melodyxx</h2>
-            <p class="support-modal-subtitle">Keep Melodyxx 100% free, ad-free, and high-speed for everyone.</p>
+            <h2 class="support-modal-title" id="support-modal-title" data-i18n="support_title">Support Melodyxx</h2>
+            <p class="support-modal-subtitle" data-i18n="support_subtitle">Keep Melodyxx 100% free, ad-free, and high-speed for everyone.</p>
           </div>
         </div>
         <button type="button" class="btn-support-close" id="btn-support-close" aria-label="Close dialog">
@@ -1191,7 +1219,7 @@
       </div>
 
       <div class="support-modal-body">
-        <p class="support-intro-text">
+        <p class="support-intro-text" data-i18n="support_intro">
           Melodyxx is an open-source project with zero ads and zero trackers. Every contribution helps cover ongoing
           server bandwidth, high-performance transcoding CPU, and domain maintenance!
         </p>
@@ -1217,7 +1245,7 @@
               </div>
             </div>
             <div class="support-card-action">
-              <span>Support on Saweria</span>
+              <span data-i18n="support_saweria_action">Support on Saweria</span>
               <svg class="support-arrow-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M7 17L17 7M17 7H7M17 7V17" />
@@ -1247,7 +1275,7 @@
                       stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
                       aria-hidden="true">
                       <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                      <line x1="21" y1="12" x2="22" y2="12"></line>
                       <path
                         d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
                       </path>
@@ -1255,11 +1283,11 @@
                     International
                   </span>
                 </div>
-                <p class="support-brand-desc">Credit/Debit Card, PayPal, Apple Pay</p>
+                <p class="support-brand-desc" data-i18n="support_kofi_desc">Credit/Debit Card, PayPal, Apple Pay</p>
               </div>
             </div>
             <div class="support-card-action">
-              <span>Support on Ko-fi</span>
+              <span data-i18n="support_kofi_action">Support on Ko-fi</span>
               <svg class="support-arrow-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M7 17L17 7M17 7H7M17 7V17" />
@@ -1278,8 +1306,8 @@
             </svg>
           </div>
           <div class="support-perks-text">
-            <strong>Thank you for keeping Melodyxx alive!</strong>
-            <span>All funds are 100% reinvested into server bandwidth and open-source updates.</span>
+            <strong data-i18n="support_thanks_strong">Thank you for keeping Melodyxx alive!</strong>
+            <span data-i18n="support_thanks_span">All funds are 100% reinvested into server bandwidth and open-source updates.</span>
           </div>
         </div>
       </div>
@@ -1301,9 +1329,9 @@
           </div>
           <div>
             <div class="report-title-row">
-              <h2 class="report-modal-title" id="report-modal-title">Report an Issue or Feedback</h2>
+              <h2 class="report-modal-title" id="report-modal-title" data-i18n="report_title">Report an Issue or Feedback</h2>
             </div>
-            <p class="report-modal-subtitle">Found a bug or have a suggestion? Let us know below.</p>
+            <p class="report-modal-subtitle" data-i18n="report_subtitle">Found a bug or have a suggestion? Let us know below.</p>
           </div>
         </div>
         <button type="button" class="btn-report-close" id="btn-report-close" aria-label="Close dialog">
@@ -1321,13 +1349,13 @@
 
         <div class="report-form-row">
           <div class="report-form-group">
-            <label for="report-name" class="report-label">Your Name <span class="report-required">*</span></label>
+            <label for="report-name" class="report-label"><span data-i18n="report_name_label">Your Name</span> <span class="report-required">*</span></label>
             <input type="text" id="report-name" name="name" class="report-input" placeholder="e.g. Alex" maxlength="60"
               autocomplete="name" required />
             <span class="report-field-error" id="report-name-error" style="display: none;">Name is required</span>
           </div>
           <div class="report-form-group">
-            <label for="report-email" class="report-label">Your Email <span class="report-required">*</span></label>
+            <label for="report-email" class="report-label"><span data-i18n="report_email_label">Your Email</span> <span class="report-required">*</span></label>
             <input type="email" id="report-email" name="email" class="report-input" placeholder="e.g. alex@example.com"
               maxlength="80" autocomplete="email" required />
             <span class="report-field-error" id="report-email-error" style="display: none;">Please enter a valid email
@@ -1336,15 +1364,15 @@
         </div>
 
         <div class="report-form-group">
-          <label for="report-category" class="report-label">Category</label>
+          <label for="report-category" class="report-label" data-i18n="report_category_label">Category</label>
           <div class="report-select-wrap">
             <select id="report-category" name="category" class="report-select">
-              <option value="Bug / Error">Bug / Something isn't working</option>
-              <option value="Audio Stream / Download Issue">Audio Stream / Download Issue</option>
-              <option value="Metadata / Artwork Incorrect">Metadata / Artwork Incorrect</option>
-              <option value="UI / Design Glitch">UI / Design Glitch</option>
-              <option value="Feature Request">Feature Request</option>
-              <option value="Other Feedback">Other Feedback</option>
+              <option value="Bug / Error" data-i18n="report_category_bug">Bug / Something isn't working</option>
+              <option value="Audio Stream / Download Issue" data-i18n="report_category_audio">Audio Stream / Download Issue</option>
+              <option value="Metadata / Artwork Incorrect" data-i18n="report_category_metadata">Metadata / Artwork Incorrect</option>
+              <option value="UI / Design Glitch" data-i18n="report_category_ui">UI / Design Glitch</option>
+              <option value="Feature Request" data-i18n="report_category_feature">Feature Request</option>
+              <option value="Other Feedback" data-i18n="report_category_other">Other Feedback</option>
             </select>
             <svg class="report-select-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none"
               stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
@@ -1356,18 +1384,17 @@
 
         <div class="report-form-group">
           <div class="report-label-row">
-            <label for="report-description" class="report-label">Description <span
+            <label for="report-description" class="report-label"><span data-i18n="report_desc_label">Description</span> <span
                 class="report-required">*</span></label>
             <span class="report-char-count" id="report-char-count">0 / 1000</span>
           </div>
           <textarea id="report-description" name="description" class="report-textarea" rows="4"
-            placeholder="Describe what happened, steps to reproduce, or what you expected to see..." maxlength="1000"
+            placeholder="Describe what happened, steps to reproduce, or what you expected to see..." data-i18n-placeholder="report_desc_placeholder" maxlength="1000"
             required></textarea>
         </div>
 
         <div class="report-form-group">
-          <label class="report-label">Screenshot / Screen Recording <span class="report-optional">(Optional, max 10MB
-              image / 30MB video)</span></label>
+          <label class="report-label"><span data-i18n="report_dropzone_label">Screenshot / Screen Recording</span> <span class="report-optional" data-i18n="report_dropzone_optional">(Optional, max 10MB image / 30MB video)</span></label>
           <div class="report-dropzone" id="report-dropzone">
             <input type="file" id="report-file-input" name="media"
               accept="image/png,image/jpeg,image/webp,video/mp4,video/webm" class="report-file-input" />
@@ -1381,9 +1408,9 @@
                 </svg>
               </div>
               <div class="dropzone-text">
-                <span class="dropzone-prompt">Drag &amp; drop an image or video, or <span
-                    class="dropzone-browse">browse</span></span>
-                <span class="dropzone-hint">Supports PNG, JPG, WEBP, MP4, WEBM</span>
+                <span class="dropzone-prompt"><span data-i18n="report_dropzone_prompt">Drag &amp; drop an image or video, or</span> <span
+                    class="dropzone-browse" data-i18n="report_dropzone_browse">browse</span></span>
+                <span class="dropzone-hint" data-i18n="report_dropzone_hint">Supports PNG, JPG, WEBP, MP4, WEBM</span>
               </div>
             </div>
 
@@ -1411,22 +1438,22 @@
               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-            <span>Included Diagnostics (Auto-collected)</span>
+            <span data-i18n="report_diagnostics_summary">Included Diagnostics (Auto-collected)</span>
           </summary>
           <div class="diagnostics-content">
-            <div class="diag-row"><span class="diag-label">App Version:</span> <span class="diag-val"
+            <div class="diag-row"><span class="diag-label" data-i18n="report_diag_app_ver">App Version:</span> <span class="diag-val"
                 id="diag-app-version">--</span></div>
-            <div class="diag-row"><span class="diag-label">Browser &amp; OS:</span> <span class="diag-val"
+            <div class="diag-row"><span class="diag-label" data-i18n="report_diag_browser_os">Browser &amp; OS:</span> <span class="diag-val"
                 id="diag-platform">--</span></div>
-            <div class="diag-row"><span class="diag-label">Screen:</span> <span class="diag-val"
+            <div class="diag-row"><span class="diag-label" data-i18n="report_diag_screen">Screen:</span> <span class="diag-val"
                 id="diag-screen">--</span></div>
-            <div class="diag-row"><span class="diag-label">Current Page:</span> <span class="diag-val"
+            <div class="diag-row"><span class="diag-label" data-i18n="report_diag_page">Current Page:</span> <span class="diag-val"
                 id="diag-page">--</span></div>
           </div>
         </details>
 
         <div class="report-modal-footer">
-          <button type="button" class="btn-report-cancel" id="btn-report-cancel">Cancel</button>
+          <button type="button" class="btn-report-cancel" id="btn-report-cancel" data-i18n="report_btn_cancel">Cancel</button>
           <button type="submit" class="btn-report-submit" id="btn-report-submit">
             <svg class="submit-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1434,7 +1461,7 @@
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
             <div class="spinner-small submit-spinner" style="display: none;" aria-hidden="true"></div>
-            <span class="submit-text">Send Report</span>
+            <span class="submit-text" data-i18n="report_btn_submit">Send Report</span>
           </button>
         </div>
       </form>
@@ -1456,8 +1483,8 @@
           </svg>
         </div>
         <div class="confirm-modal-title-wrap">
-          <h2 class="confirm-modal-title" id="confirm-modal-title">Clear All Favorites?</h2>
-          <p class="confirm-modal-subtitle" id="confirm-modal-subtitle">Permanent action</p>
+          <h2 class="confirm-modal-title" id="confirm-modal-title" data-i18n="confirm_clear_fav_title">Clear All Favorites?</h2>
+          <p class="confirm-modal-subtitle" id="confirm-modal-subtitle" data-i18n="confirm_clear_fav_subtitle">Permanent action</p>
         </div>
         <button type="button" class="btn-confirm-close" id="btn-confirm-close" aria-label="Close dialog">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -1468,21 +1495,21 @@
       </div>
 
       <div class="confirm-modal-body">
-        <p class="confirm-modal-message" id="confirm-modal-message">
+        <p class="confirm-modal-message" id="confirm-modal-message" data-i18n-html="confirm_clear_fav_message">
           Are you sure you want to remove all songs from your Favorites collection? This action cannot be undone.
         </p>
       </div>
 
       <div class="confirm-modal-footer">
-        <button type="button" class="btn-confirm-cancel" id="btn-confirm-cancel">Cancel</button>
-        <button type="button" class="btn-confirm-action danger" id="btn-confirm-action">Clear All</button>
+        <button type="button" class="btn-confirm-cancel" id="btn-confirm-cancel" data-i18n="confirm_btn_cancel">Cancel</button>
+        <button type="button" class="btn-confirm-action danger" id="btn-confirm-action" data-i18n="confirm_btn_clear_all">Clear All</button>
       </div>
     </div>
   </div>
 
   <!-- Floating Support Me Bubble -->
   <button type="button" class="floating-support-bubble" id="btn-floating-support" aria-label="Support Melodyxx"
-    title="Support Me !">
+    title="Support Me !" data-i18n-title="floating_support_text">
     <span class="floating-support-pulse" aria-hidden="true"></span>
     <div class="floating-support-icon-wrap" aria-hidden="true">
       <svg class="cute-coffee-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
@@ -1495,13 +1522,13 @@
           stroke="none" opacity="0.85"></path>
       </svg>
     </div>
-    <span class="floating-support-text">Support Me !</span>
+    <span class="floating-support-text" data-i18n="floating_support_text">Support Me !</span>
   </button>
 
   <!-- Toast container -->
   <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
 
-  <script src="/static/js/app.js?v=1.24.2" defer></script>
+  <script src="/static/js/app.js?v=1.25.0" defer></script>
 </body>
 
 </html>
