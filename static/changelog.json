@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.25.1",
+    "date": "2026-11-21",
+    "type": "fix",
+    "title": "Real-Time Sliding Glider Realignment on Language Change",
+    "highlights": [
+      "Dynamic Search Mode Glider Recalculation: Fixed glider capsule cutoff and positioning offset when toggling between EN and ID by actively re-measuring tab dimensions after translation.",
+      "ResizeObserver Integration: Implemented proactive ResizeObserver monitoring on the search mode tabs container and individual tab pills for instant realignment whenever tab text or badge counts change.",
+      "Favorites Badge Size Synchronization: Automatically triggers glider realignment when the favorites count badge updates (e.g. from 9 to 10 or when toggled).",
+      "Seamless Dual-Language Transitions: Ensures the glowing violet active pill wraps cleanly around translated labels without visual clipping or awkward overflow gaps."
+    ]
+  },
+  {
     "version": "v1.25.0",
     "date": "2026-11-20",
     "type": "feature",
