@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.25.2",
+    "date": "2026-11-21",
+    "type": "fix",
+    "title": "Restored Smooth Fluid Glider Transitions for Favorites Tab",
+    "highlights": [
+      "Smooth Tab Navigation: Fixed animation stutter and abrupt snapping when navigating to the Favorites tab by removing premature instant glider overrides.",
+      "Clean CSS Transitions: Preserved full cubic-bezier motion dynamics across all search mode tabs without layout interruptions.",
+      "Reliable Language Switch Alignment: Maintained smooth, non-blocking recalculations on language toggles without cutting active transitions short."
+    ]
+  },
+  {
     "version": "v1.25.1",
     "date": "2026-11-21",
     "type": "fix",

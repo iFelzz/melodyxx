@@ -192,9 +192,6 @@
       } else {
         $tabFavBadge.style.display = 'none';
       }
-      if (searchMode === 'favorites') {
-        requestAnimationFrame(() => updateSearchModeGlider(true));
-      }
     }
 
     function renderStarSvg(isActive) {
@@ -1282,18 +1279,6 @@
       // Initialize glider position on page load and handle window resizing
       requestAnimationFrame(() => updateSearchModeGlider(true));
       window.addEventListener('resize', () => updateSearchModeGlider(true));
-
-      // Observe search mode tabs container and individual tab elements for any dimension changes (e.g. language switch, font load, badge count)
-      const $tabsContainer = document.querySelector('.search-mode-tabs');
-      if ($tabsContainer && typeof ResizeObserver !== 'undefined') {
-        const roTabs = new ResizeObserver(() => {
-          updateSearchModeGlider(false);
-        });
-        roTabs.observe($tabsContainer);
-        if ($tabModeSongs) roTabs.observe($tabModeSongs);
-        if ($tabModeArtists) roTabs.observe($tabModeArtists);
-        if ($tabModeFavorites) roTabs.observe($tabModeFavorites);
-      }
     }
 
     // ── Search ───────────────────────────────────────────────
@@ -4960,7 +4945,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.25.1';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.25.2';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5244,7 +5229,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.25.1');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.25.2');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);
@@ -5413,7 +5398,7 @@
 
     // ── Reactive Language Change Listener (i18n) ──────────────────
     window.addEventListener('melodyxx:langchange', () => {
-      // 0. Re-align search mode glider & quality glider with new translated tab widths
+      // 0. Re-align search mode glider & quality glider with new translated tab widths smoothly
       requestAnimationFrame(() => {
         if (typeof updateSearchModeGlider === 'function') {
           updateSearchModeGlider(false);
@@ -5422,11 +5407,6 @@
           updateQualityGlider(false);
         }
       });
-      setTimeout(() => {
-        if (typeof updateSearchModeGlider === 'function') {
-          updateSearchModeGlider(true);
-        }
-      }, 50);
 
       // 1. Update search placeholder
       if ($input) {
