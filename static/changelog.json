@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.25.3",
+    "date": "2026-11-23",
+    "type": "fix",
+    "title": "YouTube Mix & Radio URL Normalization for Single-Song Search",
+    "highlights": [
+      "Smart YouTube URL Sanitization: Automatically extracts and isolates clean 11-character video IDs from YouTube URLs containing radio, mix, and playlist query parameters (&list=RD..., &start_radio=1, &index=..., &t=...).",
+      "Reliable Direct Video Extraction: Prevents yt-dlp from misinterpreting single-track links as complex playlist tabs or empty duration streams, eliminating false 'No results found' screens.",
+      "Comprehensive Link Support: Normalizes standard watch links, youtu.be shortlinks, YouTube Music, mobile, embed, and shorts URLs across search, preview, and download pipelines."
+    ]
+  },
+  {
     "version": "v1.25.2",
     "date": "2026-11-21",
     "type": "fix",

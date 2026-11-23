@@ -479,6 +479,59 @@ class DownloadRequest(BaseModel):
         return v
 
 # ── Helpers ───────────────────────────────────────────────────
+def _clean_youtube_url(url: str) -> str:
+    """
+    Normalize YouTube URLs (watch, shorts, embed, youtu.be, mobile, music) into clean watch URLs,
+    stripping mix/radio/playlist query parameters (&list=RD..., &start_radio=1, &index=..., &t=...)
+    that can confuse yt-dlp into treating a single video as a playlist/tab.
+    """
+    raw = (url or "").strip()
+    if not raw:
+        return ""
+    if not (raw.startswith("http://") or raw.startswith("https://")):
+        if "youtube.com" in raw or "youtu.be" in raw:
+            raw = "https://" + raw
+        else:
+            return raw
+
+    try:
+        parsed = urllib.parse.urlparse(raw)
+        host = (parsed.hostname or "").lower()
+        if any(h in host for h in ("youtube.com", "youtu.be", "youtube-nocookie.com")):
+            video_id = None
+            if "youtu.be" in host:
+                path_parts = parsed.path.strip("/").split("/")
+                if path_parts and len(path_parts[0]) == 11:
+                    video_id = path_parts[0]
+            else:
+                qs = urllib.parse.parse_qs(parsed.query)
+                if "v" in qs and qs["v"] and len(qs["v"][0]) == 11:
+                    video_id = qs["v"][0]
+                elif "/shorts/" in parsed.path:
+                    parts = parsed.path.split("/shorts/")
+                    if len(parts) > 1:
+                        candidate = parts[1].split("/")[0].split("?")[0]
+                        if len(candidate) == 11:
+                            video_id = candidate
+                elif "/embed/" in parsed.path:
+                    parts = parsed.path.split("/embed/")
+                    if len(parts) > 1:
+                        candidate = parts[1].split("/")[0].split("?")[0]
+                        if len(candidate) == 11:
+                            video_id = candidate
+                elif "/v/" in parsed.path:
+                    parts = parsed.path.split("/v/")
+                    if len(parts) > 1:
+                        candidate = parts[1].split("/")[0].split("?")[0]
+                        if len(candidate) == 11:
+                            video_id = candidate
+
+            if video_id and re.fullmatch(r"[a-zA-Z0-9_-]{11}", video_id):
+                return f"https://www.youtube.com/watch?v={video_id}"
+    except Exception:
+        pass
+    return raw
+
 def sanitise_filename(name: str) -> str:
     """
     Clean filename of illegal characters across Windows and Linux,
@@ -512,7 +565,7 @@ def _extract_stream_info(url: str, raw_title: str = "", explicit_meta: Optional[
     Supports direct YouTube URLs as well as YouTube search queries (e.g. ytsearch1:Artist - Title).
     """
     explicit_meta = explicit_meta or {}
-    clean_target = url.strip()
+    clean_target = _clean_youtube_url(url.strip())
     if not (clean_target.startswith("http://") or clean_target.startswith("https://")):
         clean_target = clean_target if clean_target.startswith("ytsearch") else f"ytsearch1:{clean_target} audio"
 
@@ -1048,20 +1101,21 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
     limit = min(max(1, limit), 50)
     offset = max(0, offset)
     q_stripped = q.strip()
-    is_url = q_stripped.startswith("http://") or q_stripped.startswith("https://")
+    q_cleaned = _clean_youtube_url(q_stripped)
+    is_url = q_cleaned.startswith("http://") or q_cleaned.startswith("https://")
 
     if is_url:
         if offset > 0:
             return JSONResponse(content={"results": [], "has_more": False, "offset": offset, "limit": limit})
-        search_query = q_stripped
+        search_query = q_cleaned
         slice_items = None
     else:
         start_item = offset + 1
         end_item = offset + limit
-        search_query = f"ytsearch{end_item}:{q_stripped}"
+        search_query = f"ytsearch{end_item}:{q_cleaned}"
         slice_items = f"{start_item}-{end_item}"
 
-    cache_key = f"{q_stripped.lower()}::{offset}::{limit}"
+    cache_key = f"{q_cleaned.lower()}::{offset}::{limit}"
     if not is_url:
         cached = _search_cache.get(cache_key)
         if cached:
@@ -1147,7 +1201,7 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
         raise HTTPException(status_code=500, detail=str(exc))
 
 def _normalize_preview_target(target: str) -> str:
-    cleaned = (target or "").strip()
+    cleaned = _clean_youtube_url((target or "").strip())
     if not cleaned:
         return ""
     if cleaned.startswith("http://") or cleaned.startswith("https://") or cleaned.startswith("ytsearch"):
