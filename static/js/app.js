@@ -192,6 +192,10 @@
       } else {
         $tabFavBadge.style.display = 'none';
       }
+      // Re-align search glider immediately whenever badge visibility or count shifts tab dimensions
+      if (typeof updateSearchModeGlider === 'function') {
+        requestAnimationFrame(() => updateSearchModeGlider(false));
+      }
     }
 
     function renderStarSvg(isActive) {
@@ -1286,6 +1290,19 @@
       showState('empty');
       requestAnimationFrame(() => updateSearchModeGlider(true));
       window.addEventListener('resize', () => updateSearchModeGlider(true));
+
+      // Observe tab elements and container to auto-sync glider on content/badge/font shifts
+      if ('ResizeObserver' in window && $tabModeFavorites) {
+        const roTabs = new ResizeObserver(() => {
+          if (typeof updateSearchModeGlider === 'function') {
+            updateSearchModeGlider(false);
+          }
+        });
+        roTabs.observe($tabModeFavorites);
+        if ($tabModeSongs) roTabs.observe($tabModeSongs);
+        if ($tabModeArtists) roTabs.observe($tabModeArtists);
+        if ($tabModeSongs.parentElement) roTabs.observe($tabModeSongs.parentElement);
+      }
     }
 
     // ── Search ───────────────────────────────────────────────
@@ -4989,7 +5006,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.2';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.3';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5273,7 +5290,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.2');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.3');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

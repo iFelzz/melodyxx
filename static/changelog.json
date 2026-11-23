@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.26.3",
+    "date": "2026-11-23",
+    "type": "fix",
+    "title": "Dynamic Search Glider Auto-Sync on Favorites Badge & Playlist Mutation",
+    "highlights": [
+      "Dynamic Glider Bounds Recalculation: Fixed search mode glider (#search-mode-glider) boundary overflow when adding or removing favorites by triggering immediate geometry recalculation inside updateFavoritesBadge().",
+      "Seamless ResizeObserver Integration: Attached ResizeObserver to tab buttons and container (.search-mode-tabs) ensuring the active purple glider perfectly hugs tab boundaries with zero clipping or overflow during badge visibility toggles, playlist clears, and language switches.",
+      "Service worker cache layer bumped to melodyxx-v148."
+    ]
+  },
+  {
     "version": "v1.26.2",
     "date": "2026-11-23",
     "type": "fix",
