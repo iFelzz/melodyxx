@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /static/
+Allow: /favicon.ico
 Allow: /llms.txt
 Disallow: /api/
 Disallow: /stats

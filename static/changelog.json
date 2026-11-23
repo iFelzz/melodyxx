@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.26.8",
+    "date": "2026-11-24",
+    "type": "fix",
+    "title": "Google Search Favicon Optimization & Compliant Asset Suite",
+    "highlights": [
+      "Compliant Google Favicon Suite: Generated true PNG favicon assets scaled to official Google Search guidelines (48x48, 96x96, 192x192, 512x512, and 180x180 Apple touch icon).",
+      "Multi-Resolution Favicon.ico: Compiled authentic Microsoft ICO format container with 16x16, 32x32, and 48x48 frames replacing previous pseudo-JPEG image file.",
+      "Root Favicon & Robots.txt Alignment: Explicitly allowed /favicon.ico and static assets in robots.txt and configured public cache headers for search engine crawlers.",
+      "Service worker cache bumped to melodyxx-v153."
+    ]
+  },
+  {
     "version": "v1.26.7",
     "date": "2026-11-23",
     "type": "feature",

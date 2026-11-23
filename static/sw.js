@@ -6,13 +6,18 @@
  *   - Static Assets (CSS, JS, images): Stale-while-revalidate
  */
 
-const CACHE_NAME = 'melodyxx-v152';
+const CACHE_NAME = 'melodyxx-v153';
 const APP_SHELL = [
   '/',
+  '/favicon.ico',
   '/static/css/style.css',
   '/static/js/i18n.js',
   '/static/js/app.js',
   '/static/logo.png',
+  '/static/favicon-48x48.png',
+  '/static/favicon-96x96.png',
+  '/static/favicon-192x192.png',
+  '/static/apple-touch-icon.png',
   '/static/manifest.json',
   '/static/offline.html',
 ];

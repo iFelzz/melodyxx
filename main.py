@@ -754,19 +754,27 @@ async def offline():
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    """Serve favicon with no-cache headers."""
+    """Serve favicon with standard icon media type."""
     favicon_path = STATIC_DIR / "favicon.ico"
     if favicon_path.exists():
         return FileResponse(
             str(favicon_path),
-            headers={"Cache-Control": "no-cache, must-revalidate, max-age=0"}
+            media_type="image/x-icon",
+            headers={"Cache-Control": "public, max-age=86400"}
+        )
+    fallback_path = STATIC_DIR / "favicon-48x48.png"
+    if fallback_path.exists():
+        return FileResponse(
+            str(fallback_path),
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=86400"}
         )
     logo_path = STATIC_DIR / "logo.png"
     if logo_path.exists():
         return FileResponse(
             str(logo_path),
             media_type="image/png",
-            headers={"Cache-Control": "no-cache, must-revalidate, max-age=0"}
+            headers={"Cache-Control": "public, max-age=86400"}
         )
     raise HTTPException(status_code=404, detail="Favicon not found.")
 
