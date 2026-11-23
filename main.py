@@ -68,7 +68,7 @@ STATIC_DIR = BASE_DIR / "static"
 # ── Environment & External Config ────────────────────────────
 CLEANUP_TOKEN = os.environ.get("CLEANUP_TOKEN")
 YTDLP_PROXY   = os.environ.get("YTDLP_PROXY")
-ADMIN_KEY     = os.environ.get("ADMIN_KEY", "melodyxx-admin")
+ADMIN_KEY     = (os.environ.get("ADMIN_KEY") or "melodyxx-admin").strip()
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "").strip()

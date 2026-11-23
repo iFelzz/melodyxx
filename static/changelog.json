@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.26.4",
+    "date": "2026-11-23",
+    "type": "fix",
+    "title": "Portainer Docker Compose Environment Variable Forwarding for Custom ADMIN_KEY",
+    "highlights": [
+      "Docker Compose Environment Pass-Through: Explicitly forwarded ADMIN_KEY, CLEANUP_TOKEN, YTDLP_PROXY, and YTDLP_COOKIES_FILE from stack environment variables into the container in docker-compose.yml, allowing Portainer environment configurations to take effect at runtime.",
+      "Sanitized Admin Key Parsing: Hardened ADMIN_KEY in main.py to automatically strip surrounding whitespace and reliably fall back to default melodyxx-admin if empty.",
+      "Service worker cache bumped to melodyxx-v149."
+    ]
+  },
+  {
     "version": "v1.26.3",
     "date": "2026-11-23",
     "type": "fix",
