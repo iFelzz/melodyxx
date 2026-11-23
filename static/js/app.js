@@ -1305,7 +1305,46 @@
       }
     }
 
-    // ── Search ───────────────────────────────────────────────
+    // ── Search & URL Validation ───────────────────────────────
+
+    function isYouTubeUrl(url) {
+      const raw = (url || '').trim();
+      if (!raw) return false;
+      let candidate = raw;
+      if (!/^https?:\/\//i.test(candidate)) {
+        if (/^\/\//.test(candidate)) {
+          candidate = 'https:' + candidate;
+        } else if (/^www\./i.test(candidate) || /(?:youtube\.com|youtu\.be|youtube-nocookie\.com)/i.test(candidate)) {
+          candidate = 'https://' + candidate;
+        } else {
+          return false;
+        }
+      }
+      try {
+        const parsed = new URL(candidate);
+        const host = (parsed.hostname || '').toLowerCase();
+        if (!host) return false;
+        const allowedDomains = ['youtube.com', 'youtu.be', 'youtube-nocookie.com'];
+        return allowedDomains.some(dom => host === dom || host.endsWith('.' + dom));
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function isExternalNonYoutubeUrl(text) {
+      const raw = (text || '').trim();
+      if (!raw) return false;
+      if (/^(?:https?|ftp):\/\//i.test(raw) || /^\/\//.test(raw)) {
+        return !isYouTubeUrl(raw);
+      }
+      if (/^www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/i.test(raw)) {
+        return !isYouTubeUrl(raw);
+      }
+      if (!raw.includes(' ') && /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,6}(?::\d+)?(?:\/.*)?$/.test(raw)) {
+        return !isYouTubeUrl(raw);
+      }
+      return false;
+    }
 
     async function performSearch(query) {
       if (!query || !query.trim()) return;
@@ -1326,6 +1365,16 @@
         return;
       }
 
+      // Safeguard: Block non-YouTube external links immediately without server network calls
+      if (isExternalNonYoutubeUrl(q)) {
+        if ($errorMsg) {
+          $errorMsg.textContent = t('err_only_yt_urls');
+        }
+        showState('error');
+        toast('error', t('err_only_yt_urls'));
+        return;
+      }
+
       isSearching = true;
       showState('loading');
       $loadingText.textContent = 'Searching for songs…';
@@ -1338,7 +1387,13 @@
 
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=50&offset=0`);
-        const data = await res.json();
+        let data;
+        const resText = await res.text();
+        try {
+          data = JSON.parse(resText);
+        } catch (_) {
+          data = { detail: resText.slice(0, 200) || `HTTP ${res.status}` };
+        }
 
         if (!res.ok) {
           throw new Error(data.detail || `HTTP ${res.status}`);
@@ -1382,14 +1437,32 @@
       }
       if ($input) $input.blur();
 
+      const q = (query || '').trim();
+
+      // Safeguard: artist search should not accept URLs
+      if (isExternalNonYoutubeUrl(q) || isYouTubeUrl(q)) {
+        if ($errorMsg) {
+          $errorMsg.textContent = t('err_artist_no_urls');
+        }
+        showState('error');
+        toast('error', t('err_artist_no_urls'));
+        return;
+      }
+
       isSearching = true;
       showState('loading');
-      $loadingText.textContent = `Searching artists for ${query}…`;
+      $loadingText.textContent = `Searching artists for ${q}…`;
       $searchBtn.disabled = true;
 
       try {
-        const res = await fetch(`/api/artist/search?q=${encodeURIComponent(query)}&limit=48`);
-        const data = await res.json();
+        const res = await fetch(`/api/artist/search?q=${encodeURIComponent(q)}&limit=48`);
+        let data;
+        const resText = await res.text();
+        try {
+          data = JSON.parse(resText);
+        } catch (_) {
+          data = { detail: resText.slice(0, 200) || `HTTP ${res.status}` };
+        }
         if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
         const artists = data.results || [];
@@ -5006,7 +5079,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.6';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.7';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5290,7 +5363,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.6');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.7');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

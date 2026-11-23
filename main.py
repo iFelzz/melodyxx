@@ -562,6 +562,59 @@ def _clean_youtube_url(url: str) -> str:
         pass
     return raw
 
+def is_youtube_url(url: str) -> bool:
+    """
+    Check if a string represents a valid YouTube URL (watch, shorts, playlist, embed, mobile, music, youtu.be).
+    Safely validates hostname against domain spoofing.
+    """
+    raw = (url or "").strip()
+    if not raw:
+        return False
+    if not (raw.startswith("http://") or raw.startswith("https://")):
+        if raw.startswith("//"):
+            raw = "https:" + raw
+        elif raw.startswith("www.") or any(d in raw.lower() for d in ("youtube.com", "youtu.be", "youtube-nocookie.com")):
+            raw = "https://" + raw
+        else:
+            return False
+
+    try:
+        parsed = urllib.parse.urlparse(raw)
+        host = (parsed.hostname or "").lower()
+        if not host:
+            return False
+        allowed_domains = ("youtube.com", "youtu.be", "youtube-nocookie.com")
+        for dom in allowed_domains:
+            if host == dom or host.endswith("." + dom):
+                return True
+    except Exception:
+        pass
+    return False
+
+def is_non_youtube_url(text: str) -> bool:
+    """
+    Detect whether the input is an external non-YouTube URL or domain.
+    Returns True ONLY if the text is a URL/domain and NOT a valid YouTube URL.
+    Normal song search queries (e.g. "Alan Walker Faded", "Twice 1to10") return False.
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return False
+
+    # 1. Has explicit URL scheme or protocol-relative '//'
+    if re.match(r"^(?:https?|ftp)://", raw, re.IGNORECASE) or raw.startswith("//"):
+        return not is_youtube_url(raw)
+
+    # 2. Starts with www.
+    if re.match(r"^www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}", raw, re.IGNORECASE):
+        return not is_youtube_url(raw)
+
+    # 3. Standalone domain or URL path without scheme (e.g. instagram.com/p/..., spotify.link/...)
+    if " " not in raw and re.match(r"^[a-zA-Z0-9-]+\.[a-zA-Z]{2,6}(?::\d+)?(?:/.*)?$", raw):
+        return not is_youtube_url(raw)
+
+    return False
+
 def sanitise_filename(name: str) -> str:
     """
     Clean filename of illegal characters across Windows and Linux,
@@ -1139,6 +1192,13 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
     limit = min(max(1, limit), 50)
     offset = max(0, offset)
     q_stripped = q.strip()
+
+    if is_non_youtube_url(q_stripped):
+        raise HTTPException(
+            status_code=400,
+            detail="Only YouTube links and song/artist search queries are supported. Other URLs are not allowed."
+        )
+
     q_cleaned = _clean_youtube_url(q_stripped)
     is_url = q_cleaned.startswith("http://") or q_cleaned.startswith("https://")
 
@@ -1261,6 +1321,12 @@ async def preview(request: Request, url: str):
     if not clean_url:
         raise HTTPException(status_code=400, detail="URL is required")
 
+    if is_non_youtube_url(clean_url):
+        raise HTTPException(
+            status_code=400,
+            detail="Only YouTube links and song/artist search queries are supported. Other URLs are not allowed."
+        )
+
     client_ip = get_client_ip(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
@@ -1321,6 +1387,12 @@ async def preview_stream(request: Request, url: str):
     clean_url = url.strip()
     if not clean_url:
         raise HTTPException(status_code=400, detail="URL is required")
+
+    if is_non_youtube_url(clean_url):
+        raise HTTPException(
+            status_code=400,
+            detail="Only YouTube links and song/artist search queries are supported. Other URLs are not allowed."
+        )
 
     stream_url = _preview_cache.get(clean_url)
 
@@ -1460,8 +1532,8 @@ async def get_suggestions(request: Request, q: str = "", mode: str = "songs"):
     Returns matching top artist entity and query suggestions.
     """
     clean_q = q.strip() if q else ""
-    if not clean_q:
-        return JSONResponse(content={"query": "", "top_artist": None, "artists": [], "suggestions": []})
+    if not clean_q or is_non_youtube_url(clean_q) or is_youtube_url(clean_q):
+        return JSONResponse(content={"query": clean_q, "top_artist": None, "artists": [], "suggestions": []})
 
     data = await asyncio.to_thread(metadata_resolver.get_live_suggestions, clean_q, mode)
     return JSONResponse(content=data)
@@ -1474,6 +1546,9 @@ async def search_artist(request: Request, q: str, limit: int = 24):
     """Search music artists via iTunes API with smart acronym expansion and suggestions."""
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Query parameter 'q' is required.")
+
+    if is_non_youtube_url(q.strip()) or is_youtube_url(q.strip()):
+        return JSONResponse(content={"results": [], "suggestions": []})
     
     client_ip = get_client_ip(request)
     cf_country = request.headers.get("cf-ipcountry")
@@ -1543,6 +1618,12 @@ async def prepare_download(request: Request, body: DownloadRequest):
             target_url = f"{body.artist} - {body.title}"
         else:
             raise HTTPException(status_code=400, detail="URL or Artist+Title is required.")
+
+    if is_non_youtube_url(target_url):
+        raise HTTPException(
+            status_code=400,
+            detail="Only YouTube links and song/artist search queries are supported. Other URLs are not allowed."
+        )
 
     explicit_meta = {}
     if body.artist and body.title:

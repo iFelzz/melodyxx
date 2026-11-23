@@ -41,6 +41,8 @@
       start_searching_desc: "Type a song title, artist name, or lyrics in the search box above.",
       search_failed_title: "Search failed",
       search_failed_desc: "An error occurred. Please try again.",
+      err_only_yt_urls: "Only YouTube links and song/artist search queries are supported. Other URLs are not allowed.",
+      err_artist_no_urls: "Please enter an artist name, not a URL.",
       no_results_title: "No results found",
       no_results_desc: "Try a different keyword.",
 
@@ -316,6 +318,8 @@
       start_searching_desc: "Ketik judul lagu, nama artis, atau lirik pada kotak pencarian di atas.",
       search_failed_title: "Pencarian Gagal",
       search_failed_desc: "Terjadi kesalahan. Silakan coba beberapa saat lagi.",
+      err_only_yt_urls: "Hanya tautan YouTube dan pencarian lagu/artis yang didukung. Tautan lain tidak diizinkan.",
+      err_artist_no_urls: "Silakan masukkan nama artis atau grup musik, bukan tautan/URL.",
       no_results_title: "Tidak Ada Hasil Ditemukan",
       no_results_desc: "Coba gunakan kata kunci pencarian yang lain.",
 

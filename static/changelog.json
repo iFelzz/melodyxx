@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.26.7",
+    "date": "2026-11-23",
+    "type": "feature",
+    "title": "Strict Non-YouTube URL Blocking & Search Safeguards",
+    "highlights": [
+      "Non-YouTube URL Restriction: Automatically intercepts and rejects arbitrary external URLs (e.g. Instagram, Spotify, TikTok, internal IPs) on both frontend and backend before executing yt-dlp or querying external services, preventing server resource exhaustion, scraping crashes, and SSRF attacks.",
+      "Full YouTube Ecosystem Protection: Verified 100% compatibility for standard watch links, youtu.be shortlinks, shorts, playlists, mobile/music domains, and embed formats alongside standard song title and artist text searches.",
+      "Safe API Error Handling: Hardened frontend JSON parsing to gracefully handle non-JSON / HTML responses with localized toast notifications.",
+      "Service worker cache bumped to melodyxx-v152."
+    ]
+  },
+  {
     "version": "v1.26.6",
     "date": "2026-11-23",
     "type": "fix",
