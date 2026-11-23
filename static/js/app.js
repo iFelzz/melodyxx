@@ -396,14 +396,20 @@
 
     /** Show / hide the named state panel */
     function showState(state) {
-      $emptyState.style.display = state === 'empty' ? '' : 'none';
-      $errorState.style.display = state === 'error' ? '' : 'none';
-      $noResults.style.display = state === 'no-results' ? '' : 'none';
+      $emptyState.style.display = state === 'empty' ? 'block' : 'none';
+      $errorState.style.display = state === 'error' ? 'block' : 'none';
+      $noResults.style.display = state === 'no-results' ? 'block' : 'none';
       $results.classList.toggle('visible', state === 'results');
       $loading.classList.toggle('visible', state === 'loading');
-      if ($artistSearchResults) $artistSearchResults.style.display = state === 'artists' ? '' : 'none';
-      if ($artistView) $artistView.style.display = state === 'artist-view' ? '' : 'none';
-      if ($favoritesSection) $favoritesSection.style.display = state === 'favorites' ? '' : 'none';
+      if ($artistSearchResults) $artistSearchResults.style.display = state === 'artists' ? 'block' : 'none';
+      if ($artistView) $artistView.style.display = state === 'artist-view' ? 'block' : 'none';
+      if ($favoritesSection) $favoritesSection.style.display = state === 'favorites' ? 'block' : 'none';
+
+      // Keep SEO features showcase visible on initial empty landing, hide on favorites, search results, or artist view
+      const $seoSection = document.getElementById('seo-info-section');
+      if ($seoSection) {
+        $seoSection.style.display = (state === 'empty') ? 'block' : 'none';
+      }
 
       if (state === 'results' && !qualityGliderInit) {
         requestAnimationFrame(() => updateQualityGlider(true));
@@ -1276,7 +1282,8 @@
         });
       }
 
-      // Initialize glider position on page load and handle window resizing
+      // Initialize view state and glider position on page load
+      showState('empty');
       requestAnimationFrame(() => updateSearchModeGlider(true));
       window.addEventListener('resize', () => updateSearchModeGlider(true));
     }
@@ -2597,6 +2604,67 @@
       });
     }
 
+    function handleImportPlaylistFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          const imported = Array.isArray(parsed)
+            ? parsed
+            : (parsed && Array.isArray(parsed.favorites) ? parsed.favorites
+            : (parsed && Array.isArray(parsed.tracks) ? parsed.tracks
+            : (parsed && Array.isArray(parsed.playlist) ? parsed.playlist
+            : (parsed && Array.isArray(parsed.songs) ? parsed.songs : null))));
+          if (!imported || !Array.isArray(imported)) throw new Error('Invalid JSON playlist array');
+
+          const existing = getFavorites();
+          const existingIds = new Set(existing.map(x => String(x.id || x.url).trim()));
+          let addedCount = 0;
+          imported.forEach(item => {
+            if (!item) return;
+            const id = String(item.id || item.url || `${item.artist || ''} - ${item.title || ''}`).trim();
+            if (id && !existingIds.has(id)) {
+              const rawArt = item.artist || item.channel || '';
+              const cleanArt = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
+                ? (extractArtistFromTitle(item.title) || 'Unknown Artist')
+                : rawArt;
+
+              existing.push({
+                id: item.id || item.url || id,
+                url: item.url || '',
+                title: item.title || 'Unknown Title',
+                artist: cleanArt,
+                album: item.album || '',
+                duration: item.duration || '',
+                thumbnail: item.thumbnail || item.artwork_url || '',
+                preview_url: item.preview_url || '',
+                added_at: item.added_at || Date.now()
+              });
+              existingIds.add(id);
+              addedCount++;
+            }
+          });
+          saveFavorites(existing);
+          renderFavorites();
+          updateFavoritesBadge();
+          updateMiniFavButton();
+          toast('success', t('toast_imported_fav', { count: addedCount, plural: addedCount === 1 ? '' : 's' }));
+        } catch (err) {
+          console.error('Import favorites error:', err);
+          toast('error', t('toast_import_invalid'));
+        }
+        if ($favImportInput) $favImportInput.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    if ($btnFavImport && $favImportInput) {
+      $btnFavImport.addEventListener('click', () => {
+        $favImportInput.click();
+      });
+    }
+
     if ($btnFavEmptyImport && $favImportInput) {
       $btnFavEmptyImport.addEventListener('click', () => {
         $favImportInput.click();
@@ -2606,58 +2674,34 @@
     if ($favImportInput) {
       $favImportInput.addEventListener('change', (e) => {
         const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          try {
-            const parsed = JSON.parse(evt.target.result);
-            const imported = Array.isArray(parsed)
-              ? parsed
-              : (parsed && Array.isArray(parsed.favorites) ? parsed.favorites
-              : (parsed && Array.isArray(parsed.tracks) ? parsed.tracks
-              : (parsed && Array.isArray(parsed.playlist) ? parsed.playlist
-              : (parsed && Array.isArray(parsed.songs) ? parsed.songs : null))));
-            if (!imported || !Array.isArray(imported)) throw new Error('Invalid JSON playlist array');
+        handleImportPlaylistFile(file);
+      });
+    }
 
-            const existing = getFavorites();
-            const existingIds = new Set(existing.map(x => String(x.id || x.url).trim()));
-            let addedCount = 0;
-            imported.forEach(item => {
-              if (!item) return;
-              const id = String(item.id || item.url || `${item.artist || ''} - ${item.title || ''}`).trim();
-              if (id && !existingIds.has(id)) {
-                const rawArt = item.artist || item.channel || '';
-                const cleanArt = (!rawArt || rawArt.trim().toLowerCase() === 'unknown' || rawArt.trim().toLowerCase() === 'unknown artist')
-                  ? (extractArtistFromTitle(item.title) || 'Unknown Artist')
-                  : rawArt;
+    // Direct drag-and-drop playlist JSON support on the empty state card
+    if ($favoritesEmptyState) {
+      ['dragenter', 'dragover'].forEach(evName => {
+        $favoritesEmptyState.addEventListener(evName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          $favoritesEmptyState.classList.add('is-dragover');
+        });
+      });
 
-                existing.push({
-                  id: item.id || item.url || id,
-                  url: item.url || '',
-                  title: item.title || 'Unknown Title',
-                  artist: cleanArt,
-                  album: item.album || '',
-                  duration: item.duration || '',
-                  thumbnail: item.thumbnail || item.artwork_url || '',
-                  preview_url: item.preview_url || '',
-                  added_at: item.added_at || Date.now()
-                });
-                existingIds.add(id);
-                addedCount++;
-              }
-            });
-            saveFavorites(existing);
-            renderFavorites();
-            updateFavoritesBadge();
-            updateMiniFavButton();
-            toast('success', t('toast_imported_fav', { count: addedCount, plural: addedCount === 1 ? '' : 's' }));
-          } catch (err) {
-            console.error('Import favorites error:', err);
-            toast('error', t('toast_import_invalid'));
-          }
-          $favImportInput.value = '';
-        };
-        reader.readAsText(file);
+      ['dragleave', 'drop'].forEach(evName => {
+        $favoritesEmptyState.addEventListener(evName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          $favoritesEmptyState.classList.remove('is-dragover');
+        });
+      });
+
+      $favoritesEmptyState.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const file = dt && dt.files && dt.files[0];
+        if (file) {
+          handleImportPlaylistFile(file);
+        }
       });
     }
 
@@ -4945,7 +4989,7 @@
       document.body.style.overflow = 'hidden';
 
       // Populate diagnostics
-      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.1';
+      const activeVer = currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.2';
       if ($diagAppVersion) $diagAppVersion.textContent = activeVer;
       if ($diagScreen) $diagScreen.textContent = `${window.screen.width} × ${window.screen.height}`;
       if ($diagPage) $diagPage.textContent = window.location.href;
@@ -5229,7 +5273,7 @@
           formData.append('platform_info', platformInfo);
           formData.append('screen_res', `${window.screen.width}x${window.screen.height}`);
           formData.append('current_url', window.location.href);
-          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.1');
+          formData.append('app_version', currentAppVersion || document.getElementById('app-version-badge')?.textContent || 'v1.26.2');
 
           if (selectedReportFile) {
             formData.append('media', selectedReportFile, selectedReportFile.name);

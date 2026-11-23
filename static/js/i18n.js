@@ -117,6 +117,7 @@
       fav_empty_desc: "Search for songs or browse artist discographies and click the star button on any track to add it to your collection, or import a saved playlist.",
       fav_discover_music: "Discover Music",
       fav_import_playlist: "Import Playlist",
+      fav_drop_hint: "or drag & drop a playlist JSON file anywhere here",
       fav_no_matches: 'No favorites match "{query}"',
 
       // Mini Player
@@ -391,6 +392,7 @@
       fav_empty_desc: "Cari lagu atau jelajahi diskografi artis lalu klik ikon bintang pada lagu untuk menyimpannya, atau impor playlist yang sudah ada.",
       fav_discover_music: "Jelajahi Musik",
       fav_import_playlist: "Impor Playlist",
+      fav_drop_hint: "atau seret & lepas (drag & drop) file JSON playlist ke sini",
       fav_no_matches: 'Tidak ada favorit yang cocok dengan "{query}"',
 
       // Mini Player

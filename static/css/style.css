@@ -1148,7 +1148,6 @@
     #panel-albums,
     #favorites-section,
     #fav-import-input,
-    #favorites-empty-state,
     #release-log-badge,
     #global-player,
     #batch-action-bar,
@@ -6583,30 +6582,47 @@ details[open] .summary-caret {
 
 /* Empty State */
 .favorites-empty-state {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 50px 20px;
-  background: rgba(18, 14, 34, 0.45);
-  border: 1px dashed rgba(255, 255, 255, 0.12);
+  padding: 56px 24px;
+  background: rgba(18, 14, 34, 0.55);
+  border: 1px dashed rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-lg);
   margin-top: 10px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.favorites-empty-state.is-dragover {
+  border-color: #a855f7;
+  border-style: solid;
+  background: rgba(168, 85, 247, 0.15);
+  box-shadow: 0 0 35px rgba(168, 85, 247, 0.4), inset 0 0 20px rgba(168, 85, 247, 0.2);
+  transform: scale(1.01);
 }
 
 .favorites-empty-icon-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.18) 0%, rgba(168, 85, 247, 0.08) 60%, transparent 100%);
+  border: 1px solid rgba(251, 191, 36, 0.35);
   color: #fbbf24;
-  margin-bottom: 16px;
-  box-shadow: 0 0 24px rgba(251, 191, 36, 0.15);
+  margin-bottom: 18px;
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.22), inset 0 0 16px rgba(251, 191, 36, 0.12);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.favorites-empty-icon-wrap:hover {
+  transform: scale(1.08) rotate(5deg);
+  box-shadow: 0 0 40px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(251, 191, 36, 0.25);
 }
 
 .favorites-empty-title {
@@ -6631,6 +6647,15 @@ details[open] .summary-caret {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 4px;
+}
+
+.fav-drop-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--clr-text-dim);
+  margin-top: 14px;
+  opacity: 0.8;
+  letter-spacing: 0.02em;
 }
 
 .btn-fav-discover {

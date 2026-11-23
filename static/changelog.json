@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.26.2",
+    "date": "2026-11-23",
+    "type": "fix",
+    "title": "Favorites View Visibility Fix, Empty Playlist Artwork & Direct Drag-and-Drop Import",
+    "highlights": [
+      "Fixed Favorites View Display State: Resolved CSS specificity conflict where #favorites-section remained hidden under modular display:none rule, restoring the complete My Favorites view and hiding marketing cards when viewing playlist.",
+      "Enhanced Empty Playlist UI: Beautiful glowing golden star aura vector illustration, clear status typography in English and Indonesian, and immediate action buttons ('Discover Music' and 'Import Playlist').",
+      "Drag-and-Drop Playlist Import: Added native drag-and-drop file support to the empty state container, allowing users to drop their playlist JSON file anywhere to import songs instantly.",
+      "Bust client caches with melodyxx-v147 and cache-busting v1.26.2 query strings."
+    ]
+  },
+  {
     "version": "v1.26.1",
     "date": "2026-11-23",
     "type": "fix",
