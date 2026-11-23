@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.26.5",
+    "date": "2026-11-23",
+    "type": "fix",
+    "title": "Clean Sitemap Alignment & Disallow Harmonization for Google Search Console",
+    "highlights": [
+      "Harmonized Sitemap & Robots.txt: Removed disallowed internal /stats dashboard from public sitemap.xml to prevent Google Search Console 'Submitted URL blocked by robots.txt' warnings.",
+      "Service worker cache bumped to melodyxx-v150."
+    ]
+  },
+  {
     "version": "v1.26.4",
     "date": "2026-11-23",
     "type": "fix",
