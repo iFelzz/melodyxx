@@ -6,7 +6,7 @@
  *   - Static Assets (CSS, JS, images): Stale-while-revalidate
  */
 
-const CACHE_NAME = 'melodyxx-v153';
+const CACHE_NAME = 'melodyxx-v154';
 const APP_SHELL = [
   '/',
   '/favicon.ico',

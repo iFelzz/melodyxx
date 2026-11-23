@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.26.9",
+    "date": "2026-11-24",
+    "type": "feature",
+    "title": "Google Site Name Optimization (YT to MP3 Converter Downloader)",
+    "highlights": [
+      "Explicit Google Site Name Schema: Configured official schema.org WebSite structured data with primary name 'YT to MP3 Converter Downloader' and alternateName 'Melodyxx' to replace fallback subdomain text in Google Search snippet headers.",
+      "Meta Tag Alignment: Synchronized og:site_name, application-name, and title tags across OpenGraph, Twitter Cards, and HTML headers to ensure consistent search indexing signals.",
+      "PWA Manifest Sync: Updated Web App Manifest name to 'Melodyxx — YT to MP3 Converter Downloader'.",
+      "Service worker cache bumped to melodyxx-v154."
+    ]
+  },
+  {
     "version": "v1.26.8",
     "date": "2026-11-24",
     "type": "fix",
