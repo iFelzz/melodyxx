@@ -1087,7 +1087,9 @@
       margin-bottom: 12px;
     }
 
-    .state-msg h3 {
+    .state-msg h2,
+    .state-msg h3,
+    .state-title {
       font-size: 1.1rem;
       font-weight: 600;
       color: var(--clr-text);
@@ -1097,6 +1099,107 @@
     .state-msg p {
       font-size: 0.9rem;
       line-height: 1.6;
+    }
+
+    /* Initial hidden states for modular components (eliminates inline styles) */
+    #update-notification-banner,
+    #reconnect-banner,
+    #btn-install-pwa,
+    #tab-fav-badge,
+    #btn-search-clear,
+    #search-suggestions,
+    #error-state,
+    #no-results-state,
+    #pagination-controls,
+    #artist-search-results,
+    #artist-suggestions-bar,
+    #artist-load-more-wrap,
+    #artist-view,
+    #artist-country,
+    #panel-albums,
+    #favorites-section,
+    #fav-import-input,
+    #favorites-empty-state,
+    #release-log-badge,
+    #global-player,
+    #batch-action-bar,
+    #batch-progress-widget,
+    #batch-progress-actions,
+    #release-log-modal,
+    #release-search-clear,
+    #btn-release-scroll-top,
+    .report-field-error,
+    #dropzone-preview,
+    .submit-spinner {
+      display: none;
+    }
+
+    .results-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .artist-meta-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* SEO Guide & Educational Overview Card */
+    .seo-guide-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      margin-top: 32px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .seo-guide-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--clr-text);
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff 40%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .seo-guide-intro {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--clr-text-muted);
+      margin-bottom: 24px;
+    }
+
+    .seo-guide-step-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--clr-primary-light);
+      margin: 18px 0 10px 0;
+    }
+
+    .seo-step-list,
+    .seo-feature-list {
+      padding-left: 20px;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: var(--clr-text-muted);
+    }
+
+    .seo-step-list li,
+    .seo-feature-list li {
+      margin-bottom: 8px;
+    }
+
+    .seo-step-list strong,
+    .seo-feature-list strong {
+      color: var(--clr-text);
     }
 
     /* ═══════════════════════════════════════════════════

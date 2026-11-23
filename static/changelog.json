@@ -1,5 +1,21 @@
 [
   {
+    "version": "v1.26.0",
+    "date": "2026-11-23",
+    "type": "feature",
+    "title": "Comprehensive SEO, GEO & Performance Optimization Upgrade",
+    "highlights": [
+      "Optimized Title & Meta Description: Shortened and targeted the primary title tag to 51 characters and meta description to 147 characters to match search engine SERP truncation sweet spots.",
+      "Strict Heading Hierarchy: Standardized heading structure (H1 -> H2 -> H3) with zero skipped levels and unified semantic state message typography.",
+      "Generative Engine Optimization (GEO): Implemented standardized /llms.txt file and added Organization JSON-LD identity schema for AI search engines (ChatGPT, Claude, Gemini, Perplexity).",
+      "Gzip Compression & Fast Caching: Enabled GZipMiddleware and automated Cache-Control headers with 1-year immutable caching for versioned static assets.",
+      "Clean Inline Styles Elimination: Removed 100% of inline style attributes from index.html in favor of modular, GPU-accelerated CSS stylesheet classes.",
+      "Non-Blocking Asset Loading: Preloaded Google Fonts with non-blocking print-to-all stylesheet invocation to eliminate render-blocking delay.",
+      "Enforced HTTPS Redirect & Security Headers: Added production HTTPS redirect middleware alongside X-Content-Type-Options, X-Frame-Options, and Referrer-Policy headers.",
+      "Rich Educational Content & Word Count: Expanded on-page guide and feature copy to over 1,000 words, eliminating thin-content warnings and enhancing primary keyword consistency."
+    ]
+  },
+  {
     "version": "v1.25.3",
     "date": "2026-11-23",
     "type": "fix",

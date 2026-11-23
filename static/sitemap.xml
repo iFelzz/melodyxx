@@ -5,15 +5,20 @@
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <url>
     <loc>https://melodyxx.eztec.biz.id/</loc>
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://melodyxx.eztec.biz.id/stats</loc>
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
+  <url>
+    <loc>https://melodyxx.eztec.biz.id/llms.txt</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>
-

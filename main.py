@@ -41,9 +41,10 @@ from typing import Optional, Dict, Any, List
 
 import yt_dlp
 from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -455,6 +456,35 @@ app.add_middleware(
     allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+@app.middleware("http")
+async def security_and_cache_middleware(request: Request, call_next):
+    # 1. Automatic HTTPS Redirect on production domain
+    proto = request.headers.get("x-forwarded-proto", "").lower()
+    host = request.headers.get("host", "").lower()
+    if proto == "http" and "melodyxx" in host:
+        https_url = str(request.url).replace("http://", "https://", 1)
+        return RedirectResponse(url=https_url, status_code=301)
+
+    response = await call_next(request)
+
+    # 2. Optimized Browser Caching for static assets and SEO files
+    path = request.url.path
+    if path.startswith("/static/"):
+        if "v=" in str(request.query_params):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        else:
+            response.headers.setdefault("Cache-Control", "public, max-age=86400")
+    elif path in ("/favicon.ico", "/robots.txt", "/sitemap.xml", "/llms.txt"):
+        response.headers.setdefault("Cache-Control", "public, max-age=86400")
+
+    # 3. Essential Security Headers
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+
+    return response
 
 # Serve static assets
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -694,9 +724,17 @@ async def robots():
     if robots_path.exists():
         return FileResponse(str(robots_path), media_type="text/plain; charset=utf-8")
     return Response(
-        content="User-agent: *\nAllow: /\nAllow: /static/\nDisallow: /api/\nDisallow: /stats\n\nSitemap: https://melodyxx.eztec.biz.id/sitemap.xml\n",
+        content="User-agent: *\nAllow: /\nAllow: /static/\nAllow: /llms.txt\nDisallow: /api/\nDisallow: /stats\n\nSitemap: https://melodyxx.eztec.biz.id/sitemap.xml\n",
         media_type="text/plain; charset=utf-8"
     )
+
+@app.get("/llms.txt", include_in_schema=False)
+async def llms_txt():
+    """Serve llms.txt for AI Search Engines & LLM crawlers (Generative Engine Optimization)."""
+    llms_path = STATIC_DIR / "llms.txt"
+    if llms_path.exists():
+        return FileResponse(str(llms_path), media_type="text/plain; charset=utf-8")
+    raise HTTPException(status_code=404, detail="llms.txt not found.")
 
 @app.get("/sitemap.xml", include_in_schema=False)
 async def sitemap():

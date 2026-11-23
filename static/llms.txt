@@ -1,0 +1,34 @@
+# Melodyxx — Free YouTube to MP3 Downloader & Discography Browser
+
+> Fast, free YouTube to MP3 converter and artist discography browser. Converts and streams high-definition 320kbps MP3 audio on the fly with official Apple Music artwork and verified ID3v2 metadata. 100% free, zero ads, zero tracking, no registration required.
+
+## Website & Documentation
+- URL: https://melodyxx.eztec.biz.id/
+- License: GNU Affero General Public License v3 (AGPL-3.0)
+- Repository: https://github.com/iFelzz/melodyxx
+- API Base URL: https://melodyxx.eztec.biz.id/api/
+
+## Core Architecture
+Melodyxx operates on a cobalt-style zero-disk streaming architecture:
+- 0 MB Server Disk Usage: Audio is transcoded on-the-fly via FFmpeg directly from YouTube media streams into the client's HTTP response.
+- Apple Music Studio Artwork: Resolves official 800x800 square album cover art and standard ID3 tags (Artist, Title, Album, Release Year).
+- Flexible Bitrates: Supports 320kbps (HD studio fidelity), 192kbps (balanced standard), and 128kbps (data-saving compact).
+- Artist Discography Browser: Search any artist to inspect their popular songs and entire discography (Albums & EPs) with one-click sequential batch downloading.
+- Built-in Browser Player: High-performance audio player with persistent favorites, shuffle playback, seekbar scrubbing, and JSON playlist import/export.
+
+## Public Endpoints
+- `GET /` — Single-page web application
+- `GET /api/search?q={query}&limit=50&offset=0` — Fast YouTube music search supporting song titles, artists, or direct URLs
+- `GET /api/artist/search?q={artist}` — Apple Music artist search
+- `GET /api/artist/{id}/discography` — Complete artist popular songs and albums list
+- `GET /api/album/{id}/tracks` — Album track listing
+- `POST /api/download` — Stream URL pre-validation, metadata resolution & token issuance
+- `GET /api/stream?token={token}` — Direct in-memory zero-disk MP3 stream
+- `GET /api/preview?url={url}` — Fast audio preview stream for in-browser listening
+- `GET /api/version` — Version and release metadata
+- `GET /api/health` — Service health and operational metrics
+
+## Technology Stack
+- Backend: Python 3.11+, FastAPI, yt-dlp, FFmpeg
+- Frontend: Modern vanilla JavaScript (ES2022), responsive CSS glassmorphism, Service Worker PWA, Dual-Language (English & Indonesian)
+- Caching: In-memory TTL caches for instant autocomplete, preview, and discographies
