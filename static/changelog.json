@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.26.6",
+    "date": "2026-11-23",
+    "type": "fix",
+    "title": "Google Search Console Site Ownership Verification Tag",
+    "highlights": [
+      "Added Google Site Verification: Embedded official Google Search Console verification meta tag (qZN8jKLm3457tPh6ngev3bZxgW79WrcuYtjc9NwxNw4) to authenticate ownership for https://melodyxx.eztec.biz.id/.",
+      "Service worker cache bumped to melodyxx-v151."
+    ]
+  },
+  {
     "version": "v1.26.5",
     "date": "2026-11-23",
     "type": "fix",
