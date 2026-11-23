@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.26.1",
+    "date": "2026-11-23",
+    "type": "fix",
+    "title": "Smooth Sliding Glider Animation for Language Switcher",
+    "highlights": [
+      "Fluid Language Switcher Glider: Added an animated sliding pill glider (.lang-switch-glider) to the top-left language switcher capsule with bouncy spring physics easing (cubic-bezier(0.2, 0.9, 0.3, 1.2)), providing smooth transition when switching between English and Indonesian.",
+      "Responsive Bounds & Zero-FOUC: Integrated ResizeObserver and dynamic bounding rect calculations with instant layout positioning on page load to prevent initial animation flashes.",
+      "Updated service worker cache layer to melodyxx-v146."
+    ]
+  },
+  {
     "version": "v1.26.0",
     "date": "2026-11-23",
     "type": "feature",

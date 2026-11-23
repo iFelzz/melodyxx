@@ -606,6 +606,8 @@
       btnId.setAttribute('aria-pressed', currentLang === 'id' ? 'true' : 'false');
     }
 
+    updateLangGlider();
+
     // 2. Translate Text Elements ([data-i18n])
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
@@ -657,6 +659,39 @@
     }));
   }
 
+  function updateLangGlider(instant = false) {
+    const glider = document.getElementById('lang-switch-glider');
+    const wrap = document.getElementById('lang-switch-wrap');
+    if (!glider || !wrap) return;
+
+    const activeBtn = wrap.querySelector('.lang-btn.active') || document.getElementById('lang-btn-en');
+    if (!activeBtn) return;
+
+    const wrapRect = wrap.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+
+    if (wrapRect.width === 0 || btnRect.width === 0) return;
+
+    const left = btnRect.left - wrapRect.left;
+    const width = btnRect.width;
+
+    if (instant) {
+      glider.style.transition = 'none';
+    } else {
+      glider.style.transition = '';
+    }
+
+    glider.style.width = `${width}px`;
+    glider.style.transform = `translateX(${left}px)`;
+    glider.classList.add('ready');
+    wrap.classList.add('glider-ready');
+
+    if (instant) {
+      void glider.offsetWidth;
+      glider.style.transition = '';
+    }
+  }
+
   function getLanguage() {
     return currentLang;
   }
@@ -666,6 +701,7 @@
     t,
     setLanguage,
     getLanguage,
+    updateLangGlider,
     translations: TRANSLATIONS
   };
   window.t = t;
@@ -684,5 +720,15 @@
 
     // Apply initial language
     setLanguage(currentLang);
+    updateLangGlider(true);
+
+    // Keep glider aligned on resize and container changes
+    window.addEventListener('resize', () => updateLangGlider(true), { passive: true });
+    if ('ResizeObserver' in window) {
+      const wrap = document.getElementById('lang-switch-wrap');
+      if (wrap) {
+        new ResizeObserver(() => updateLangGlider(true)).observe(wrap);
+      }
+    }
   });
 })();
