@@ -40,7 +40,7 @@ from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any, List
 
 import yt_dlp
-from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile
+from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile, Query
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -1319,7 +1319,12 @@ def _normalize_preview_target(target: str) -> str:
 
 @app.get("/api/preview")
 @limiter.limit("60/minute")
-async def preview(request: Request, url: str):
+async def preview(
+    request: Request,
+    url: str,
+    title: Optional[str] = None,
+    artist: Optional[str] = None,
+):
     """
     Extract best direct audio stream URL for in-browser audio playback.
     Supports direct YouTube URLs as well as Artist/Title search queries.
@@ -1341,7 +1346,9 @@ async def preview(request: Request, url: str):
     client_ip = get_client_ip(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
-    analytics.record_preview(title="", ip=client_ip, cf_country=cf_country, user_agent=ua)
+
+    resolved_title = (title or "").strip()
+    resolved_artist = (artist or "").strip()
 
     cached = _preview_cache.get(clean_url)
     webpage_url = ""
@@ -1368,6 +1375,11 @@ async def preview(request: Request, url: str):
             if not stream_url:
                 raise HTTPException(status_code=404, detail="Stream URL not found")
 
+            if not resolved_title:
+                resolved_title = (info.get("title") or "").strip()
+            if not resolved_artist:
+                resolved_artist = (info.get("artist") or info.get("uploader") or info.get("channel") or "").strip()
+
             webpage_url = info.get("webpage_url") or ""
             _preview_cache.set(clean_url, stream_url)
             if webpage_url and webpage_url != clean_url:
@@ -1379,6 +1391,20 @@ async def preview(request: Request, url: str):
             raise HTTPException(status_code=500, detail=f"Failed to extract preview: {str(exc)}")
     else:
         stream_url = cached
+
+    # Record stream playback event in analytics
+    if resolved_title:
+        analytics.record_stream_complete(
+            resolved_title,
+            resolved_artist,
+            bytes_streamed=0,
+            ip=client_ip,
+            cf_country=cf_country,
+            user_agent=ua,
+            quality="Preview",
+        )
+    else:
+        analytics.record_preview(title="", ip=client_ip, cf_country=cf_country, user_agent=ua)
 
     encoded = urllib.parse.quote(clean_url)
     resp = {"stream_url": f"/api/preview/stream?url={encoded}"}
@@ -1517,7 +1543,12 @@ async def preview_stream(request: Request, url: str):
     ua = request.headers.get("user-agent", "")
     analytics.record_activity(client_ip, "Listening Preview", cf_country=cf_country, user_agent=ua)
 
+    global _active_streams_count
+    _active_streams_count += 1
+    analytics.record_concurrency(_active_streams_count)
+
     async def _stream_generator():
+        global _active_streams_count
         try:
             while True:
                 chunk = await loop.run_in_executor(None, resp.read, 64 * 1024)
@@ -1526,6 +1557,7 @@ async def preview_stream(request: Request, url: str):
                 analytics.record_stream_chunk(len(chunk))
                 yield chunk
         finally:
+            _active_streams_count = max(0, _active_streams_count - 1)
             resp.close()
 
     return StreamingResponse(
@@ -1534,6 +1566,27 @@ async def preview_stream(request: Request, url: str):
         headers=resp_headers,
         media_type=content_type or "audio/mp4",
     )
+
+@app.api_route("/api/stream/record", methods=["GET", "POST"])
+async def stream_record(
+    request: Request,
+    title: str = Query(...),
+    artist: str = Query(""),
+):
+    """Direct stream playback tracker for client audio player."""
+    client_ip = get_client_ip(request)
+    cf_country = request.headers.get("cf-ipcountry")
+    ua = request.headers.get("user-agent", "")
+    analytics.record_stream_complete(
+        title.strip(),
+        artist.strip(),
+        bytes_streamed=0,
+        ip=client_ip,
+        cf_country=cf_country,
+        user_agent=ua,
+        quality="Preview",
+    )
+    return JSONResponse(content={"status": "ok"})
 
 @app.get("/api/suggest")
 @limiter.limit("180/minute")

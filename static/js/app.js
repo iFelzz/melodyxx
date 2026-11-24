@@ -733,7 +733,12 @@
       const targetId = currentPlayingTrackId;
 
       try {
-        const res = await fetch(`/api/preview?url=${encodeURIComponent(item.url)}`);
+        const queryParams = new URLSearchParams({
+          url: item.url,
+          title: item.title || '',
+          artist: item.channel || item.artist || ''
+        });
+        const res = await fetch(`/api/preview?${queryParams.toString()}`);
         if (!res.ok) throw new Error('Preview not found');
         const data = await res.json();
 
@@ -2133,6 +2138,15 @@
             btn.classList.remove('loading');
             btn.classList.add('playing');
             btn.innerHTML = TRACK_ICON_PAUSE;
+
+            // Record preview playback event in analytics
+            if (btn.dataset.title) {
+              const recParams = new URLSearchParams({
+                title: btn.dataset.title,
+                artist: btn.dataset.artist || ''
+              });
+              fetch(`/api/stream/record?${recParams.toString()}`).catch(() => {});
+            }
           } catch (err) {
             console.error('Audio playback failed:', err);
             setMiniLoading(false);
@@ -2355,7 +2369,13 @@
       const targetQueryOrUrl = (track.url || '').trim() || `${track.artist} - ${track.title}`;
       const targetTrackId = currentPlayingTrackId;
 
-      fetch(`/api/preview?url=${encodeURIComponent(targetQueryOrUrl)}`)
+      const queryParams = new URLSearchParams({
+        url: targetQueryOrUrl,
+        title: track.title || '',
+        artist: track.artist || ''
+      });
+
+      fetch(`/api/preview?${queryParams.toString()}`)
         .then(res => {
           if (!res.ok) throw new Error(`Preview stream error (${res.status})`);
           return res.json();
@@ -5510,7 +5530,7 @@
           return res.json();
         })
         .then(data => {
-          const version = (data && data.version) ? String(data.version).trim() : 'v1.26.11';
+          const version = (data && data.version) ? String(data.version).trim() : 'v1.27.0';
           const formatted = version.startsWith('v') ? version : `v${version}`;
           $versionLink.textContent = formatted;
           $versionLink.removeAttribute('href');

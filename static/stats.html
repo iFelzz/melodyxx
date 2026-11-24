@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.26.11" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.27.0" />
 
   <style>
     body {
@@ -1020,7 +1020,25 @@
             <span class="panel-count-tag" id="top-tracks-count">0 tracks</span>
           </div>
           <ul class="rank-list" id="top-tracks-list">
-            <li class="empty-rank-msg">No streaming records yet. Start downloading tracks to populate ranking!</li>
+            <li class="empty-rank-msg">No streaming records yet. Play or download tracks to populate ranking!</li>
+          </ul>
+        </div>
+
+        <!-- Top Searched Tracks -->
+        <div class="section-panel">
+          <div class="panel-head">
+            <span class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              Top Searched Tracks
+            </span>
+            <span class="panel-count-tag" id="top-searched-tracks-count">0 queries</span>
+          </div>
+          <ul class="rank-list" id="top-searched-tracks-list">
+            <li class="empty-rank-msg">No track searches recorded yet.</li>
           </ul>
         </div>
 
@@ -1461,6 +1479,28 @@
             <span class="rank-item-stat">${Number(t.streams).toLocaleString()} streams</span>
           </li>
         `).join('');
+      }
+
+      // Top Searched Tracks
+      const $topSearchesList = document.getElementById('top-searched-tracks-list');
+      if ($topSearchesList) {
+        const searches = data.top_searched_tracks || [];
+        const $searchesCount = document.getElementById('top-searched-tracks-count');
+        if ($searchesCount) $searchesCount.textContent = `${searches.length} queries`;
+
+        if (searches.length === 0) {
+          $topSearchesList.innerHTML = '<li class="empty-rank-msg">No track searches recorded yet.</li>';
+        } else {
+          $topSearchesList.innerHTML = searches.map((s, idx) => `
+            <li class="rank-item">
+              <div class="rank-item-info">
+                <span class="rank-number">#${idx + 1}</span>
+                <span class="rank-item-name" title="${esc(s.query)}">${esc(s.query)}</span>
+              </div>
+              <span class="rank-item-stat">${Number(s.searches).toLocaleString()} queries</span>
+            </li>
+          `).join('');
+        }
       }
 
       // Top Artists

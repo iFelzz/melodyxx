@@ -221,6 +221,7 @@ class AnalyticsEngine:
             "peak_concurrency": 0,
             "top_tracks": {},     # "Artist - Title": count
             "top_artists": {},    # "Artist Name": count
+            "top_searched_tracks": {}, # "Search Query": count
             "top_countries": {},  # "Country Name": count
             "daily_stats": {},    # "YYYY-MM-DD": { streams, bytes, searches, previews, unique_visitors }
             "history_created_at": datetime.now(timezone.utc).isoformat(),
@@ -276,6 +277,8 @@ class AnalyticsEngine:
                         self.data["top_tracks"] = loaded["top_tracks"]
                     if isinstance(loaded.get("top_artists"), dict):
                         self.data["top_artists"] = loaded["top_artists"]
+                    if isinstance(loaded.get("top_searched_tracks"), dict):
+                        self.data["top_searched_tracks"] = loaded["top_searched_tracks"]
                     if isinstance(loaded.get("top_countries"), dict):
                         # Normalize any raw ISO codes (e.g. 'IE', 'SE') to full official names
                         normalized_countries: Dict[str, int] = {}
@@ -362,12 +365,21 @@ class AnalyticsEngine:
         }
 
     def record_search(self, query: str, ip: str = "", cf_country: Optional[str] = None, user_agent: str = "") -> None:
-        """Record a single track search."""
+        """Record a single track search query and update top searched track rankings."""
         self.data["total_searches"] += 1
+        clean_query = query.strip()
+        if clean_query and not clean_query.startswith("http://") and not clean_query.startswith("https://") and len(clean_query) >= 2:
+            norm_query = clean_query.title() if clean_query.islower() else clean_query
+            curr = self.data.setdefault("top_searched_tracks", {}).get(norm_query, 0)
+            self.data["top_searched_tracks"][norm_query] = curr + 1
+            if len(self.data["top_searched_tracks"]) > 50:
+                sorted_searches = sorted(self.data["top_searched_tracks"].items(), key=lambda x: x[1], reverse=True)
+                self.data["top_searched_tracks"] = dict(sorted_searches[:50])
+
         self._get_today_bucket()["searches"] += 1
         self._dirty = True
         if ip:
-            self.record_activity(ip, f"Searching: {query[:35]}", cf_country, user_agent)
+            self.record_activity(ip, f"Searching: {clean_query[:35]}", cf_country, user_agent)
         self.save()
 
     def record_artist_search(self, artist_name: str, ip: str = "", cf_country: Optional[str] = None, user_agent: str = "") -> None:
@@ -414,13 +426,13 @@ class AnalyticsEngine:
         self,
         title: str,
         artist: str,
-        bytes_streamed: int,
+        bytes_streamed: int = 0,
         ip: str = "",
         cf_country: Optional[str] = None,
         user_agent: str = "",
         quality: str = "320",
     ) -> None:
-        """Record a successfully streamed and downloaded song."""
+        """Record a successfully streamed track (downloaded or streamed via in-browser player)."""
         self.data["total_streams"] += 1
         self._get_today_bucket()["streams"] += 1
 
@@ -437,7 +449,10 @@ class AnalyticsEngine:
 
         self._dirty = True
         if ip:
-            action_desc = f"Downloaded {quality}k MP3: {clean_title[:30]}"
+            if quality == "Preview":
+                action_desc = f"Streaming: {clean_title[:30]}"
+            else:
+                action_desc = f"Downloaded {quality}k MP3: {clean_title[:30]}"
             self.record_activity(ip, action_desc, cf_country, user_agent)
         self.save(force=True)
 
@@ -494,6 +509,10 @@ class AnalyticsEngine:
         sorted_tracks = sorted(self.data["top_tracks"].items(), key=lambda x: x[1], reverse=True)[:10]
         top_tracks_list = [{"name": k, "streams": v} for k, v in sorted_tracks]
 
+        # Sort top searched tracks
+        sorted_searches = sorted(self.data.get("top_searched_tracks", {}).items(), key=lambda x: x[1], reverse=True)[:10]
+        top_searched_tracks_list = [{"query": k, "searches": v} for k, v in sorted_searches]
+
         # Sort top artists
         sorted_artists = sorted(self.data["top_artists"].items(), key=lambda x: x[1], reverse=True)[:10]
         top_artists_list = [{"name": k, "searches": v} for k, v in sorted_artists]
@@ -544,6 +563,7 @@ class AnalyticsEngine:
             },
             "active_users": active_users_list,
             "top_tracks": top_tracks_list,
+            "top_searched_tracks": top_searched_tracks_list,
             "top_artists": top_artists_list,
             "top_countries": top_countries_list,
             "recent_days": self.data.get("daily_stats", {}),
@@ -559,6 +579,7 @@ class AnalyticsEngine:
         self.data["total_unique_visitors"] = 0
         self.data["peak_concurrency"] = 0
         self.data["top_tracks"].clear()
+        self.data.setdefault("top_searched_tracks", {}).clear()
         self.data["top_artists"].clear()
         self.data.get("top_countries", {}).clear()
         self.data["daily_stats"].clear()

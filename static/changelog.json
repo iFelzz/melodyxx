@@ -1,5 +1,24 @@
 [
   {
+    "version": "v1.27.0",
+    "date": "2026-11-24",
+    "type": "minor",
+    "title": "Real-Time Audio Player Stream Tracking & Top Searched Tracks Monitor",
+    "highlights": [
+      "Real-Time Player Stream Tracking: Fixed in-browser audio playback tracking so playing songs in player immediately records into Total Streams, Today metrics, and Top Streamed Tracks ranking.",
+      "Top Searched Tracks Analytics: Added live tracking and ranking panel for popular song search keywords on the admin dashboard.",
+      "Live Active Stream Monitoring: Connected audio player stream proxy to the active stream concurrency gauge, reflecting active listeners in real time.",
+      "Direct Preview Event Tracking: Added dedicated /api/stream/record endpoint ensuring direct discography sample playbacks are accurately captured."
+    ],
+    "changes": [
+      "Enhanced /api/preview to resolve and pass track metadata directly to analytics engine upon playback initialization.",
+      "Integrated live stream concurrency increment/decrement hooks in /api/preview/stream so active playback counts accurately.",
+      "Implemented top_searched_tracks dictionary in AnalyticsEngine, capturing normalized query frequencies across all user searches.",
+      "Added Top Searched Tracks ranking card to the admin dashboard UI with real-time SSE stream updates.",
+      "Service worker cache bumped to melodyxx-v157."
+    ]
+  },
+  {
     "version": "v1.26.11",
     "date": "2026-11-24",
     "type": "patch",
