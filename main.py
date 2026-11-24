@@ -482,10 +482,11 @@ async def security_and_cache_middleware(request: Request, call_next):
     elif path in ("/favicon.ico", "/robots.txt", "/sitemap.xml", "/llms.txt"):
         response.headers.setdefault("Cache-Control", "public, max-age=86400")
 
-    # 3. Essential Security Headers
+    # 3. Essential Security & Client Hint Headers
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Accept-CH", "Sec-CH-UA-Platform-Version, Sec-CH-UA-Model")
 
     return response
 
@@ -731,6 +732,15 @@ def get_client_session_id(request: Request) -> Optional[str]:
             return clean
     return None
 
+def get_client_device_hint(request: Request) -> Optional[str]:
+    """Extract client device override sent by frontend (e.g. Windows 11 • Chrome 131)."""
+    dev = request.headers.get("x-client-device") or request.query_params.get("dev")
+    if dev:
+        clean = dev.strip()
+        if 3 <= len(clean) <= 80:
+            return clean
+    return None
+
 # ── Routes ────────────────────────────────────────────────────
 
 @app.get("/", include_in_schema=False)
@@ -738,9 +748,19 @@ async def root(request: Request):
     """Serve the frontend single page app."""
     client_ip = get_client_ip(request)
     session_id = get_client_session_id(request)
+    client_device = get_client_device_hint(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
-    analytics.record_activity(client_ip, "Browsing App", cf_country=cf_country, user_agent=ua, session_id=session_id)
+    sec_ch_platform_version = request.headers.get("sec-ch-ua-platform-version", "")
+    analytics.record_activity(
+        client_ip,
+        "Browsing App",
+        cf_country=cf_country,
+        user_agent=ua,
+        session_id=session_id,
+        client_device=client_device,
+        client_hint_platform_version=sec_ch_platform_version,
+    )
     index_path = STATIC_DIR / "index.html"
     if not index_path.exists():
         raise HTTPException(status_code=404, detail="Frontend not found.")
@@ -751,10 +771,20 @@ async def visitor_ping(request: Request):
     """Keep-alive heartbeat and visitor activity ping."""
     client_ip = get_client_ip(request)
     session_id = get_client_session_id(request)
+    client_device = get_client_device_hint(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
+    sec_ch_platform_version = request.headers.get("sec-ch-ua-platform-version", "")
     action = request.query_params.get("action", "Online")
-    analytics.record_activity(client_ip, action[:40], cf_country=cf_country, user_agent=ua, session_id=session_id)
+    analytics.record_activity(
+        client_ip,
+        action[:40],
+        cf_country=cf_country,
+        user_agent=ua,
+        session_id=session_id,
+        client_device=client_device,
+        client_hint_platform_version=sec_ch_platform_version,
+    )
     return JSONResponse(content={"status": "ok"})
 
 @app.api_route("/api/session/leave", methods=["GET", "POST"], include_in_schema=False)
@@ -1561,9 +1591,20 @@ async def preview_stream(request: Request, url: str):
         return Response(status_code=status_code, headers=resp_headers)
 
     client_ip = get_client_ip(request)
+    session_id = get_client_session_id(request)
+    client_device = get_client_device_hint(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
-    analytics.record_activity(client_ip, "Listening Preview", cf_country=cf_country, user_agent=ua)
+    sec_ch_platform_version = request.headers.get("sec-ch-ua-platform-version", "")
+    analytics.record_activity(
+        client_ip,
+        "Listening Preview",
+        cf_country=cf_country,
+        user_agent=ua,
+        session_id=session_id,
+        client_device=client_device,
+        client_hint_platform_version=sec_ch_platform_version,
+    )
 
     global _active_streams_count
     _active_streams_count += 1

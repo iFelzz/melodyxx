@@ -6,6 +6,7 @@ with zero-database in-memory storage and debounced JSON persistence.
 """
 
 import os
+import re
 import json
 import time
 import logging
@@ -162,37 +163,92 @@ def resolve_geo(ip: str, cf_country: Optional[str] = None) -> dict:
     return res
 
 
-def parse_device_info(user_agent: str) -> str:
-    """Parse basic OS and Browser from User-Agent string."""
+def parse_device_info(
+    user_agent: str,
+    client_hint_platform_version: str = "",
+    client_device_override: str = "",
+) -> str:
+    """Parse precise OS version and Browser version from User-Agent and Client Hints."""
+    if client_device_override and client_device_override.strip():
+        override = client_device_override.strip()
+        if len(override) >= 3 and override != "Unknown OS • Unknown Browser":
+            return override
+
     if not user_agent:
         return "Desktop • Browser"
-    ua = user_agent.lower()
 
-    # OS
+    ua = user_agent
+    ua_lower = ua.lower()
+
+    # 1. Parse OS with version
     os_name = "Desktop"
-    if "android" in ua:
-        os_name = "Android"
-    elif "iphone" in ua or "ipad" in ua:
-        os_name = "iOS"
-    elif "windows" in ua:
-        os_name = "Windows"
-    elif "macintosh" in ua or "mac os" in ua:
-        os_name = "macOS"
-    elif "linux" in ua:
+    if "android" in ua_lower:
+        match = re.search(r"android\s+([\d.]+)", ua_lower)
+        os_name = f"Android {match.group(1).split('.')[0]}" if match else "Android"
+    elif "iphone" in ua_lower or "ipad" in ua_lower:
+        match = re.search(r"os\s+([\d_]+)", ua_lower)
+        if match:
+            ver = match.group(1).replace("_", ".").split(".")[0]
+            os_name = f"iOS {ver}"
+        else:
+            os_name = "iOS"
+    elif "windows" in ua_lower:
+        if "windows nt 10.0" in ua_lower:
+            # Differentiate Windows 11 vs Windows 10 via Client Hint platform version if available
+            # Chromium returns platformVersion >= 13.0.0 on Windows 11
+            if client_hint_platform_version:
+                try:
+                    major = int(client_hint_platform_version.strip('"').split('.')[0])
+                    os_name = "Windows 11" if major >= 13 else "Windows 10"
+                except Exception:
+                    os_name = "Windows 10/11"
+            else:
+                os_name = "Windows 10/11"
+        elif "windows nt 6.3" in ua_lower:
+            os_name = "Windows 8.1"
+        elif "windows nt 6.2" in ua_lower:
+            os_name = "Windows 8"
+        elif "windows nt 6.1" in ua_lower:
+            os_name = "Windows 7"
+        elif "windows nt 6.0" in ua_lower:
+            os_name = "Windows Vista"
+        elif "windows nt 5.1" in ua_lower or "windows nt 5.2" in ua_lower:
+            os_name = "Windows XP"
+        elif "windows nt 5.0" in ua_lower:
+            os_name = "Windows 2000"
+        else:
+            os_name = "Windows"
+    elif "macintosh" in ua_lower or "mac os" in ua_lower:
+        match = re.search(r"mac os x\s+([\d_]+)", ua_lower)
+        if match:
+            parts = match.group(1).replace("_", ".").split(".")
+            ver = ".".join(parts[:2]) if len(parts) > 1 else parts[0]
+            os_name = f"macOS {ver}"
+        else:
+            os_name = "macOS"
+    elif "linux" in ua_lower:
         os_name = "Linux"
 
-    # Browser
+    # 2. Parse Browser with major version
     browser = "Browser"
-    if "edg/" in ua:
-        browser = "Edge"
-    elif "chrome/" in ua and "safari/" in ua and "edg/" not in ua:
-        browser = "Chrome"
-    elif "safari/" in ua and "chrome/" not in ua:
-        browser = "Safari"
-    elif "firefox/" in ua:
-        browser = "Firefox"
-    elif "opera/" in ua or "opr/" in ua:
-        browser = "Opera"
+    if "edg/" in ua_lower or "edge/" in ua_lower:
+        match = re.search(r"edg(?:e)?\/(\d+)", ua_lower)
+        browser = f"Edge {match.group(1)}" if match else "Edge"
+    elif "opr/" in ua_lower or "opera/" in ua_lower:
+        match = re.search(r"(?:opr|opera)\/(\d+)", ua_lower)
+        browser = f"Opera {match.group(1)}" if match else "Opera"
+    elif "samsungbrowser/" in ua_lower:
+        match = re.search(r"samsungbrowser\/(\d+)", ua_lower)
+        browser = f"Samsung {match.group(1)}" if match else "Samsung"
+    elif "chrome/" in ua_lower or "crios/" in ua_lower:
+        match = re.search(r"(?:chrome|crios)\/(\d+)", ua_lower)
+        browser = f"Chrome {match.group(1)}" if match else "Chrome"
+    elif "firefox/" in ua_lower or "fxios/" in ua_lower:
+        match = re.search(r"(?:firefox|fxios)\/(\d+)", ua_lower)
+        browser = f"Firefox {match.group(1)}" if match else "Firefox"
+    elif "safari/" in ua_lower and "chrome/" not in ua_lower:
+        match = re.search(r"version\/(\d+)", ua_lower)
+        browser = f"Safari {match.group(1)}" if match else "Safari"
 
     return f"{os_name} • {browser}"
 
@@ -323,6 +379,8 @@ class AnalyticsEngine:
         cf_country: Optional[str] = None,
         user_agent: str = "",
         session_id: Optional[str] = None,
+        client_device: Optional[str] = None,
+        client_hint_platform_version: str = "",
     ) -> None:
         """Record a visitor interaction, resolve geo location, and track unique daily visitors."""
         now = time.time()
@@ -356,12 +414,27 @@ class AnalyticsEngine:
             self.data["top_countries"][country_name] = self.data["top_countries"].get(country_name, 0) + 1
             self._dirty = True
 
-        device = parse_device_info(user_agent)
-
-        # Update active session with session_key
+        # Resolve device
         prev = self.active_sessions.get(session_key)
         action_count = (prev.get("action_count", 0) + 1) if prev else 1
 
+        new_device = parse_device_info(
+            user_agent,
+            client_hint_platform_version=client_hint_platform_version,
+            client_device_override=client_device or "",
+        )
+
+        # Retain higher fidelity info if prev already has specific Windows 11 / Windows 10 vs generic fallback
+        if prev and prev.get("device"):
+            prev_dev = prev["device"]
+            if ("Windows 11" in prev_dev or "Windows 10" in prev_dev) and "Windows 10/11" in new_device:
+                new_device = prev_dev
+            elif "Browser" in new_device and "Browser" not in prev_dev:
+                new_device = prev_dev
+
+        device = new_device
+
+        # Update active session with session_key
         self.active_sessions[session_key] = {
             "session_id": clean_sid,
             "session_key": session_key,
@@ -370,6 +443,7 @@ class AnalyticsEngine:
             "country_code": geo["country_code"],
             "flag": geo["flag"],
             "device": device,
+            "user_agent": user_agent,
             "last_action": action,
             "last_seen": now,
             "action_count": action_count,
@@ -524,12 +598,15 @@ class AnalyticsEngine:
             else:
                 human_seen = f"{elapsed // 60}m ago"
 
+            dev = s.get("device", "Desktop • Browser")
+            if dev in ("Windows • Chrome", "Windows • Edge", "Desktop • Browser") and s.get("user_agent"):
+                dev = parse_device_info(s.get("user_agent", ""))
             active_users_list.append({
                 "ip": s.get("ip", ""),
                 "country": s.get("country", "Unknown"),
                 "country_code": s.get("country_code", "XX"),
                 "flag": s.get("flag", "🌐"),
-                "device": s.get("device", "Desktop • Browser"),
+                "device": dev,
                 "last_action": s.get("last_action", "Active"),
                 "last_seen_human": human_seen,
                 "action_count": s.get("action_count", 1),

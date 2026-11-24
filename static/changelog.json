@@ -1,5 +1,22 @@
 [
   {
+    "version": "v1.27.4",
+    "date": "2026-11-24",
+    "type": "improvement",
+    "title": "Precise OS & Browser Version Detection for Live Visitor Analytics",
+    "highlights": [
+      "Granular Device & OS Detection: Enhanced visitor tracking to display exact platform versions (e.g., 'Windows 11 • Chrome 131', 'macOS 14.1 • Chrome 131', 'Android 14 • Chrome 131') instead of generic labels.",
+      "High-Entropy Client Hints: Integrated Sec-CH-UA-Platform-Version HTTP negotiation and frontend userAgentData hints to differentiate Windows 11 from Windows 10.",
+      "Instant Playback Activity Heartbeat: Wired audio play/pause events directly to visitor activity pings for real-time tracking in the admin dashboard."
+    ],
+    "changes": [
+      "Upgraded parse_device_info in analytics.py with regex-based OS version and browser major version parsing.",
+      "Added client-side platform diagnostics forwarding and Accept-CH headers to main.py.",
+      "Wired audio player play/pause state transitions to immediate visitor activity heartbeats.",
+      "Service worker cache bumped to melodyxx-v161."
+    ]
+  },
+  {
     "version": "v1.27.3",
     "date": "2026-11-24",
     "type": "feature",

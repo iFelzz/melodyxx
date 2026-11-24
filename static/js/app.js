@@ -3658,6 +3658,8 @@
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
       }
+      const trackTitle = currentPlayingTrackData && currentPlayingTrackData.title;
+      pingAnalytics(trackTitle ? `Streaming: ${trackTitle.slice(0, 25)}` : 'Listening Preview');
     });
 
     audioPlayer.addEventListener('waiting', () => {
@@ -3752,6 +3754,7 @@
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
       }
+      pingAnalytics('Browsing App');
     });
 
     // ── Seekbar & time display ────────────────────────────────
@@ -5509,17 +5512,33 @@
     });
 
     // ── Visitor heartbeat for live analytics ───────────────────
-    function pingAnalytics(action = 'Online') {
+    async function pingAnalytics(action = 'Online') {
       try {
-        const url = `/api/ping?action=${encodeURIComponent(action)}&sid=${encodeURIComponent(CLIENT_SESSION_ID)}`;
+        let devStr = cachedPlatformSummary;
+        if (!devStr) {
+          try {
+            devStr = await getDetailedPlatformInfo();
+          } catch (_) {}
+        }
+        const devParam = devStr ? `&dev=${encodeURIComponent(devStr)}` : '';
+        const url = `/api/ping?action=${encodeURIComponent(action)}&sid=${encodeURIComponent(CLIENT_SESSION_ID)}${devParam}`;
         fetch(url, {
           method: 'POST',
-          headers: { 'X-Session-ID': CLIENT_SESSION_ID },
+          headers: {
+            'X-Session-ID': CLIENT_SESSION_ID,
+            ...(devStr ? { 'X-Client-Device': devStr } : {})
+          },
           keepalive: true
         }).catch(() => {});
       } catch (_) {}
     }
-    pingAnalytics('Browsing App');
+
+    (async () => {
+      try {
+        await getDetailedPlatformInfo();
+      } catch (_) {}
+      pingAnalytics('Browsing App');
+    })();
 
     // Heartbeat every 30s to keep active session status pixel-fresh
     setInterval(() => {
@@ -5595,7 +5614,7 @@
           return res.json();
         })
         .then(data => {
-          const version = (data && data.version) ? String(data.version).trim() : 'v1.27.3';
+          const version = (data && data.version) ? String(data.version).trim() : 'v1.27.4';
           const formatted = version.startsWith('v') ? version : `v${version}`;
           $versionLink.textContent = formatted;
           $versionLink.removeAttribute('href');
