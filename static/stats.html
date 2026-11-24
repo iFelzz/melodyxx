@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.27.5" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.27.6" />
 
   <style>
     body {
@@ -794,7 +794,8 @@
     </div>
     <div class="update-banner-content">
       <div class="update-banner-title">Update Available!</div>
-      <div class="update-banner-desc">Melodyxx <span id="update-new-version" class="update-version-tag">v1.27.3</span> is ready. Refresh to update.</div>
+      <div class="update-banner-desc">Melodyxx <span id="update-new-version" class="update-version-tag">v1.27.3</span>
+        is ready. Refresh to update.</div>
     </div>
     <div class="update-banner-actions">
       <button type="button" class="btn-update-reload" id="btn-update-reload">Refresh</button>
@@ -1762,7 +1763,7 @@
           try {
             const keys = await caches.keys();
             await Promise.all(keys.map(k => caches.delete(k)));
-          } catch (_) {}
+          } catch (_) { }
         }
 
         setTimeout(() => {

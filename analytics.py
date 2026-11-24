@@ -391,8 +391,16 @@ class AnalyticsEngine:
         if clean_sid:
             session_key = f"{ip}::{clean_sid}"
         else:
-            ua_hash = abs(hash(user_agent)) % 100000 if user_agent else "0"
-            session_key = f"{ip}::ua_{ua_hash}"
+            # If no session_id is provided, check if this IP already has active sessions
+            # Reuse existing session for this IP to prevent phantom duplication from media/subrequests
+            existing_for_ip = [k for k, s in self.active_sessions.items() if s.get("ip") == ip]
+            if existing_for_ip:
+                matching = [k for k in existing_for_ip if self.active_sessions[k].get("user_agent") == user_agent]
+                session_key = matching[0] if matching else existing_for_ip[0]
+                clean_sid = self.active_sessions[session_key].get("session_id", "")
+            else:
+                ua_hash = abs(hash(user_agent)) % 100000 if user_agent else "0"
+                session_key = f"{ip}::ua_{ua_hash}"
 
         # Track daily unique visitor by unique visitor session key
         if today not in self.daily_ips:
@@ -434,6 +442,14 @@ class AnalyticsEngine:
 
         device = new_device
 
+        # Preserve specific streaming track title if current incoming action is generic ping
+        final_action = action
+        if prev and prev.get("last_action"):
+            prev_act = prev["last_action"]
+            if prev_act.startswith("Streaming: ") and action in ("Listening Preview", "Online", "Browsing App"):
+                if (now - prev.get("last_seen", now)) < 45:
+                    final_action = prev_act
+
         # Update active session with session_key
         self.active_sessions[session_key] = {
             "session_id": clean_sid,
@@ -444,7 +460,7 @@ class AnalyticsEngine:
             "flag": geo["flag"],
             "device": device,
             "user_agent": user_agent,
-            "last_action": action,
+            "last_action": final_action,
             "last_seen": now,
             "action_count": action_count,
         }

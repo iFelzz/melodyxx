@@ -1459,7 +1459,8 @@ async def preview(
         analytics.record_preview(title="", ip=client_ip, cf_country=cf_country, user_agent=ua, session_id=session_id)
 
     encoded = urllib.parse.quote(clean_url)
-    resp = {"stream_url": f"/api/preview/stream?url={encoded}"}
+    sid_param = f"&sid={urllib.parse.quote(session_id)}" if session_id else ""
+    resp = {"stream_url": f"/api/preview/stream?url={encoded}{sid_param}"}
     if webpage_url:
         resp["youtube_url"] = webpage_url
     return resp
@@ -1589,22 +1590,6 @@ async def preview_stream(request: Request, url: str):
     if request.method.upper() == "HEAD":
         resp.close()
         return Response(status_code=status_code, headers=resp_headers)
-
-    client_ip = get_client_ip(request)
-    session_id = get_client_session_id(request)
-    client_device = get_client_device_hint(request)
-    cf_country = request.headers.get("cf-ipcountry")
-    ua = request.headers.get("user-agent", "")
-    sec_ch_platform_version = request.headers.get("sec-ch-ua-platform-version", "")
-    analytics.record_activity(
-        client_ip,
-        "Listening Preview",
-        cf_country=cf_country,
-        user_agent=ua,
-        session_id=session_id,
-        client_device=client_device,
-        client_hint_platform_version=sec_ch_platform_version,
-    )
 
     global _active_streams_count
     _active_streams_count += 1

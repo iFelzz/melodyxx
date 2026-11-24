@@ -1,5 +1,22 @@
 [
   {
+    "version": "v1.27.6",
+    "date": "2026-11-24",
+    "type": "fix",
+    "title": "Eliminate Ghost Visitor Duplication on In-Browser Audio Playback",
+    "highlights": [
+      "Zero Ghost Visitor Sessions: Removed duplicate activity tracking from the raw media proxy /api/preview/stream, preventing browser <audio> engines from registering as duplicate visitor instances.",
+      "Session Continuity & Fallback Binding: When media requests lack explicit session identifiers, the analytics engine automatically attaches to the active session of that client IP instead of fabricating a secondary hash-based session.",
+      "Playback Title Protection: Preserved specific track titles (e.g., 'Streaming: BABYMONSTER - DESERVE') from being inadvertently overwritten by generic preview status pings."
+    ],
+    "changes": [
+      "Removed redundant analytics.record_activity call from preview_stream in main.py.",
+      "Attached &sid parameter to stream_url in /api/preview response for media pipeline session continuity.",
+      "Enhanced record_activity in analytics.py to bind to existing IP sessions when sid is absent.",
+      "Service worker cache bumped to melodyxx-v163."
+    ]
+  },
+  {
     "version": "v1.27.5",
     "date": "2026-11-24",
     "type": "feature",
