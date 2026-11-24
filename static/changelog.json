@@ -1,5 +1,20 @@
 [
   {
+    "version": "v1.28.1",
+    "date": "2026-11-25",
+    "type": "improvement",
+    "title": "Admin Panel Consolidation & Routing Cleanup",
+    "highlights": [
+      "Unified Admin Panel Experience: Consolidated internal analytics and monitoring controls under a dedicated Admin Panel interface.",
+      "Crawler & Indexing Hardening: Updated crawler directives to keep internal administrative routes excluded from search indexing."
+    ],
+    "changes": [
+      "Updated internal management route and dashboard branding to Melodyxx Admin Panel.",
+      "Synchronized robots.txt disallow directives for administrative endpoints.",
+      "Service worker cache bumped to melodyxx-v165."
+    ]
+  },
+  {
     "version": "v1.28.0",
     "date": "2026-11-24",
     "type": "feature",

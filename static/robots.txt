@@ -4,6 +4,6 @@ Allow: /static/
 Allow: /favicon.ico
 Allow: /llms.txt
 Disallow: /api/
-Disallow: /stats
+Disallow: /admin
 
 Sitemap: https://melodyxx.eztec.biz.id/sitemap.xml

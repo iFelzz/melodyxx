@@ -837,7 +837,7 @@ async def robots():
     if robots_path.exists():
         return FileResponse(str(robots_path), media_type="text/plain; charset=utf-8")
     return Response(
-        content="User-agent: *\nAllow: /\nAllow: /static/\nAllow: /llms.txt\nDisallow: /api/\nDisallow: /stats\n\nSitemap: https://melodyxx.eztec.biz.id/sitemap.xml\n",
+        content="User-agent: *\nAllow: /\nAllow: /static/\nAllow: /llms.txt\nDisallow: /api/\nDisallow: /admin\n\nSitemap: https://melodyxx.eztec.biz.id/sitemap.xml\n",
         media_type="text/plain; charset=utf-8"
     )
 
@@ -1154,15 +1154,15 @@ async def storage_info(request: Request, key: Optional[str] = None):
         "active_tokens": len(_stream_tokens),
     })
 
-# ── Internal Analytics & Metrics ─────────────────────────────
+# ── Admin Panel & Internal Analytics ──────────────────────────
 
-@app.get("/stats", include_in_schema=False)
-async def stats_view():
-    """Serve the internal analytics & metrics dashboard."""
-    stats_path = STATIC_DIR / "stats.html"
-    if not stats_path.exists():
-        raise HTTPException(status_code=404, detail="Stats page not found.")
-    return FileResponse(str(stats_path))
+@app.get("/admin", include_in_schema=False)
+async def admin_panel_view():
+    """Serve the internal Admin Panel & real-time analytics dashboard."""
+    admin_path = STATIC_DIR / "stats.html"
+    if not admin_path.exists():
+        raise HTTPException(status_code=404, detail="Admin panel not found.")
+    return FileResponse(str(admin_path))
 
 @app.get("/api/stats")
 async def get_stats(request: Request, key: Optional[str] = None):
