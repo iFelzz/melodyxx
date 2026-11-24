@@ -1,5 +1,21 @@
 [
   {
+    "version": "v1.28.0",
+    "date": "2026-11-24",
+    "type": "feature",
+    "title": "Separate Top Streamed Tracks (In-Browser Player) & Top Downloaded Tracks (MP3)",
+    "highlights": [
+      "Distinct Analytics Partitioning: Separated track consumption metrics into Top Streamed Tracks (audio player previews) and Top Downloaded Tracks (MP3 files saved to device).",
+      "Dedicated Dashboard Ranking Cards: Added a dedicated 'Top Downloaded Tracks' card in /stats featuring neon emerald badges (#34d399) and download counter metrics alongside 'Top Streamed Tracks'.",
+      "Historical Backward Compatibility: Seamlessly mapped legacy general track rankings into the new partitioned schema without resetting existing stream records."
+    ],
+    "changes": [
+      "Partitioned top_streamed_tracks and top_downloaded_tracks in analytics.py record_stream_complete().",
+      "Added top_downloaded_tracks ranking list and count pill to static/stats.html.",
+      "Service worker cache bumped to melodyxx-v164."
+    ]
+  },
+  {
     "version": "v1.27.6",
     "date": "2026-11-24",
     "type": "fix",

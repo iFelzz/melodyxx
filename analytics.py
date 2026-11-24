@@ -275,8 +275,10 @@ class AnalyticsEngine:
             "total_previews": 0,
             "total_unique_visitors": 0,
             "peak_concurrency": 0,
-            "top_tracks": {},     # "Artist - Title": count
-            "top_artists": {},    # "Artist Name": count
+            "top_tracks": {},            # Backward-compat "Artist - Title": count
+            "top_streamed_tracks": {},   # In-browser audio player streams
+            "top_downloaded_tracks": {}, # MP3 file downloads
+            "top_artists": {},           # "Artist Name": count
             "top_searched_tracks": {}, # "Search Query": count
             "top_countries": {},  # "Country Name": count
             "daily_stats": {},    # "YYYY-MM-DD": { streams, bytes, searches, previews, unique_visitors }
@@ -331,6 +333,12 @@ class AnalyticsEngine:
                             self.data[k] = loaded[k]
                     if isinstance(loaded.get("top_tracks"), dict):
                         self.data["top_tracks"] = loaded["top_tracks"]
+                    if isinstance(loaded.get("top_streamed_tracks"), dict):
+                        self.data["top_streamed_tracks"] = loaded["top_streamed_tracks"]
+                    elif isinstance(loaded.get("top_tracks"), dict):
+                        self.data["top_streamed_tracks"] = dict(loaded["top_tracks"])
+                    if isinstance(loaded.get("top_downloaded_tracks"), dict):
+                        self.data["top_downloaded_tracks"] = loaded["top_downloaded_tracks"]
                     if isinstance(loaded.get("top_artists"), dict):
                         self.data["top_artists"] = loaded["top_artists"]
                     if isinstance(loaded.get("top_searched_tracks"), dict):
@@ -561,11 +569,26 @@ class AnalyticsEngine:
         clean_title = title.strip()
         track_key = f"{clean_artist} - {clean_title}" if clean_artist else clean_title
         if track_key:
+            # General backward-compatible top tracks
             curr = self.data["top_tracks"].get(track_key, 0)
             self.data["top_tracks"][track_key] = curr + 1
             if len(self.data["top_tracks"]) > 50:
                 sorted_tracks = sorted(self.data["top_tracks"].items(), key=lambda x: x[1], reverse=True)
                 self.data["top_tracks"] = dict(sorted_tracks[:50])
+
+            # Separate metrics: Streamed (In-browser Player) vs Downloaded (MP3 file)
+            if quality == "Preview":
+                curr_s = self.data.setdefault("top_streamed_tracks", {}).get(track_key, 0)
+                self.data["top_streamed_tracks"][track_key] = curr_s + 1
+                if len(self.data["top_streamed_tracks"]) > 50:
+                    sorted_s = sorted(self.data["top_streamed_tracks"].items(), key=lambda x: x[1], reverse=True)
+                    self.data["top_streamed_tracks"] = dict(sorted_s[:50])
+            else:
+                curr_d = self.data.setdefault("top_downloaded_tracks", {}).get(track_key, 0)
+                self.data["top_downloaded_tracks"][track_key] = curr_d + 1
+                if len(self.data["top_downloaded_tracks"]) > 50:
+                    sorted_d = sorted(self.data["top_downloaded_tracks"].items(), key=lambda x: x[1], reverse=True)
+                    self.data["top_downloaded_tracks"] = dict(sorted_d[:50])
 
         self._dirty = True
         if ip:
@@ -657,9 +680,15 @@ class AnalyticsEngine:
                 "action_count": s.get("action_count", 1),
             })
 
-        # Sort top tracks
-        sorted_tracks = sorted(self.data["top_tracks"].items(), key=lambda x: x[1], reverse=True)[:10]
-        top_tracks_list = [{"name": k, "streams": v} for k, v in sorted_tracks]
+        # Sort top streamed tracks (played in browser)
+        streamed_dict = self.data.get("top_streamed_tracks") or self.data.get("top_tracks", {})
+        sorted_streamed = sorted(streamed_dict.items(), key=lambda x: x[1], reverse=True)[:10]
+        top_streamed_list = [{"name": k, "streams": v} for k, v in sorted_streamed]
+
+        # Sort top downloaded tracks (saved as MP3)
+        downloaded_dict = self.data.get("top_downloaded_tracks", {})
+        sorted_downloaded = sorted(downloaded_dict.items(), key=lambda x: x[1], reverse=True)[:10]
+        top_downloaded_list = [{"name": k, "downloads": v} for k, v in sorted_downloaded]
 
         # Sort top searched tracks
         sorted_searches = sorted(self.data.get("top_searched_tracks", {}).items(), key=lambda x: x[1], reverse=True)[:10]
@@ -714,7 +743,9 @@ class AnalyticsEngine:
                 "unique_visitors": today_bucket.get("unique_visitors", 0),
             },
             "active_users": active_users_list,
-            "top_tracks": top_tracks_list,
+            "top_tracks": top_streamed_list,
+            "top_streamed_tracks": top_streamed_list,
+            "top_downloaded_tracks": top_downloaded_list,
             "top_searched_tracks": top_searched_tracks_list,
             "top_artists": top_artists_list,
             "top_countries": top_countries_list,
@@ -731,6 +762,8 @@ class AnalyticsEngine:
         self.data["total_unique_visitors"] = 0
         self.data["peak_concurrency"] = 0
         self.data["top_tracks"].clear()
+        self.data.setdefault("top_streamed_tracks", {}).clear()
+        self.data.setdefault("top_downloaded_tracks", {}).clear()
         self.data.setdefault("top_searched_tracks", {}).clear()
         self.data["top_artists"].clear()
         self.data.get("top_countries", {}).clear()

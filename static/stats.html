@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.27.6" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.28.0" />
 
   <style>
     body {
@@ -1069,21 +1069,39 @@
 
       <!-- Rankings Grid -->
       <div class="tables-split-grid">
-        <!-- Top Tracks -->
+        <!-- Top Streamed Tracks -->
         <div class="section-panel">
           <div class="panel-head">
             <span class="panel-title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <path
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
               Top Streamed Tracks
             </span>
             <span class="panel-count-tag" id="top-tracks-count">0 tracks</span>
           </div>
           <ul class="rank-list" id="top-tracks-list">
-            <li class="empty-rank-msg">No streaming records yet. Play or download tracks to populate ranking!</li>
+            <li class="empty-rank-msg">No in-browser stream records yet. Play tracks to populate ranking!</li>
+          </ul>
+        </div>
+
+        <!-- Top Downloaded Tracks -->
+        <div class="section-panel">
+          <div class="panel-head">
+            <span class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Top Downloaded Tracks
+            </span>
+            <span class="panel-count-tag" id="top-downloaded-tracks-count">0 tracks</span>
+          </div>
+          <ul class="rank-list" id="top-downloaded-tracks-list">
+            <li class="empty-rank-msg">No download records yet. Download tracks to populate ranking!</li>
           </ul>
         </div>
 
@@ -1543,15 +1561,15 @@
         `).join('');
       }
 
-      // Top Tracks
+      // Top Streamed Tracks
       const $topTracksList = document.getElementById('top-tracks-list');
-      const tracks = data.top_tracks || [];
-      document.getElementById('top-tracks-count').textContent = `${tracks.length} tracks`;
+      const streamedTracks = data.top_streamed_tracks || data.top_tracks || [];
+      document.getElementById('top-tracks-count').textContent = `${streamedTracks.length} tracks`;
 
-      if (tracks.length === 0) {
+      if (streamedTracks.length === 0) {
         $topTracksList.innerHTML = '<li class="empty-rank-msg">No streaming records yet.</li>';
       } else {
-        $topTracksList.innerHTML = tracks.map((t, idx) => `
+        $topTracksList.innerHTML = streamedTracks.map((t, idx) => `
           <li class="rank-item">
             <div class="rank-item-info">
               <span class="rank-number">#${idx + 1}</span>
@@ -1560,6 +1578,28 @@
             <span class="rank-item-stat">${Number(t.streams).toLocaleString()} streams</span>
           </li>
         `).join('');
+      }
+
+      // Top Downloaded Tracks
+      const $topDownloadedList = document.getElementById('top-downloaded-tracks-list');
+      if ($topDownloadedList) {
+        const dlTracks = data.top_downloaded_tracks || [];
+        const $dlCount = document.getElementById('top-downloaded-tracks-count');
+        if ($dlCount) $dlCount.textContent = `${dlTracks.length} tracks`;
+
+        if (dlTracks.length === 0) {
+          $topDownloadedList.innerHTML = '<li class="empty-rank-msg">No download records yet.</li>';
+        } else {
+          $topDownloadedList.innerHTML = dlTracks.map((t, idx) => `
+            <li class="rank-item">
+              <div class="rank-item-info">
+                <span class="rank-number">#${idx + 1}</span>
+                <span class="rank-item-name" title="${esc(t.name)}">${esc(t.name)}</span>
+              </div>
+              <span class="rank-item-stat" style="color: #34d399;">${Number(t.downloads).toLocaleString()} downloads</span>
+            </li>
+          `).join('');
+        }
       }
 
       // Top Searched Tracks
