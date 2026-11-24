@@ -4765,7 +4765,11 @@
       const selectedVerVal = $releaseVersionSelect ? $releaseVersionSelect.value : 'all';
 
       function resolveReleaseType(item) {
-        if (item.type) return item.type.toLowerCase();
+        const raw = (item.type || '').toLowerCase();
+        if (raw === 'fix' || raw === 'patch' || raw === 'bugfix') return 'fix';
+        if (raw === 'feature' || raw === 'minor' || raw === 'major' || raw === 'feat') return 'feature';
+        if (raw === 'improvement' || raw === 'improve' || raw === 'security' || raw === 'docs' || raw === 'perf') return 'improvement';
+
         const t = (item.title || '').toLowerCase();
         if (t.startsWith('fix') || t.includes('bug') || t.includes('prevent') || t.includes('truncation')) {
           return 'fix';
@@ -5591,7 +5595,7 @@
           return res.json();
         })
         .then(data => {
-          const version = (data && data.version) ? String(data.version).trim() : 'v1.27.1';
+          const version = (data && data.version) ? String(data.version).trim() : 'v1.27.2';
           const formatted = version.startsWith('v') ? version : `v${version}`;
           $versionLink.textContent = formatted;
           $versionLink.removeAttribute('href');
