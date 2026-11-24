@@ -109,11 +109,14 @@ _last_commit_check = 0.0
 _cached_commit_hash = ""
 
 def get_git_remote_commit() -> Optional[str]:
-    """Fetch latest commit hash from GitHub Git Smart HTTP protocol (no rate limits)."""
+    """Fetch latest commit hash from optional configured remote Git protocol."""
+    remote_url = os.getenv("GIT_REMOTE_URL")
+    if not remote_url:
+        return None
     try:
         import urllib.request
         req = urllib.request.Request(
-            "https://github.com/iFelzz/melodyxx.git/info/refs?service=git-upload-pack",
+            f"{remote_url.rstrip('/')}.git/info/refs?service=git-upload-pack",
             headers={"User-Agent": "git/2.40.0"}
         )
         with urllib.request.urlopen(req, timeout=3.5) as resp:
@@ -825,8 +828,8 @@ async def get_version():
     return {
         "version": version,
         "commit": commit,
-        "version_url": f"https://github.com/iFelzz/melodyxx/releases/tag/{version}" if version else "https://github.com/iFelzz/melodyxx",
-        "commit_url": f"https://github.com/iFelzz/melodyxx/commit/{commit}" if commit and commit not in ("latest", "unknown") else "https://github.com/iFelzz/melodyxx",
+        "version_url": "",
+        "commit_url": "",
     }
 
 @app.get("/api/changelog")

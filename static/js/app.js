@@ -5510,11 +5510,17 @@
           return res.json();
         })
         .then(data => {
-          const version = (data && data.version) ? String(data.version).trim() : 'v1.0.0';
+          const version = (data && data.version) ? String(data.version).trim() : 'v1.26.11';
           const formatted = version.startsWith('v') ? version : `v${version}`;
           $versionLink.textContent = formatted;
-          $versionLink.href = data.version_url || 'https://github.com/iFelzz/melodyxx';
-          $versionLink.title = `Melodyxx ${formatted}`;
+          $versionLink.removeAttribute('href');
+          $versionLink.style.cursor = 'pointer';
+          $versionLink.setAttribute('role', 'button');
+          $versionLink.title = `Melodyxx ${formatted} • Open Release Log`;
+          $versionLink.onclick = (e) => {
+            e.preventDefault();
+            if (typeof openReleaseLogModal === 'function') openReleaseLogModal();
+          };
 
           checkPostUpdateFeedback(formatted);
           checkReleaseLogBadge(formatted);

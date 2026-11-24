@@ -1,5 +1,23 @@
 [
   {
+    "version": "v1.26.11",
+    "date": "2026-11-24",
+    "type": "patch",
+    "title": "Privacy Hardening & Release Log Sanitization",
+    "highlights": [
+      "Privacy Hardening: Decoupled external developer repository links from the public web interface, footer actions, and structured metadata.",
+      "Release Log Sanitization: Cleaned internal infrastructure details, verification tokens, and configuration parameters across historical release logs.",
+      "Interactive Version Badge: Enhanced footer version badge to directly trigger the application release log modal upon click.",
+      "Community Support Links: Preserved verified community creator support channels (Saweria & Ko-fi) while safeguarding private project infrastructure."
+    ],
+    "changes": [
+      "Decoupled public web interface from developer repository links across footer navigation, structured JSON-LD schemas, and version check API.",
+      "Connected footer version badge directly to open the built-in release log modal for improved user discovery.",
+      "Sanitized historical changelog records to focus strictly on user-facing features, improvements, and system reliability.",
+      "Service worker cache bumped to melodyxx-v156."
+    ]
+  },
+  {
     "version": "v1.26.10",
     "date": "2026-11-24",
     "type": "fix",
@@ -53,7 +71,7 @@
     "type": "fix",
     "title": "Google Search Console Site Ownership Verification Tag",
     "highlights": [
-      "Added Google Site Verification: Embedded official Google Search Console verification meta tag (qZN8jKLm3457tPh6ngev3bZxgW79WrcuYtjc9NwxNw4) to authenticate ownership for https://melodyxx.eztec.biz.id/.",
+      "Added Google Site Verification: Embedded official Google Search Console verification meta tag to authenticate site ownership.",
       "Service worker cache bumped to melodyxx-v151."
     ]
   },
@@ -71,10 +89,10 @@
     "version": "v1.26.4",
     "date": "2026-11-23",
     "type": "fix",
-    "title": "Portainer Docker Compose Environment Variable Forwarding for Custom ADMIN_KEY",
+    "title": "Container Deployment & Environment Configuration Optimization",
     "highlights": [
-      "Docker Compose Environment Pass-Through: Explicitly forwarded ADMIN_KEY, CLEANUP_TOKEN, YTDLP_PROXY, and YTDLP_COOKIES_FILE from stack environment variables into the container in docker-compose.yml, allowing Portainer environment configurations to take effect at runtime.",
-      "Sanitized Admin Key Parsing: Hardened ADMIN_KEY in main.py to automatically strip surrounding whitespace and reliably fall back to default melodyxx-admin if empty.",
+      "Container Environment Pass-Through: Enhanced environment variable configuration support for containerized deployment stacks.",
+      "Robust Configuration Parsing: Hardened administrative configuration parsing with automatic whitespace trimming and resilient fallback handling.",
       "Service worker cache bumped to melodyxx-v149."
     ]
   },
@@ -410,7 +428,7 @@
     "type": "improvement",
     "title": "Interactive Previous and Next Track Buttons on Mini Floating Player",
     "highlights": [
-      "Transport Navigation Controls: Added sleek vector Previous (\u23ee\ufe0f) and Next (\u23ed\ufe0f) buttons to the floating mini audio player island bar.",
+      "Transport Navigation Controls: Added sleek vector Previous (⏮️) and Next (⏭️) buttons to the floating mini audio player island bar.",
       "Universal Queue Switching: One-click track skipping across Favorites playlists, YouTube search results, and Apple Music artist discographies.",
       "Mobile-Optimized Touch Targets: Responsive sizing and calibrated touch target gaps ensuring smooth operation on smartphones and tablets."
     ]
@@ -444,9 +462,9 @@
     "date": "2026-11-12",
     "title": "Persistent Server Storage for Analytics Across Container Rebuilds",
     "highlights": [
-      "Persistent Data Volume: Added `/app/data` volume mount (`./data:/app/data`) in `docker-compose.yml` and `MELODYXX_DATA_DIR` environment support so analytics metrics are never wiped during Docker / Portainer container updates.",
-      "Automatic Legacy Migration: AnalyticsEngine automatically checks for existing `analytics.json` in the root folder and migrates historical visitor, search, and stream metrics into persistent storage on first run.",
-      "Resilient Directory Creation: Added automatic parent directory creation (`mkdir -p`) before writing analytics state to eliminate path or filesystem permission issues on Linux/Docker servers."
+      "Persistent Data Storage: Added persistent volume storage support ensuring analytics metrics are securely preserved across container updates.",
+      "Automatic Legacy Migration: AnalyticsEngine automatically checks for existing historical metrics and migrates them into persistent storage on first run.",
+      "Resilient Directory Creation: Added automatic parent directory creation before writing analytics state to eliminate path or filesystem permission issues on containerized servers."
     ],
     "type": "fix"
   },
@@ -867,7 +885,7 @@
     "title": "Sticky Footer Visibility & Above-Footer Mini-Player Docking",
     "highlights": [
       "Repositioned the fixed mini now-playing audio bar to anchor seamlessly above the sticky footer using dynamic CSS variable --footer-height.",
-      "Eliminated footer occlusion during audio playback so the copyright notice, release log button, bug report modal trigger, and GitHub links remain fully visible and clickable.",
+      "Eliminated footer occlusion during audio playback so the copyright notice, release log button, bug report modal trigger, and footer actions remain fully visible and clickable.",
       "Adjusted floating volume slider, batch action drawer, and progress widgets to float cleanly above the newly docked mini player.",
       "Added dynamic ResizeObserver and viewport resize hooks to keep footer height measurements pixel-accurate across desktop and mobile screens."
     ]
@@ -962,7 +980,7 @@
     "type": "improvement",
     "title": "Reposition Version Tag Beside Melodyxx Copyright",
     "highlights": [
-      "Moved the version tag badge into the left footer section right next to 'Melodyxx \u00a9 2026' with refined glassmorphic chip styling."
+      "Moved the version tag badge into the left footer section right next to 'Melodyxx © 2026' with refined glassmorphic chip styling."
     ]
   },
   {
@@ -984,7 +1002,7 @@
     "type": "improvement",
     "title": "Clear Action Terminology: 'Downloading' UX Feedback",
     "highlights": [
-      "Updated download button status and toast notification labels from 'Streaming' to 'Downloading\u2026' for intuitive user experience."
+      "Updated download button status and toast notification labels from 'Streaming' to 'Downloading…' for intuitive user experience."
     ]
   },
   {
@@ -1063,7 +1081,7 @@
     "type": "improvement",
     "title": "Update Google Search Console Site Verification Meta Tag",
     "highlights": [
-      "Updated google-site-verification meta tag with official token (n9xC6-qf3zD8pCA3_-r5wdKkDVhva8FqZfMm5jcfBtU) for instant Search Console ownership verification."
+      "Updated google-site-verification meta tag to ensure seamless Search Console ownership verification."
     ]
   },
   {
@@ -1073,7 +1091,7 @@
     "type": "improvement",
     "title": "Google Search Console Site Verification Endpoint & Meta Tag",
     "highlights": [
-      "Added dynamic endpoint to serve Google Search Console HTML verification file (googledfb472774f5b70f0.html).",
+      "Added dedicated verification endpoint for Google Search Console domain authentication.",
       "Embedded google-site-verification meta tag as redundant verification method in document head."
     ]
   },
@@ -1118,10 +1136,10 @@
     "date": "2026-11-05",
     "time": "07:20 UTC",
     "type": "fix",
-    "title": "Strict Telegram Delivery Verification & Actionable Error Reporting",
+    "title": "Strict Feedback Delivery Verification & Actionable Error Reporting",
     "highlights": [
-      "Removed silent fallback simulation to prevent false-positive success notifications when Telegram credentials are unconfigured or failing.",
-      "Surfaced clear, actionable error toasts when bot setup requires attention (missing tokens, /start not initiated, or invalid chat ID).",
+      "Strict Delivery Verification: Prevented false-positive success notifications when the feedback notification service encounters connectivity issues.",
+      "Actionable User Feedback: Surfaced clear, actionable notifications when feedback submission requires attention.",
       "Preserved user input and prevented triggering 5-minute cooldown timer when delivery fails so users can retry immediately."
     ]
   },
@@ -1130,11 +1148,11 @@
     "date": "2026-11-05",
     "time": "07:16 UTC",
     "type": "fix",
-    "title": "Pass Environment Variables to Docker Compose & Bulletproof Telegram HTML Parsing",
+    "title": "Feedback Service Formatting & Container Environment Optimization",
     "highlights": [
-      "Uncommented and explicitly mapped TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in docker-compose.yml environment block.",
-      "Switched Telegram Bot message formatting from strict Markdown to resilient HTML mode with entity escaping.",
-      "Enhanced HTTP error logging to inspect detailed API response bodies when Telegram rejects requests."
+      "Optimized environment pass-through for notification services in container deployment configurations.",
+      "Switched notification message formatting to resilient HTML mode with proper entity escaping.",
+      "Enhanced diagnostic error logging when notification delivery encounters downstream issues."
     ]
   },
   {
@@ -1165,11 +1183,11 @@
     "date": "2026-11-05",
     "time": "06:55 UTC",
     "type": "feature",
-    "title": "Bug Reporter & Feedback System with Zero-Disk Telegram Forwarding",
+    "title": "Bug Reporter & Feedback System with Zero-Disk Notification Forwarding",
     "highlights": [
       "Integrated in-app Bug Reporter & Feedback dialog accessible from the footer.",
       "Added support for image (PNG, JPG, WEBP) and video (MP4, WEBM) attachments with drag & drop and live media preview.",
-      "Implemented zero-disk streaming memory forwarder directly to developer's Telegram Bot.",
+      "Implemented zero-disk in-memory notification pipeline delivering feedback directly to developers in real-time.",
       "Enforced multi-layered anti-spam protections: SlowAPI rate limiting, invisible honeypot trap, and client-side cooldowns.",
       "Auto-collected non-intrusive diagnostic metadata (App Version, Platform/OS, Screen Resolution, Current Page URL)."
     ]
@@ -1311,8 +1329,8 @@
     "title": "502 Stream Error & Download Manager Resilience",
     "highlights": [
       "Fixed 502 Bad Gateway during batch downloads and external download managers (NDM/IDM).",
-      "Added multi-level on-the-fly YouTube stream refresh if Googlevideo CDN drops connection.",
-      "Integrated Node.js challenge solving runtime and ejs:github component for 100% n-challenge compliance.",
+      "Added multi-level on-the-fly YouTube stream refresh if media CDN drops connection.",
+      "Integrated challenge solving runtime for YouTube signature deciphering and continuous stream stability.",
       "Configured robust FFmpeg reconnect flags (-reconnect_on_http_error 4xx,5xx, -reconnect_on_network_error 1).",
       "Optimized batch sequential pacing to 3s to prevent socket thrashing."
     ]

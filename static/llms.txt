@@ -5,7 +5,6 @@
 ## Website & Documentation
 - URL: https://melodyxx.eztec.biz.id/
 - License: GNU Affero General Public License v3 (AGPL-3.0)
-- Repository: https://github.com/iFelzz/melodyxx
 - API Base URL: https://melodyxx.eztec.biz.id/api/
 
 ## Core Architecture
