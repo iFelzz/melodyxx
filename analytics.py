@@ -588,6 +588,14 @@ class AnalyticsEngine:
             reverse=True
         )[:50]
 
+        # Count occurrence of each IP to identify shared networks / CGNAT
+        ip_counts: Dict[str, int] = {}
+        for s in sorted_sessions:
+            ip_val = s.get("ip", "")
+            if ip_val:
+                ip_counts[ip_val] = ip_counts.get(ip_val, 0) + 1
+
+        ip_user_index: Dict[str, int] = {}
         active_users_list = []
         for s in sorted_sessions:
             elapsed = int(now - s.get("last_seen", now))
@@ -601,8 +609,29 @@ class AnalyticsEngine:
             dev = s.get("device", "Desktop • Browser")
             if dev in ("Windows • Chrome", "Windows • Edge", "Desktop • Browser") and s.get("user_agent"):
                 dev = parse_device_info(s.get("user_agent", ""))
+
+            ip_val = s.get("ip", "")
+            sid = s.get("session_id", "")
+            short_session = ""
+            if sid:
+                clean_chars = [c for c in sid if c.isalnum()]
+                short_session = f"#{''.join(clean_chars[-4:])}" if len(clean_chars) >= 4 else f"#{sid[:4]}"
+            elif s.get("session_key") and "ua_" in s.get("session_key", ""):
+                short_session = f"#{s.get('session_key').split('ua_')[-1][:4]}"
+
+            is_shared = ip_counts.get(ip_val, 0) > 1
+            if is_shared:
+                ip_user_index[ip_val] = ip_user_index.get(ip_val, 0) + 1
+                client_label = f"User #{ip_user_index[ip_val]}"
+            else:
+                client_label = ""
+
             active_users_list.append({
-                "ip": s.get("ip", ""),
+                "ip": ip_val,
+                "session_id": sid,
+                "short_session": short_session,
+                "is_shared_ip": is_shared,
+                "client_label": client_label,
                 "country": s.get("country", "Unknown"),
                 "country_code": s.get("country_code", "XX"),
                 "flag": s.get("flag", "🌐"),

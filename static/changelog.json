@@ -1,5 +1,22 @@
 [
   {
+    "version": "v1.27.5",
+    "date": "2026-11-24",
+    "type": "feature",
+    "title": "Shared IP (CGNAT / Multi-User) Visual Badging & Session Fingerprints",
+    "highlights": [
+      "Visual Shared IP Badging: Automatically detects multiple active visitor devices sharing the same public IP (such as CGNAT, campus, or office WiFi) and renders an amber 'User #1', 'User #2' badge with network iconography.",
+      "Unique Session Fingerprinting: Added short cryptographic session chips (#xxxx) in the IP Address column so administrators can easily distinguish between concurrent users on identical IPs.",
+      "Detailed Session Tooltips: Hovering over visitor badges displays the full anonymous session identifier and network status."
+    ],
+    "changes": [
+      "Added multi-user IP frequency counter and client labeling in analytics.py get_summary().",
+      "Enhanced Live Active Visitors table in static/stats.html with .cgnat-badge, .session-chip, and .ip-col-wrap glassmorphic styling.",
+      "Renamed table column to 'IP Address & Session' for enhanced operational clarity.",
+      "Service worker cache bumped to melodyxx-v162."
+    ]
+  },
+  {
     "version": "v1.27.4",
     "date": "2026-11-24",
     "type": "improvement",
