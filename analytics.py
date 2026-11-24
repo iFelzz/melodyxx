@@ -322,17 +322,26 @@ class AnalyticsEngine:
         action: str,
         cf_country: Optional[str] = None,
         user_agent: str = "",
+        session_id: Optional[str] = None,
     ) -> None:
         """Record a visitor interaction, resolve geo location, and track unique daily visitors."""
         now = time.time()
         today = self._today_key()
 
-        # Track daily unique visitor
+        clean_sid = (session_id or "").strip()
+        # Derive unique session key (supports CGNAT by differentiating multiple users sharing 1 IP)
+        if clean_sid:
+            session_key = f"{ip}::{clean_sid}"
+        else:
+            ua_hash = abs(hash(user_agent)) % 100000 if user_agent else "0"
+            session_key = f"{ip}::ua_{ua_hash}"
+
+        # Track daily unique visitor by unique visitor session key
         if today not in self.daily_ips:
             self.daily_ips[today] = set()
 
-        if ip not in self.daily_ips[today]:
-            self.daily_ips[today].add(ip)
+        if session_key not in self.daily_ips[today]:
+            self.daily_ips[today].add(session_key)
             today_bucket = self._get_today_bucket()
             today_bucket["unique_visitors"] = today_bucket.get("unique_visitors", 0) + 1
             self.data["total_unique_visitors"] = self.data.get("total_unique_visitors", 0) + 1
@@ -349,11 +358,13 @@ class AnalyticsEngine:
 
         device = parse_device_info(user_agent)
 
-        # Update active session
-        prev = self.active_sessions.get(ip)
+        # Update active session with session_key
+        prev = self.active_sessions.get(session_key)
         action_count = (prev.get("action_count", 0) + 1) if prev else 1
 
-        self.active_sessions[ip] = {
+        self.active_sessions[session_key] = {
+            "session_id": clean_sid,
+            "session_key": session_key,
             "ip": ip,
             "country": country_name,
             "country_code": geo["country_code"],
@@ -364,7 +375,25 @@ class AnalyticsEngine:
             "action_count": action_count,
         }
 
-    def record_search(self, query: str, ip: str = "", cf_country: Optional[str] = None, user_agent: str = "") -> None:
+    def remove_session(self, ip: str, session_id: Optional[str] = None) -> bool:
+        """Immediately remove an active visitor session upon browser close / pagehide leave beacon."""
+        clean_sid = (session_id or "").strip()
+        removed = False
+        if clean_sid:
+            session_key = f"{ip}::{clean_sid}"
+            if session_key in self.active_sessions:
+                self.active_sessions.pop(session_key, None)
+                removed = True
+        to_delete = [
+            k for k, s in self.active_sessions.items()
+            if (clean_sid and s.get("session_id") == clean_sid) or (not clean_sid and (k == ip or s.get("ip") == ip))
+        ]
+        for k in to_delete:
+            self.active_sessions.pop(k, None)
+            removed = True
+        return removed
+
+    def record_search(self, query: str, ip: str = "", cf_country: Optional[str] = None, user_agent: str = "", session_id: Optional[str] = None) -> None:
         """Record a single track search query and update top searched track rankings."""
         self.data["total_searches"] += 1
         clean_query = query.strip()
@@ -379,10 +408,10 @@ class AnalyticsEngine:
         self._get_today_bucket()["searches"] += 1
         self._dirty = True
         if ip:
-            self.record_activity(ip, f"Searching: {clean_query[:35]}", cf_country, user_agent)
+            self.record_activity(ip, f"Searching: {clean_query[:35]}", cf_country, user_agent, session_id=session_id)
         self.save()
 
-    def record_artist_search(self, artist_name: str, ip: str = "", cf_country: Optional[str] = None, user_agent: str = "") -> None:
+    def record_artist_search(self, artist_name: str, ip: str = "", cf_country: Optional[str] = None, user_agent: str = "", session_id: Optional[str] = None) -> None:
         """Record an artist search and increment popularity rank."""
         self.data["total_artist_searches"] += 1
         clean_name = artist_name.strip().title()
@@ -396,17 +425,17 @@ class AnalyticsEngine:
         self._get_today_bucket()["searches"] += 1
         self._dirty = True
         if ip:
-            self.record_activity(ip, f"Browsing Artist: {clean_name[:35]}", cf_country, user_agent)
+            self.record_activity(ip, f"Browsing Artist: {clean_name[:35]}", cf_country, user_agent, session_id=session_id)
         self.save()
 
-    def record_preview(self, title: str = "", ip: str = "", cf_country: Optional[str] = None, user_agent: str = "") -> None:
+    def record_preview(self, title: str = "", ip: str = "", cf_country: Optional[str] = None, user_agent: str = "", session_id: Optional[str] = None) -> None:
         """Record an in-browser audio preview playback."""
         self.data["total_previews"] += 1
         self._get_today_bucket()["previews"] += 1
         self._dirty = True
         if ip:
             action_desc = f"Playing Preview: {title[:35]}" if title else "Listening Preview"
-            self.record_activity(ip, action_desc, cf_country, user_agent)
+            self.record_activity(ip, action_desc, cf_country, user_agent, session_id=session_id)
         self.save()
 
     def record_concurrency(self, active_count: int) -> None:
@@ -431,6 +460,7 @@ class AnalyticsEngine:
         cf_country: Optional[str] = None,
         user_agent: str = "",
         quality: str = "320",
+        session_id: Optional[str] = None,
     ) -> None:
         """Record a successfully streamed track (downloaded or streamed via in-browser player)."""
         self.data["total_streams"] += 1
@@ -453,7 +483,7 @@ class AnalyticsEngine:
                 action_desc = f"Streaming: {clean_title[:30]}"
             else:
                 action_desc = f"Downloaded {quality}k MP3: {clean_title[:30]}"
-            self.record_activity(ip, action_desc, cf_country, user_agent)
+            self.record_activity(ip, action_desc, cf_country, user_agent, session_id=session_id)
         self.save(force=True)
 
     # ── Summary & Reporting ───────────────────────────────────
@@ -472,10 +502,10 @@ class AnalyticsEngine:
         mb_streamed = round(total_bytes / (1024 * 1024), 2)
         gb_streamed = round(total_bytes / (1024 * 1024 * 1024), 3)
 
-        # Prune inactive sessions older than 5 minutes (300s)
-        cutoff = now - 300
-        active_ips = [ip for ip, s in self.active_sessions.items() if s.get("last_seen", 0) >= cutoff]
-        self.active_sessions = {ip: self.active_sessions[ip] for ip in active_ips}
+        # Prune inactive sessions older than 90 seconds (1.5 minutes)
+        cutoff = now - 90
+        active_keys = [k for k, s in self.active_sessions.items() if s.get("last_seen", 0) >= cutoff]
+        self.active_sessions = {k: self.active_sessions[k] for k in active_keys}
 
         # Build active user list sorted by most recent activity
         sorted_sessions = sorted(

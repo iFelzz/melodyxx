@@ -722,15 +722,25 @@ def get_client_ip(request: Request) -> str:
         return request.client.host.strip()
     return "127.0.0.1"
 
+def get_client_session_id(request: Request) -> Optional[str]:
+    """Extract anonymous client session identifier to accurately distinguish users behind shared CGNAT/WiFi."""
+    sid = request.headers.get("x-session-id") or request.query_params.get("sid")
+    if sid:
+        clean = sid.strip()
+        if 4 <= len(clean) <= 64:
+            return clean
+    return None
+
 # ── Routes ────────────────────────────────────────────────────
 
 @app.get("/", include_in_schema=False)
 async def root(request: Request):
     """Serve the frontend single page app."""
     client_ip = get_client_ip(request)
+    session_id = get_client_session_id(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
-    analytics.record_activity(client_ip, "Browsing App", cf_country=cf_country, user_agent=ua)
+    analytics.record_activity(client_ip, "Browsing App", cf_country=cf_country, user_agent=ua, session_id=session_id)
     index_path = STATIC_DIR / "index.html"
     if not index_path.exists():
         raise HTTPException(status_code=404, detail="Frontend not found.")
@@ -740,11 +750,20 @@ async def root(request: Request):
 async def visitor_ping(request: Request):
     """Keep-alive heartbeat and visitor activity ping."""
     client_ip = get_client_ip(request)
+    session_id = get_client_session_id(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
     action = request.query_params.get("action", "Online")
-    analytics.record_activity(client_ip, action[:40], cf_country=cf_country, user_agent=ua)
+    analytics.record_activity(client_ip, action[:40], cf_country=cf_country, user_agent=ua, session_id=session_id)
     return JSONResponse(content={"status": "ok"})
+
+@app.api_route("/api/session/leave", methods=["GET", "POST"], include_in_schema=False)
+async def session_leave(request: Request, sid: Optional[str] = None):
+    """Instant visitor session departure beacon handler when browser or tab closes."""
+    client_ip = get_client_ip(request)
+    session_id = sid or get_client_session_id(request)
+    analytics.remove_session(client_ip, session_id)
+    return JSONResponse(content={"status": "left"})
 
 @app.get("/offline", include_in_schema=False)
 @app.get("/offline.html", include_in_schema=False)
@@ -1196,9 +1215,10 @@ async def search(request: Request, q: str, limit: int = 10, offset: int = 0):
         raise HTTPException(status_code=400, detail="Query parameter 'q' is required.")
 
     client_ip = get_client_ip(request)
+    session_id = get_client_session_id(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
-    analytics.record_search(q.strip(), ip=client_ip, cf_country=cf_country, user_agent=ua)
+    analytics.record_search(q.strip(), ip=client_ip, cf_country=cf_country, user_agent=ua, session_id=session_id)
 
     limit = min(max(1, limit), 50)
     offset = max(0, offset)
@@ -1392,6 +1412,7 @@ async def preview(
     else:
         stream_url = cached
 
+    session_id = get_client_session_id(request)
     # Record stream playback event in analytics
     if resolved_title:
         analytics.record_stream_complete(
@@ -1402,9 +1423,10 @@ async def preview(
             cf_country=cf_country,
             user_agent=ua,
             quality="Preview",
+            session_id=session_id,
         )
     else:
-        analytics.record_preview(title="", ip=client_ip, cf_country=cf_country, user_agent=ua)
+        analytics.record_preview(title="", ip=client_ip, cf_country=cf_country, user_agent=ua, session_id=session_id)
 
     encoded = urllib.parse.quote(clean_url)
     resp = {"stream_url": f"/api/preview/stream?url={encoded}"}
@@ -1575,6 +1597,7 @@ async def stream_record(
 ):
     """Direct stream playback tracker for client audio player."""
     client_ip = get_client_ip(request)
+    session_id = get_client_session_id(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
     analytics.record_stream_complete(
@@ -1585,6 +1608,7 @@ async def stream_record(
         cf_country=cf_country,
         user_agent=ua,
         quality="Preview",
+        session_id=session_id,
     )
     return JSONResponse(content={"status": "ok"})
 
@@ -1615,9 +1639,10 @@ async def search_artist(request: Request, q: str, limit: int = 24):
         return JSONResponse(content={"results": [], "suggestions": []})
     
     client_ip = get_client_ip(request)
+    session_id = get_client_session_id(request)
     cf_country = request.headers.get("cf-ipcountry")
     ua = request.headers.get("user-agent", "")
-    analytics.record_artist_search(q.strip(), ip=client_ip, cf_country=cf_country, user_agent=ua)
+    analytics.record_artist_search(q.strip(), ip=client_ip, cf_country=cf_country, user_agent=ua, session_id=session_id)
     limit = min(max(1, limit), 50)
     q_clean = q.strip().lower()
     cache_key = f"{q_clean}:{limit}"
@@ -2142,6 +2167,7 @@ async def stream_audio(
             finally:
                 _active_streams_count = max(0, _active_streams_count - 1)
                 client_ip = get_client_ip(request)
+                session_id = get_client_session_id(request)
                 cf_country = request.headers.get("cf-ipcountry")
                 ua = request.headers.get("user-agent", "")
                 analytics.record_stream_complete(
@@ -2152,6 +2178,7 @@ async def stream_audio(
                     cf_country=cf_country,
                     user_agent=ua,
                     quality=stream_quality,
+                    session_id=session_id,
                 )
                 logger.info("Stream closed: %s (Remaining active: %d, Streamed: %d bytes)",
                             output_filename, _active_streams_count, total_streamed_bytes)

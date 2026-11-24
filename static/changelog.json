@@ -1,5 +1,22 @@
 [
   {
+    "version": "v1.27.1",
+    "date": "2026-11-24",
+    "type": "patch",
+    "title": "Instant Visitor Departure Detection & CGNAT Multi-User Session Isolation",
+    "highlights": [
+      "Instant Browser Departure Beacon: Implemented pagehide and beforeunload departure beacons via /api/session/leave, instantly removing closed tabs from Live Active Visitors without 5-minute lag.",
+      "CGNAT & Shared WiFi Isolation: Separated visitor sessions using anonymous client session identifiers (mxx_sid), ensuring multiple distinct users sharing a single public IP are tracked independently.",
+      "Tighter Real-Time Pruning: Reduced passive inactivity pruning cutoff from 300 seconds to 90 seconds and accelerated heartbeat intervals to 30 seconds for live accuracy."
+    ],
+    "changes": [
+      "Added /api/session/leave route with navigator.sendBeacon support for zero-delay visitor session dismissal upon browser closure.",
+      "Composite session key (IP + Session ID) in AnalyticsEngine prevents session collisions and stat overwrites in shared CGNAT environments.",
+      "Unique visitor deduplication now accurately credits multiple distinct devices behind a shared network.",
+      "Service worker cache bumped to melodyxx-v158."
+    ]
+  },
+  {
     "version": "v1.27.0",
     "date": "2026-11-24",
     "type": "minor",

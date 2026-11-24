@@ -1,5 +1,21 @@
     'use strict';
 
+    // ── Anonymous Client Session ID (Supports Multi-User CGNAT / Shared WiFi) ──
+    function getClientSessionId() {
+      let sid = '';
+      try {
+        sid = sessionStorage.getItem('melodyxx_session_id') || '';
+        if (!sid) {
+          sid = 'mxx_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+          sessionStorage.setItem('melodyxx_session_id', sid);
+        }
+      } catch (_) {
+        if (!sid) sid = 'mxx_anon_' + Date.now().toString(36);
+      }
+      return sid;
+    }
+    const CLIENT_SESSION_ID = getClientSessionId();
+
     // ── i18n Translation Helper ───────────────────────────────
     const t = (key, params) => (window.i18n ? window.i18n.t(key, params) : (window.t ? window.t(key, params) : key));
 
@@ -736,9 +752,12 @@
         const queryParams = new URLSearchParams({
           url: item.url,
           title: item.title || '',
-          artist: item.channel || item.artist || ''
+          artist: item.channel || item.artist || '',
+          sid: CLIENT_SESSION_ID
         });
-        const res = await fetch(`/api/preview?${queryParams.toString()}`);
+        const res = await fetch(`/api/preview?${queryParams.toString()}`, {
+          headers: { 'X-Session-ID': CLIENT_SESSION_ID }
+        });
         if (!res.ok) throw new Error('Preview not found');
         const data = await res.json();
 
@@ -975,7 +994,9 @@
       `;
 
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(currentSearchQuery)}&limit=50&offset=${currentSearchOffset}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(currentSearchQuery)}&limit=50&offset=${currentSearchOffset}&sid=${encodeURIComponent(CLIENT_SESSION_ID)}`, {
+          headers: { 'X-Session-ID': CLIENT_SESSION_ID }
+        });
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.detail || `HTTP ${res.status}`);
@@ -1391,7 +1412,9 @@
       isLoadingMoreResults = false;
 
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=50&offset=0`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=50&offset=0&sid=${encodeURIComponent(CLIENT_SESSION_ID)}`, {
+          headers: { 'X-Session-ID': CLIENT_SESSION_ID }
+        });
         let data;
         const resText = await res.text();
         try {
@@ -1460,7 +1483,9 @@
       $searchBtn.disabled = true;
 
       try {
-        const res = await fetch(`/api/artist/search?q=${encodeURIComponent(q)}&limit=48`);
+        const res = await fetch(`/api/artist/search?q=${encodeURIComponent(q)}&limit=48&sid=${encodeURIComponent(CLIENT_SESSION_ID)}`, {
+          headers: { 'X-Session-ID': CLIENT_SESSION_ID }
+        });
         let data;
         const resText = await res.text();
         try {
@@ -2143,9 +2168,12 @@
             if (btn.dataset.title) {
               const recParams = new URLSearchParams({
                 title: btn.dataset.title,
-                artist: btn.dataset.artist || ''
+                artist: btn.dataset.artist || '',
+                sid: CLIENT_SESSION_ID
               });
-              fetch(`/api/stream/record?${recParams.toString()}`).catch(() => {});
+              fetch(`/api/stream/record?${recParams.toString()}`, {
+                headers: { 'X-Session-ID': CLIENT_SESSION_ID }
+              }).catch(() => {});
             }
           } catch (err) {
             console.error('Audio playback failed:', err);
@@ -2372,10 +2400,13 @@
       const queryParams = new URLSearchParams({
         url: targetQueryOrUrl,
         title: track.title || '',
-        artist: track.artist || ''
+        artist: track.artist || '',
+        sid: CLIENT_SESSION_ID
       });
 
-      fetch(`/api/preview?${queryParams.toString()}`)
+      fetch(`/api/preview?${queryParams.toString()}`, {
+        headers: { 'X-Session-ID': CLIENT_SESSION_ID }
+      })
         .then(res => {
           if (!res.ok) throw new Error(`Preview stream error (${res.status})`);
           return res.json();
@@ -5476,11 +5507,41 @@
     // ── Visitor heartbeat for live analytics ───────────────────
     function pingAnalytics(action = 'Online') {
       try {
-        fetch(`/api/ping?action=${encodeURIComponent(action)}`, { method: 'POST', keepalive: true }).catch(() => {});
+        const url = `/api/ping?action=${encodeURIComponent(action)}&sid=${encodeURIComponent(CLIENT_SESSION_ID)}`;
+        fetch(url, {
+          method: 'POST',
+          headers: { 'X-Session-ID': CLIENT_SESSION_ID },
+          keepalive: true
+        }).catch(() => {});
       } catch (_) {}
     }
     pingAnalytics('Browsing App');
-    setInterval(() => pingAnalytics('Active in App'), 120000);
+
+    // Heartbeat every 30s to keep active session status pixel-fresh
+    setInterval(() => {
+      const isListening = audioPlayer && !audioPlayer.paused;
+      const trackTitle = currentPlayingTrackData && currentPlayingTrackData.title;
+      const currentAction = isListening ? (trackTitle ? `Streaming: ${trackTitle.slice(0, 25)}` : 'Listening Preview') : 'Browsing App';
+      pingAnalytics(currentAction);
+    }, 30000);
+
+    // ── Instant Departure Beacon (Browser Close / Tab Exit) ──
+    function notifyDeparture() {
+      try {
+        const leaveUrl = `/api/session/leave?sid=${encodeURIComponent(CLIENT_SESSION_ID)}`;
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(leaveUrl);
+        } else {
+          fetch(leaveUrl, {
+            method: 'POST',
+            headers: { 'X-Session-ID': CLIENT_SESSION_ID },
+            keepalive: true
+          }).catch(() => {});
+        }
+      } catch (_) {}
+    }
+    window.addEventListener('pagehide', notifyDeparture);
+    window.addEventListener('beforeunload', notifyDeparture);
 
     // ── PWA Native Installation Prompt ────────────────────────
     let deferredInstallPrompt = null;
@@ -5530,7 +5591,7 @@
           return res.json();
         })
         .then(data => {
-          const version = (data && data.version) ? String(data.version).trim() : 'v1.27.0';
+          const version = (data && data.version) ? String(data.version).trim() : 'v1.27.1';
           const formatted = version.startsWith('v') ? version : `v${version}`;
           $versionLink.textContent = formatted;
           $versionLink.removeAttribute('href');

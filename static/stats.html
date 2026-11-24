@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.27.0" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.27.1" />
 
   <style>
     body {
@@ -997,7 +997,7 @@
             <tbody id="active-visitors-table-body">
               <tr>
                 <td colspan="5" style="text-align: center; color: var(--clr-text-dim); padding: 24px;">No active
-                  visitors detected in past 5 minutes.</td>
+                  visitors detected in past 90 seconds.</td>
               </tr>
             </tbody>
           </table>
@@ -1442,7 +1442,7 @@
       if ($activePill) $activePill.textContent = `${activeUsers.length} active`;
 
       if (activeUsers.length === 0) {
-        $activeTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--clr-text-dim); padding: 24px;">No active visitors detected in past 5 minutes.</td></tr>';
+        $activeTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--clr-text-dim); padding: 24px;">No active visitors detected in past 90 seconds.</td></tr>';
       } else {
         $activeTableBody.innerHTML = activeUsers.map(u => `
           <tr>
