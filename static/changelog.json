@@ -1,5 +1,17 @@
 [
   {
+    "version": "v1.26.10",
+    "date": "2026-11-24",
+    "type": "fix",
+    "title": "Audio Player Full Song Title Visibility & Mobile Responsive Optimization",
+    "highlights": [
+      "Full Song Title Display: Expanded floating mini-player title container and upgraded text formatting to support multi-line wrapping (up to 3 full lines), eliminating premature ellipsis truncation for long tracks and collaborations.",
+      "Mobile Responsive Overhaul: Redesigned mini-player mobile deck with relaxed flex-wrapping, comfortable 34-44px touch targets, wider seekbar scrub zones, and clean vertical rhythm across small screens (360px-480px).",
+      "Dynamic Page Clearance: Harmonized body.player-open padding to ensure long multi-line titles never obstruct background content or interactive footer controls.",
+      "Service worker cache bumped to melodyxx-v155."
+    ]
+  },
+  {
     "version": "v1.26.9",
     "date": "2026-11-24",
     "type": "feature",
