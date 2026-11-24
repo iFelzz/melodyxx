@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.27.2" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.27.3" />
 
   <style>
     body {
@@ -739,6 +739,27 @@
 </head>
 
 <body>
+
+  <!-- Floating App Update Notification Banner -->
+  <div id="update-notification-banner" class="update-notification-banner" role="alert">
+    <div class="update-banner-icon" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+        <path d="M21 3v5h-5" />
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+        <path d="M3 21v-5h5" />
+      </svg>
+    </div>
+    <div class="update-banner-content">
+      <div class="update-banner-title">Update Available!</div>
+      <div class="update-banner-desc">Melodyxx <span id="update-new-version" class="update-version-tag">v1.27.3</span> is ready. Refresh to update.</div>
+    </div>
+    <div class="update-banner-actions">
+      <button type="button" class="btn-update-reload" id="btn-update-reload">Refresh</button>
+      <button type="button" class="btn-update-dismiss" id="btn-update-dismiss" aria-label="Dismiss">&times;</button>
+    </div>
+  </div>
 
   <!-- ── ADMIN AUTHENTICATION GATE ── -->
   <div id="admin-gate" class="admin-gate-overlay">
@@ -1606,6 +1627,110 @@
         alert('Failed to connect to reset endpoint: ' + err.message);
       }
     });
+
+    // ── In-App Update Notification & Version Polling ──────────
+    const $updateBanner = document.getElementById('update-notification-banner');
+    const $updateNewVersion = document.getElementById('update-new-version');
+    const $btnUpdateReload = document.getElementById('btn-update-reload');
+    const $btnUpdateDismiss = document.getElementById('btn-update-dismiss');
+
+    let currentStatsAppVersion = null;
+    let latestNotifiedVersion = null;
+    let dismissedVersion = null;
+
+    function showUpdateBanner(newVersion) {
+      if (!newVersion) return;
+      const formattedVer = newVersion.startsWith('v') ? newVersion : `v${newVersion}`;
+      const isVersionBump = latestNotifiedVersion && latestNotifiedVersion !== formattedVer;
+      latestNotifiedVersion = formattedVer;
+
+      if ($updateNewVersion) {
+        $updateNewVersion.textContent = formattedVer;
+      }
+      if ($updateBanner) {
+        $updateBanner.style.display = 'flex';
+        if (isVersionBump) {
+          $updateBanner.classList.remove('banner-highlight');
+          void $updateBanner.offsetWidth; // trigger reflow
+          $updateBanner.classList.add('banner-highlight');
+        }
+      }
+    }
+
+    async function checkForStatsUpdates() {
+      try {
+        const res = await fetch(`/api/version?_t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const remoteVersion = data && data.version ? String(data.version).trim() : null;
+        if (!remoteVersion) return;
+        const formattedRemote = remoteVersion.startsWith('v') ? remoteVersion : `v${remoteVersion}`;
+
+        if (!currentStatsAppVersion) {
+          currentStatsAppVersion = formattedRemote;
+          return;
+        }
+
+        if (formattedRemote !== currentStatsAppVersion) {
+          const isNewerNotice = !latestNotifiedVersion || formattedRemote !== latestNotifiedVersion;
+          const isNewerThanDismissed = !dismissedVersion || formattedRemote !== dismissedVersion;
+
+          if (isNewerNotice) {
+            dismissedVersion = null;
+            showUpdateBanner(formattedRemote);
+          } else if (isNewerThanDismissed && $updateBanner && $updateBanner.style.display === 'none') {
+            showUpdateBanner(formattedRemote);
+          } else if ($updateNewVersion && $updateNewVersion.textContent !== formattedRemote) {
+            $updateNewVersion.textContent = formattedRemote;
+          }
+        } else {
+          if ($updateBanner && $updateBanner.style.display !== 'none') {
+            $updateBanner.style.display = 'none';
+          }
+          dismissedVersion = null;
+        }
+      } catch (err) {
+        console.debug('[Stats Update Check] Error:', err);
+      }
+    }
+
+    if ($btnUpdateReload) {
+      $btnUpdateReload.addEventListener('click', async () => {
+        $btnUpdateReload.textContent = 'Updating…';
+        $btnUpdateReload.disabled = true;
+
+        if ('caches' in window) {
+          try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          } catch (_) {}
+        }
+
+        setTimeout(() => {
+          window.location.reload(true);
+        }, 200);
+      });
+    }
+
+    if ($btnUpdateDismiss) {
+      $btnUpdateDismiss.addEventListener('click', () => {
+        if ($updateBanner) {
+          $updateBanner.style.display = 'none';
+        }
+        dismissedVersion = latestNotifiedVersion;
+      });
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NEW_VERSION_AVAILABLE') {
+          showUpdateBanner(event.data.version);
+        }
+      });
+    }
+
+    checkForStatsUpdates();
+    setInterval(checkForStatsUpdates, 45000);
 
     // Check for auto-login from URL or sessionStorage
     (function init() {

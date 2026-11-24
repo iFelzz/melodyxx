@@ -1,5 +1,20 @@
 [
   {
+    "version": "v1.27.3",
+    "date": "2026-11-24",
+    "type": "feature",
+    "title": "In-App Auto-Update Notifications for Admin Dashboard (/stats)",
+    "highlights": [
+      "Admin Update Banner: Integrated the glowing neon floating update notification banner (#update-notification-banner) into the /stats admin dashboard.",
+      "Live Background Version Polling: Added periodic version polling and Service Worker lifecycle listeners to /stats, alerting admins immediately when a new app release is deployed."
+    ],
+    "changes": [
+      "Added floating update banner HTML and neon glassmorphism styling to static/stats.html.",
+      "Implemented client-side update polling and one-click instant cache busting refresh for stats administrators.",
+      "Service worker cache bumped to melodyxx-v160."
+    ]
+  },
+  {
     "version": "v1.27.2",
     "date": "2026-11-24",
     "type": "fix",
