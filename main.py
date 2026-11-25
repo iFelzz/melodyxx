@@ -1143,7 +1143,7 @@ async def storage_info(request: Request, key: Optional[str] = None):
     if provided_key != ADMIN_KEY:
         raise HTTPException(
             status_code=401,
-            detail="Admin authentication required. Access denied."
+            detail="Incorrect password. Please try again." if provided_key else "Password is required."
         )
     return JSONResponse(content={
         "mode": "Zero-Disk Streaming (Cobalt-Style Pipeline)",
@@ -1175,7 +1175,7 @@ async def get_stats(request: Request, key: Optional[str] = None):
     if provided_key != ADMIN_KEY:
         raise HTTPException(
             status_code=401,
-            detail="Admin authentication required. Access denied."
+            detail="Incorrect password. Please try again." if provided_key else "Password is required."
         )
     summary = analytics.get_summary(current_active_streams=_active_streams_count)
     summary["is_admin"] = True
@@ -1192,7 +1192,7 @@ async def live_stats_stream(request: Request, key: Optional[str] = None):
     if provided_key != ADMIN_KEY:
         raise HTTPException(
             status_code=401,
-            detail="Admin authentication required. Access denied."
+            detail="Incorrect password. Please try again." if provided_key else "Password is required."
         )
 
     async def event_generator():
@@ -1229,7 +1229,7 @@ async def reset_stats(request: Request, key: Optional[str] = None):
     admin_header = request.headers.get("X-Admin-Key")
     provided_key = (key or admin_header or "").strip()
     if provided_key != ADMIN_KEY:
-        raise HTTPException(status_code=401, detail="Invalid admin key. Access denied.")
+        raise HTTPException(status_code=401, detail="Incorrect password. Please try again." if provided_key else "Password is required.")
     analytics.reset()
     return JSONResponse(content={"success": True, "message": "Analytics metrics have been reset successfully."})
 

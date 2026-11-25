@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.28.6",
+    "date": "2026-11-25",
+    "type": "fix",
+    "title": "Clearer Admin Login Error Feedback",
+    "highlights": [
+      "Friendly Login Error Message: Replaced generic 'Admin authentication required' responses with clear 'Incorrect password. Please try again.' feedback."
+    ],
+    "changes": [
+      "Updated 401 error messages in main.py and default gate error text in static/stats.html.",
+      "Service worker cache bumped to melodyxx-v170."
+    ]
+  },
+  {
     "version": "v1.28.5",
     "date": "2026-11-25",
     "type": "improvement",
