@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.28.5",
+    "date": "2026-11-25",
+    "type": "improvement",
+    "title": "Clean Admin Login Button",
+    "highlights": [
+      "Login Button Polish: Removed the extraneous icon inside the Admin Panel Login button for a cleaner appearance."
+    ],
+    "changes": [
+      "Removed the SVG icon from #btn-gate-unlock in static/stats.html.",
+      "Service worker cache bumped to melodyxx-v169."
+    ]
+  },
+  {
     "version": "v1.28.4",
     "date": "2026-11-25",
     "type": "improvement",
