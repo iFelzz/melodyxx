@@ -1,5 +1,19 @@
 [
   {
+    "version": "v1.28.4",
+    "date": "2026-11-25",
+    "type": "improvement",
+    "title": "Dynamic Version Indicator on Admin Login Card",
+    "highlights": [
+      "Login Screen Version Visibility: Added a dynamic version pill at the bottom of the Admin Panel login card, automatically synced with /api/version."
+    ],
+    "changes": [
+      "Added #gate-version-badge and footer styling to static/stats.html.",
+      "Wired checkForStatsUpdates() to keep the login card version badge synchronized.",
+      "Service worker cache bumped to melodyxx-v168."
+    ]
+  },
+  {
     "version": "v1.28.3",
     "date": "2026-11-25",
     "type": "improvement",

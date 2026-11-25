@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.28.3" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.28.4" />
 
   <style>
     body {
@@ -331,6 +331,24 @@
 
     .gate-back-link:active {
       transform: translateY(0);
+    }
+
+    .gate-version-footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .gate-version-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--clr-text-dim);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.03em;
     }
 
 
@@ -862,6 +880,10 @@
         </svg>
         <span>Back to App</span>
       </a>
+
+      <div class="gate-version-footer">
+        <span id="gate-version-badge" class="gate-version-pill">v1.28.4</span>
+      </div>
     </div>
   </div>
 
@@ -1781,6 +1803,8 @@
 
         if (!currentStatsAppVersion) {
           currentStatsAppVersion = formattedRemote;
+          const $gateVer = document.getElementById('gate-version-badge');
+          if ($gateVer) $gateVer.textContent = formattedRemote;
           return;
         }
 
