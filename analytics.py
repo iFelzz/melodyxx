@@ -560,9 +560,13 @@ class AnalyticsEngine:
         quality: str = "320",
         session_id: Optional[str] = None,
     ) -> None:
-        """Record a successfully streamed track (downloaded or streamed via in-browser player)."""
-        self.data["total_streams"] += 1
-        self._get_today_bucket()["streams"] += 1
+        """Record a completed track stream (in-browser preview) or MP3 file download."""
+        if quality == "Preview":
+            self.data["total_previews"] += 1
+            self._get_today_bucket()["previews"] += 1
+        else:
+            self.data["total_streams"] += 1
+            self._get_today_bucket()["streams"] += 1
 
         # Track popularity
         clean_artist = artist.strip() if artist and artist != "Unknown Artist" else ""
@@ -681,7 +685,7 @@ class AnalyticsEngine:
             })
 
         # Sort top streamed tracks (played in browser)
-        streamed_dict = self.data.get("top_streamed_tracks") or self.data.get("top_tracks", {})
+        streamed_dict = self.data.get("top_streamed_tracks", {})
         sorted_streamed = sorted(streamed_dict.items(), key=lambda x: x[1], reverse=True)[:10]
         top_streamed_list = [{"name": k, "streams": v} for k, v in sorted_streamed]
 

@@ -1136,6 +1136,7 @@ async def submit_bug_report(
     return JSONResponse(content={"ok": True, "message": "Thank you! Your report has been submitted."})
 
 @app.get("/api/storage")
+@limiter.limit("10/minute")
 async def storage_info(request: Request, key: Optional[str] = None):
     """System information & stream statistics (Admin authentication required)."""
     admin_header = request.headers.get("X-Admin-Key")
@@ -1165,6 +1166,7 @@ async def admin_panel_view():
     return FileResponse(str(admin_path))
 
 @app.get("/api/stats")
+@limiter.limit("15/minute")
 async def get_stats(request: Request, key: Optional[str] = None):
     """
     Return comprehensive stream & bandwidth analytics.
@@ -1182,6 +1184,7 @@ async def get_stats(request: Request, key: Optional[str] = None):
     return JSONResponse(content=summary)
 
 @app.get("/api/stats/live")
+@limiter.limit("15/minute")
 async def live_stats_stream(request: Request, key: Optional[str] = None):
     """
     Real-time Server-Sent Events (SSE) stream for live analytics metrics.
@@ -1224,6 +1227,7 @@ async def live_stats_stream(request: Request, key: Optional[str] = None):
     )
 
 @app.post("/api/stats/reset")
+@limiter.limit("10/minute")
 async def reset_stats(request: Request, key: Optional[str] = None):
     """Reset accumulated analytics metrics (Admin authentication required)."""
     admin_header = request.headers.get("X-Admin-Key")

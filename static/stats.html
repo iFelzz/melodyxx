@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.28.6" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.29.0" />
 
   <style>
     body {
@@ -496,6 +496,12 @@
       margin-bottom: 28px;
     }
 
+    @media (min-width: 769px) {
+      .tables-split-grid > .section-panel:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+      }
+    }
+
     .ip-col-wrap {
       display: inline-flex;
       align-items: center;
@@ -878,7 +884,7 @@
       </a>
 
       <div class="gate-version-footer">
-        <span id="gate-version-badge" class="gate-version-pill">v1.28.6</span>
+        <span id="gate-version-badge" class="gate-version-pill">v1.29.0</span>
       </div>
     </div>
   </div>
@@ -948,7 +954,7 @@
             </div>
           </div>
           <div class="metric-value" style="color: #4ade80;" id="val-active-users">0</div>
-          <div class="metric-sub">Past 5-min sliding window</div>
+          <div class="metric-sub">Past 90-sec sliding window</div>
         </div>
 
         <!-- Unique Visitors -->
@@ -967,21 +973,21 @@
           <div class="metric-sub">Today: <strong id="val-today-visitors">0</strong> visitors</div>
         </div>
 
-        <!-- Total Streams -->
+        <!-- Total Downloads -->
         <div class="metric-card">
           <div class="metric-card-header">
-            <span class="metric-label">Songs Streamed</span>
+            <span class="metric-label">MP3 Downloads</span>
             <div class="metric-icon-wrap">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13" />
-                <circle cx="6" cy="18" r="3" />
-                <circle cx="18" cy="16" r="3" />
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             </div>
           </div>
           <div class="metric-value" id="val-total-streams">0</div>
-          <div class="metric-sub">Today: <strong id="val-today-streams">0</strong> songs</div>
+          <div class="metric-sub">Today: <strong id="val-today-streams">0</strong> downloads</div>
         </div>
 
         <!-- Bandwidth -->
@@ -1033,7 +1039,7 @@
         <!-- Audio Previews -->
         <div class="metric-card">
           <div class="metric-card-header">
-            <span class="metric-label">In-Browser Previews</span>
+            <span class="metric-label">In-Browser Streams</span>
             <div class="metric-icon-wrap">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -1212,12 +1218,12 @@
           <table class="history-table">
             <thead>
               <tr>
-                <th>Date</th>
+                <th>Date (UTC)</th>
                 <th>Visitors</th>
-                <th>Streams</th>
+                <th>Downloads</th>
                 <th>Bandwidth</th>
                 <th>Searches</th>
-                <th>Previews</th>
+                <th>Streams</th>
               </tr>
             </thead>
             <tbody id="history-table-body">
@@ -1375,13 +1381,13 @@
       if ($btnSpan) $btnSpan.textContent = 'Verifying...';
 
       try {
-        const res = await fetch(`/api/stats?_t=${Date.now()}&key=${encodeURIComponent(key)}`, {
+        const res = await fetch(`/api/stats?_t=${Date.now()}`, {
           headers: { 'X-Admin-Key': key }
         });
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.detail || 'Access denied. Invalid Admin Key.');
+          throw new Error(errData.detail || 'Incorrect password. Please try again.');
         }
 
         const data = await res.json();
@@ -1398,7 +1404,7 @@
         startLiveStream(key);
 
       } catch (err) {
-        $gateErrorText.textContent = err.message || 'Invalid Admin Key. Access denied.';
+        $gateErrorText.textContent = err.message || 'Incorrect password. Please try again.';
         $gateError.style.display = 'flex';
         $gateInput.focus();
         $gateInput.select();
@@ -1502,7 +1508,7 @@
     async function fetchStats() {
       if (!currentAdminKey) return;
       $btnRefresh.classList.add('spinning');
-      const url = `/api/stats?_t=${Date.now()}&key=${encodeURIComponent(currentAdminKey)}`;
+      const url = `/api/stats?_t=${Date.now()}`;
 
       try {
         const res = await fetch(url, {
@@ -1731,31 +1737,65 @@
       fetchStats();
     });
 
-    // Reset button (authenticated)
+    // Reset button (authenticated, 2-step inline confirmation)
+    let resetConfirmArmed = false;
+    let resetConfirmTimer = null;
+
     $btnReset.addEventListener('click', async () => {
-      if (!currentAdminKey) {
-        alert('Admin authentication is required.');
+      if (!currentAdminKey) return;
+
+      if (!resetConfirmArmed) {
+        resetConfirmArmed = true;
+        $btnReset.textContent = 'Confirm Reset?';
+        $btnReset.style.background = 'rgba(239, 68, 68, 0.35)';
+        clearTimeout(resetConfirmTimer);
+        resetConfirmTimer = setTimeout(() => {
+          resetConfirmArmed = false;
+          $btnReset.textContent = 'Reset Metrics';
+          $btnReset.style.background = '';
+        }, 4000);
         return;
       }
 
-      if (!confirm('Are you sure you want to completely reset all analytics data? This action cannot be undone.')) {
-        return;
-      }
+      clearTimeout(resetConfirmTimer);
+      resetConfirmArmed = false;
+      $btnReset.disabled = true;
+      $btnReset.textContent = 'Resetting...';
 
       try {
-        const res = await fetch(`/api/stats/reset?key=${encodeURIComponent(currentAdminKey)}`, {
+        const res = await fetch('/api/stats/reset', {
           method: 'POST',
           headers: { 'X-Admin-Key': currentAdminKey }
         });
-        const resData = await res.json();
+        const resData = await res.json().catch(() => ({}));
         if (!res.ok) {
-          alert('Reset failed: ' + (resData.detail || 'Unauthorized'));
+          $btnReset.textContent = resData.detail || 'Reset Failed';
+          setTimeout(() => {
+            $btnReset.textContent = 'Reset Metrics';
+            $btnReset.style.background = '';
+            $btnReset.disabled = false;
+          }, 2500);
           return;
         }
-        alert('Analytics metrics have been reset successfully.');
+        $btnReset.textContent = 'Metrics Reset!';
+        $btnReset.style.background = 'rgba(34, 197, 94, 0.25)';
+        $btnReset.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+        $btnReset.style.color = '#4ade80';
         fetchStats();
+        setTimeout(() => {
+          $btnReset.textContent = 'Reset Metrics';
+          $btnReset.style.background = '';
+          $btnReset.style.borderColor = '';
+          $btnReset.style.color = '';
+          $btnReset.disabled = false;
+        }, 2500);
       } catch (err) {
-        alert('Failed to connect to reset endpoint: ' + err.message);
+        $btnReset.textContent = 'Connection Error';
+        setTimeout(() => {
+          $btnReset.textContent = 'Reset Metrics';
+          $btnReset.style.background = '';
+          $btnReset.disabled = false;
+        }, 2500);
       }
     });
 

@@ -5614,7 +5614,7 @@ function loadVersion() {
       return res.json();
     })
     .then(data => {
-      const version = (data && data.version) ? String(data.version).trim() : 'v1.28.6';
+      const version = (data && data.version) ? String(data.version).trim() : 'v1.29.0';
       const formatted = version.startsWith('v') ? version : `v${version}`;
       $versionLink.textContent = formatted;
       $versionLink.removeAttribute('href');

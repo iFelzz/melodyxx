@@ -1,5 +1,22 @@
 [
   {
+    "version": "v1.29.0",
+    "date": "2026-11-25",
+    "type": "improvement",
+    "title": "Admin Panel Metrics Accuracy, Security Hardening & Layout Polish",
+    "highlights": [
+      "Accurate Downloads vs Browser Streams Split: Fixed counter overlap so in-browser playback increments In-Browser Streams while file downloads increment MP3 Downloads independently.",
+      "Admin Endpoint Rate Limiting & Header Auth: Added brute-force rate limits on admin endpoints and moved fetch authentication strictly to HTTP headers.",
+      "Refined Dashboard Cards & Table Labels: Synced active-user window label (90s), balanced the 5-card rankings grid on desktop, clarified UTC daily table columns, and replaced browser popups with inline 2-step reset confirmation."
+    ],
+    "changes": [
+      "Separated total_previews vs total_streams in analytics.py record_stream_complete() and removed mixed fallback in get_summary().",
+      "Added @limiter.limit decorators to admin routes in main.py.",
+      "Updated static/stats.html card labels, grid CSS, error fallbacks, and inline reset UX.",
+      "Service worker cache bumped to melodyxx-v171."
+    ]
+  },
+  {
     "version": "v1.28.6",
     "date": "2026-11-25",
     "type": "fix",
