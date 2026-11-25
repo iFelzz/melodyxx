@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.28.3",
+    "date": "2026-11-25",
+    "type": "improvement",
+    "title": "Cleaner Admin Login Card Layout",
+    "highlights": [
+      "Minimalist Admin Prompt: Removed redundant subtitle text and simplified the authentication input placeholder to 'Enter Password'."
+    ],
+    "changes": [
+      "Removed gate subtitle and updated input placeholder in static/stats.html.",
+      "Service worker cache bumped to melodyxx-v167."
+    ]
+  },
+  {
     "version": "v1.28.2",
     "date": "2026-11-25",
     "type": "improvement",
