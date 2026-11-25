@@ -1,5 +1,22 @@
 [
   {
+    "version": "v1.29.1",
+    "date": "2026-11-25",
+    "type": "improvement",
+    "title": "Admin Security Hardening, Code Cleanup & Automated Unit Tests",
+    "highlights": [
+      "Header-Only Admin Authentication: Removed query-parameter key fallback across all admin endpoints and migrated live SSE streaming in stats.html to fetch-based X-Admin-Key headers with constant-time digest comparison.",
+      "Cache-Buster & Code Cleanup: Removed duplicate get_client_ip definition in main.py, synced i18n.js cache-buster to v1.29.1, and updated AGENTS.md for dual-language (EN/ID) UI support.",
+      "Automated Test Suite: Added unit tests covering URL validation, cache TTL/LRU eviction, metadata parsing, analytics separation, and admin auth."
+    ],
+    "changes": [
+      "Added _require_admin_auth() with secrets.compare_digest and startup warning for default ADMIN_KEY in main.py.",
+      "Replaced EventSource query-string auth with AbortController + fetch ReadableStream SSE in static/stats.html.",
+      "Added tests/test_core.py and tests/test_analytics.py runnable via python -m unittest.",
+      "Service worker cache bumped to melodyxx-v172."
+    ]
+  },
+  {
     "version": "v1.29.0",
     "date": "2026-11-25",
     "type": "improvement",

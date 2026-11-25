@@ -1432,36 +1432,56 @@
         }, 1000);
       }
 
-      // 1. Try Server-Sent Events (SSE) for zero-latency push
-      if (window.EventSource) {
-        try {
-          const sseUrl = `/api/stats/live?key=${encodeURIComponent(key)}`;
-          liveEventSource = new EventSource(sseUrl);
+      // 1. Try fetch-based Server-Sent Events (SSE) with X-Admin-Key header
+      if (window.AbortController && window.TextDecoder) {
+        const controller = new AbortController();
+        liveEventSource = { close: () => controller.abort() };
 
-          liveEventSource.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data);
-              renderMetrics(data);
-              pingLiveIndicator();
-            } catch (e) {
-              console.error('SSE parse error:', e);
+        (async () => {
+          try {
+            const res = await fetch('/api/stats/live', {
+              headers: { 'X-Admin-Key': key },
+              signal: controller.signal
+            });
+            if (!res.ok || !res.body) {
+              throw new Error(`SSE HTTP ${res.status}`);
             }
-          };
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-          liveEventSource.onerror = () => {
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              const events = buffer.split('\n\n');
+              buffer = events.pop() || '';
+              for (const evt of events) {
+                for (const line of evt.split('\n')) {
+                  if (line.startsWith('data:')) {
+                    const payload = line.slice(5).trim();
+                    if (!payload) continue;
+                    try {
+                      const data = JSON.parse(payload);
+                      renderMetrics(data);
+                      pingLiveIndicator();
+                    } catch (e) {
+                      console.error('SSE parse error:', e);
+                    }
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            if (err && err.name === 'AbortError') return;
             console.warn('SSE connection interrupted. Falling back to active 2s polling.');
-            if (liveEventSource) {
-              liveEventSource.close();
-              liveEventSource = null;
-            }
+            liveEventSource = null;
             if (!fallbackPollTimer) {
               fallbackPollTimer = setInterval(fetchStats, 2000);
             }
-          };
-          return;
-        } catch (err) {
-          console.warn('Could not start EventSource, falling back to polling:', err);
-        }
+          }
+        })();
+        return;
       }
 
       // 2. Fallback to fast 2s polling
@@ -1905,13 +1925,11 @@
     checkForStatsUpdates();
     setInterval(checkForStatsUpdates, 45000);
 
-    // Check for auto-login from URL or sessionStorage
+    // Check for auto-login from sessionStorage
     (function init() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const keyFromUrl = urlParams.get('key');
       let savedKey = '';
       try {
-        savedKey = keyFromUrl || sessionStorage.getItem('melodyxx_admin_key') || '';
+        savedKey = sessionStorage.getItem('melodyxx_admin_key') || '';
       } catch (_) { }
 
       if (savedKey) {

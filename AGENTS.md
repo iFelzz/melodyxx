@@ -17,7 +17,7 @@ Welcome to the **Melodyxx** codebase. This document outlines critical rules, arc
    - Before committing `HTTP 200` headers to the client, the backend must verify the initial audio chunk from FFmpeg.
    - If dual-input (audio + poster) encounters network issues or timeout from cover art CDNs, the pipeline must **automatically fall back to audio-only stream** to ensure 100% playable files and prevent corrupt 0 KB downloads.
 4. **Language & Localization**:
-   - The entire Web UI (HTML, CSS, JavaScript, user-facing notifications, placeholders, and error messages) must remain strictly in **English**.
+   - The Web UI supports **dual language** (English & Indonesian) via [`static/js/i18n.js`](./static/js/i18n.js). All new UI strings should provide translations for both `en` and `id`.
    - User conversations in chat are conducted in **Indonesian** (unless explicitly asked otherwise).
 
 ---
@@ -41,9 +41,10 @@ Whenever you bump the version in `VERSION` (e.g., from `1.0.0` to `1.0.1`):
 1. **Update `VERSION`**:
    Write the new SemVer string into [`VERSION`](./VERSION) (e.g. `1.0.1`).
 2. **Update Cache-Busters in `static/index.html`**:
-   Update CSS and JS version queries to match the new version:
+   Update CSS and JS version queries (`style.css`, `i18n.js`, `app.js`) to match the new version:
    ```html
    <link rel="stylesheet" href="/static/css/style.css?v=1.0.1" />
+   <script src="/static/js/i18n.js?v=1.0.1"></script>
    <script src="/static/js/app.js?v=1.0.1" defer></script>
    ```
 3. **Bump Service Worker Cache Name in `static/sw.js`**:

@@ -68,7 +68,12 @@ STATIC_DIR = BASE_DIR / "static"
 # ── Environment & External Config ────────────────────────────
 CLEANUP_TOKEN = os.environ.get("CLEANUP_TOKEN")
 YTDLP_PROXY   = os.environ.get("YTDLP_PROXY")
-ADMIN_KEY     = (os.environ.get("ADMIN_KEY") or "melodyxx-admin").strip()
+_RAW_ADMIN_KEY = os.environ.get("ADMIN_KEY", "").strip()
+if not _RAW_ADMIN_KEY:
+    logger.warning("ADMIN_KEY environment variable is not set; using default fallback key. Set ADMIN_KEY in production!")
+    ADMIN_KEY = "melodyxx-admin"
+else:
+    ADMIN_KEY = _RAW_ADMIN_KEY
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
@@ -708,21 +713,6 @@ def _extract_stream_info(url: str, raw_title: str = "", explicit_meta: Optional[
             "user_agent":  headers.get("User-Agent"),
         }
 
-def get_client_ip(request: Request) -> str:
-    """Extract client IP respecting Cloudflare and reverse-proxy headers."""
-    cf_ip = request.headers.get("cf-connecting-ip")
-    if cf_ip:
-        return cf_ip.strip()
-    x_real_ip = request.headers.get("x-real-ip")
-    if x_real_ip:
-        return x_real_ip.strip()
-    x_forwarded_for = request.headers.get("x-forwarded-for")
-    if x_forwarded_for:
-        return x_forwarded_for.split(",")[0].strip()
-    if request.client and request.client.host:
-        return request.client.host.strip()
-    return "127.0.0.1"
-
 def get_client_session_id(request: Request) -> Optional[str]:
     """Extract anonymous client session identifier to accurately distinguish users behind shared CGNAT/WiFi."""
     sid = request.headers.get("x-session-id") or request.query_params.get("sid")
@@ -1135,17 +1125,19 @@ async def submit_bug_report(
 
     return JSONResponse(content={"ok": True, "message": "Thank you! Your report has been submitted."})
 
+def _require_admin_auth(request: Request) -> None:
+    """Validate admin key strictly from X-Admin-Key header using constant-time comparison."""
+    provided_key = (request.headers.get("X-Admin-Key") or "").strip()
+    if not provided_key:
+        raise HTTPException(status_code=401, detail="Password is required.")
+    if not secrets.compare_digest(provided_key.encode("utf-8"), ADMIN_KEY.encode("utf-8")):
+        raise HTTPException(status_code=401, detail="Incorrect password. Please try again.")
+
 @app.get("/api/storage")
 @limiter.limit("10/minute")
-async def storage_info(request: Request, key: Optional[str] = None):
+async def storage_info(request: Request):
     """System information & stream statistics (Admin authentication required)."""
-    admin_header = request.headers.get("X-Admin-Key")
-    provided_key = (key or admin_header or "").strip()
-    if provided_key != ADMIN_KEY:
-        raise HTTPException(
-            status_code=401,
-            detail="Incorrect password. Please try again." if provided_key else "Password is required."
-        )
+    _require_admin_auth(request)
     return JSONResponse(content={
         "mode": "Zero-Disk Streaming (Cobalt-Style Pipeline)",
         "disk_usage_mb": 0.0,
@@ -1167,36 +1159,24 @@ async def admin_panel_view():
 
 @app.get("/api/stats")
 @limiter.limit("15/minute")
-async def get_stats(request: Request, key: Optional[str] = None):
+async def get_stats(request: Request):
     """
     Return comprehensive stream & bandwidth analytics.
-    Strictly requires valid Admin Key authentication.
+    Strictly requires valid Admin Key authentication via X-Admin-Key header.
     """
-    admin_header = request.headers.get("X-Admin-Key")
-    provided_key = (key or admin_header or "").strip()
-    if provided_key != ADMIN_KEY:
-        raise HTTPException(
-            status_code=401,
-            detail="Incorrect password. Please try again." if provided_key else "Password is required."
-        )
+    _require_admin_auth(request)
     summary = analytics.get_summary(current_active_streams=_active_streams_count)
     summary["is_admin"] = True
     return JSONResponse(content=summary)
 
 @app.get("/api/stats/live")
 @limiter.limit("15/minute")
-async def live_stats_stream(request: Request, key: Optional[str] = None):
+async def live_stats_stream(request: Request):
     """
     Real-time Server-Sent Events (SSE) stream for live analytics metrics.
     Continuously pushes updated metrics directly to connected admin dashboards.
     """
-    admin_header = request.headers.get("X-Admin-Key")
-    provided_key = (key or admin_header or "").strip()
-    if provided_key != ADMIN_KEY:
-        raise HTTPException(
-            status_code=401,
-            detail="Incorrect password. Please try again." if provided_key else "Password is required."
-        )
+    _require_admin_auth(request)
 
     async def event_generator():
         try:
@@ -1228,12 +1208,9 @@ async def live_stats_stream(request: Request, key: Optional[str] = None):
 
 @app.post("/api/stats/reset")
 @limiter.limit("10/minute")
-async def reset_stats(request: Request, key: Optional[str] = None):
+async def reset_stats(request: Request):
     """Reset accumulated analytics metrics (Admin authentication required)."""
-    admin_header = request.headers.get("X-Admin-Key")
-    provided_key = (key or admin_header or "").strip()
-    if provided_key != ADMIN_KEY:
-        raise HTTPException(status_code=401, detail="Incorrect password. Please try again." if provided_key else "Password is required.")
+    _require_admin_auth(request)
     analytics.reset()
     return JSONResponse(content={"success": True, "message": "Analytics metrics have been reset successfully."})
 
