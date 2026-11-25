@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.28.1" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.28.2" />
 
   <style>
     body {
@@ -305,18 +305,32 @@
     }
 
     .gate-back-link {
+      width: 100%;
+      height: 42px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      color: var(--clr-text-dim);
-      font-size: 0.82rem;
+      justify-content: center;
+      gap: 7px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--clr-border);
+      border-radius: 10px;
+      color: var(--clr-text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
       text-decoration: none;
-      margin-top: 20px;
-      transition: color 0.2s ease;
+      margin-top: 12px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .gate-back-link:hover {
-      color: var(--clr-primary-light);
+      background: rgba(124, 58, 237, 0.14);
+      border-color: rgba(124, 58, 237, 0.5);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .gate-back-link:active {
+      transform: translateY(0);
     }
 
 
@@ -838,7 +852,7 @@
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 2l-2 2m-6 6l7-7M3 10l6-6 4 4-6 6H3v-4z" />
           </svg>
-          <span>Unlock Dashboard</span>
+          <span>Login</span>
         </button>
       </form>
 
@@ -847,7 +861,7 @@
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
-        <span>Return to Melodyxx App</span>
+        <span>Back to App</span>
       </a>
     </div>
   </div>
@@ -1340,7 +1354,7 @@
       $gateError.style.display = 'none';
       $gateBtn.disabled = true;
       const $btnSpan = $gateBtn.querySelector('span');
-      const origText = $btnSpan ? $btnSpan.textContent : 'Unlock Dashboard';
+      const origText = $btnSpan ? $btnSpan.textContent : 'Login';
       if ($btnSpan) $btnSpan.textContent = 'Verifying...';
 
       try {

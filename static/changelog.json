@@ -1,5 +1,18 @@
 [
   {
+    "version": "v1.28.2",
+    "date": "2026-11-25",
+    "type": "improvement",
+    "title": "Admin Gate UI Refinement (Login & Back to App Buttons)",
+    "highlights": [
+      "Streamlined Admin Gate Controls: Updated the primary authentication button label to 'Login' and converted the return navigation link into a glassmorphic 'Back to App' button."
+    ],
+    "changes": [
+      "Updated admin login button text and secondary Back to App button styling in static/stats.html.",
+      "Service worker cache bumped to melodyxx-v166."
+    ]
+  },
+  {
     "version": "v1.28.1",
     "date": "2026-11-25",
     "type": "improvement",
