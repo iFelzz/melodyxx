@@ -273,6 +273,7 @@ class AnalyticsEngine:
             "total_searches": 0,
             "total_artist_searches": 0,
             "total_previews": 0,
+            "total_rapidapi_requests": 0,
             "total_unique_visitors": 0,
             "peak_concurrency": 0,
             "top_tracks": {},            # Backward-compat "Artist - Title": count
@@ -536,6 +537,17 @@ class AnalyticsEngine:
             self.record_activity(ip, action_desc, cf_country, user_agent, session_id=session_id)
         self.save()
 
+    def record_rapidapi_call(self, endpoint: str, user: str = "", plan: str = "", ip: str = "") -> None:
+        """Record an API call originating from RapidAPI gateway."""
+        self.data["total_rapidapi_requests"] = self.data.get("total_rapidapi_requests", 0) + 1
+        today_bucket = self._get_today_bucket()
+        today_bucket["rapidapi_requests"] = today_bucket.get("rapidapi_requests", 0) + 1
+        self._dirty = True
+        if ip:
+            action_desc = f"RapidAPI [{user or 'client'}] {endpoint}"[:45]
+            self.record_activity(ip, action_desc, user_agent=f"RapidAPI/{plan or 'default'}")
+        self.save()
+
     def record_concurrency(self, active_count: int) -> None:
         """Update peak concurrency tracker."""
         if active_count > self.data.get("peak_concurrency", 0):
@@ -737,6 +749,7 @@ class AnalyticsEngine:
             "total_searches": self.data["total_searches"],
             "total_artist_searches": self.data["total_artist_searches"],
             "total_previews": self.data["total_previews"],
+            "total_rapidapi_requests": self.data.get("total_rapidapi_requests", 0),
             "total_unique_visitors": self.data.get("total_unique_visitors", 0),
             "today": {
                 "date": self._today_key(),
@@ -744,6 +757,7 @@ class AnalyticsEngine:
                 "mb_streamed": round(today_bucket.get("bytes", 0) / (1024 * 1024), 2),
                 "searches": today_bucket.get("searches", 0),
                 "previews": today_bucket.get("previews", 0),
+                "rapidapi_requests": today_bucket.get("rapidapi_requests", 0),
                 "unique_visitors": today_bucket.get("unique_visitors", 0),
             },
             "active_users": active_users_list,

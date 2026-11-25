@@ -24,6 +24,7 @@ services:
       - CLEANUP_TOKEN=${CLEANUP_TOKEN:-}
       - YTDLP_PROXY=${YTDLP_PROXY:-}
       - YTDLP_COOKIES_FILE=${YTDLP_COOKIES_FILE:-}
+      - RAPIDAPI_PROXY_SECRET=${RAPIDAPI_PROXY_SECRET:-}
       - ENABLE_HTTPS_REDIRECT=${ENABLE_HTTPS_REDIRECT:-}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]

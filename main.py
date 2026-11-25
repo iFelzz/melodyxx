@@ -40,7 +40,7 @@ from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any, List
 
 import yt_dlp
-from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile, Query
+from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile, Query, APIRouter
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -77,6 +77,11 @@ else:
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+RAPIDAPI_PROXY_SECRET = os.environ.get("RAPIDAPI_PROXY_SECRET", "").strip()
+if RAPIDAPI_PROXY_SECRET:
+    logger.info("RapidAPI proxy secret protection is ENABLED for /api/v1.")
+else:
+    logger.info("RapidAPI proxy secret not configured; /api/v1 accepting direct calls (Dev mode).")
 
 COOKIES_FILE = os.environ.get("YTDLP_COOKIES_FILE")
 if not COOKIES_FILE and (BASE_DIR / "cookies.txt").exists():
@@ -2207,6 +2212,428 @@ async def stream_audio(
             "Expires":             "0",
         }
     )
+
+# ── RapidAPI v1 Public Developer API ──────────────────────────
+
+api_v1 = APIRouter(prefix="/api/v1", tags=["RapidAPI v1"])
+
+
+class ConvertV1Request(BaseModel):
+    url: str
+    quality: Optional[str] = "320"
+    artist: Optional[str] = None
+    title: Optional[str] = None
+    album: Optional[str] = None
+    year: Optional[str] = None
+    poster_url: Optional[str] = None
+
+    @field_validator("quality")
+    def validate_quality(cls, v):
+        q = str(v).lower().strip()
+        if q not in ALLOWED_QUALITIES:
+            return "320"
+        return q
+
+
+def verify_rapidapi_auth(request: Request) -> Dict[str, str]:
+    """
+    Validates X-RapidAPI-Proxy-Secret header if configured.
+    When configured, unauthorized access bypassing the RapidAPI Gateway is rejected with HTTP 403.
+    """
+    if RAPIDAPI_PROXY_SECRET:
+        secret = request.headers.get("X-RapidAPI-Proxy-Secret", "").strip()
+        if not secret or not secrets.compare_digest(secret.encode("utf-8"), RAPIDAPI_PROXY_SECRET.encode("utf-8")):
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: Invalid or missing X-RapidAPI-Proxy-Secret header. Direct access without RapidAPI Gateway is prohibited."
+            )
+    rapid_user = request.headers.get("X-RapidAPI-User", "anonymous")
+    rapid_plan = request.headers.get("X-RapidAPI-Subscription", "default")
+    return {"user": rapid_user, "plan": rapid_plan}
+
+
+@api_v1.get("/health")
+async def v1_health():
+    """Health check endpoint for RapidAPI monitoring."""
+    return JSONResponse(content={
+        "status": "online",
+        "api_version": "v1",
+        "service": "Melodyxx Music Engine",
+        "timestamp": time.time(),
+    })
+
+
+@api_v1.get("/search")
+@limiter.limit("60/minute")
+async def v1_search(
+    request: Request,
+    q: str = Query(..., description="Song title, artist name, or keywords"),
+    limit: int = Query(10, ge=1, le=25, description="Number of results (1-25)"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+):
+    """
+    Search YouTube music & tracks with clean parsed metadata.
+    """
+    auth = verify_rapidapi_auth(request)
+    clean_q = q.strip()
+    if not clean_q:
+        raise HTTPException(status_code=400, detail="Search query parameter 'q' cannot be empty.")
+
+    client_ip = get_client_ip(request)
+    analytics.record_rapidapi_call("/api/v1/search", user=auth["user"], plan=auth["plan"], ip=client_ip)
+
+    cache_key = f"v1_search:{clean_q.lower()}"
+    cached = _search_cache.get(cache_key)
+    if cached is not None:
+        slice_res = cached[offset : offset + limit]
+        return JSONResponse(content={
+            "status": "success",
+            "query": clean_q,
+            "total_cached": len(cached),
+            "count": len(slice_res),
+            "results": slice_res,
+        })
+
+    fetch_count = 50
+    opts = _get_base_ytdl_opts()
+    opts.update({
+        "extract_flat": True,
+        "playlist_items": f"1-{fetch_count}",
+    })
+
+    def _do_search():
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            return ydl.extract_info(f"ytsearch{fetch_count}:{clean_q}", download=False)
+
+    try:
+        data = await asyncio.to_thread(_do_search)
+    except Exception as exc:
+        logger.error("RapidAPI v1 search failed for query '%s': %s", clean_q, exc)
+        raise HTTPException(status_code=502, detail=f"YouTube search error: {str(exc)}")
+
+    entries = (data or {}).get("entries", [])
+    formatted_results = []
+    for entry in entries:
+        if not entry:
+            continue
+        v_id = entry.get("id") or ""
+        v_title = entry.get("title") or ""
+        v_uploader = entry.get("uploader") or entry.get("channel") or ""
+        v_duration = entry.get("duration") or 0
+        v_url = entry.get("url") or f"https://www.youtube.com/watch?v={v_id}"
+
+        artist_name, clean_title = metadata_resolver.parse_artist_and_title(v_title, v_uploader)
+        mins, secs = divmod(int(v_duration), 60)
+        formatted_duration = f"{mins:02d}:{secs:02d}"
+        thumb = entry.get("thumbnail") or (f"https://i.ytimg.com/vi/{v_id}/hqdefault.jpg" if v_id else "")
+
+        formatted_results.append({
+            "id": v_id,
+            "title": clean_title,
+            "artist": artist_name,
+            "duration": int(v_duration),
+            "duration_formatted": formatted_duration,
+            "url": v_url,
+            "thumbnail": thumb,
+            "channel": v_uploader,
+        })
+
+    _search_cache.set(cache_key, formatted_results)
+    slice_res = formatted_results[offset : offset + limit]
+    return JSONResponse(content={
+        "status": "success",
+        "query": clean_q,
+        "total_cached": len(formatted_results),
+        "count": len(slice_res),
+        "results": slice_res,
+    })
+
+
+@api_v1.get("/info")
+@limiter.limit("60/minute")
+async def v1_info(
+    request: Request,
+    url: str = Query(..., description="YouTube URL or 11-character video ID"),
+):
+    """
+    Get full metadata for a song, enriched with official Apple Music artwork & tags.
+    """
+    auth = verify_rapidapi_auth(request)
+    raw_input = url.strip()
+    if not raw_input:
+        raise HTTPException(status_code=400, detail="Missing required parameter 'url'.")
+
+    if re.match(r"^[a-zA-Z0-9_-]{11}$", raw_input):
+        target_url = f"https://www.youtube.com/watch?v={raw_input}"
+    else:
+        target_url = _clean_youtube_url(raw_input)
+
+    if not is_youtube_url(target_url):
+        raise HTTPException(status_code=400, detail="Only valid YouTube URLs or 11-character video IDs are supported.")
+
+    client_ip = get_client_ip(request)
+    analytics.record_rapidapi_call("/api/v1/info", user=auth["user"], plan=auth["plan"], ip=client_ip)
+
+    cache_key = f"v1_info:{target_url}"
+    cached = _preview_cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(content={"status": "success", **cached})
+
+    try:
+        info = await asyncio.to_thread(_extract_stream_info, target_url)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch song info: {str(exc)}")
+
+    dur = int(info.get("duration") or 0)
+    mins, secs = divmod(dur, 60)
+
+    result_data = {
+        "id": info.get("webpage_url_basename") or target_url.split("v=")[-1][:11],
+        "url": info.get("webpage_url") or target_url,
+        "title": info.get("title"),
+        "artist": info.get("artist"),
+        "album": info.get("album") or "",
+        "year": str(info.get("year") or ""),
+        "duration": dur,
+        "duration_formatted": f"{mins:02d}:{secs:02d}",
+        "artwork_url": info.get("poster_url") or "",
+        "channel": info.get("uploader") or "",
+        "available_qualities": ["128", "192", "320", "native"],
+    }
+    _preview_cache.set(cache_key, result_data)
+    return JSONResponse(content={"status": "success", **result_data})
+
+
+@api_v1.post("/convert")
+@limiter.limit("30/minute")
+async def v1_convert(request: Request, body: ConvertV1Request):
+    """
+    Generate an authorized, high-speed streaming/download link with embedded metadata.
+    """
+    auth = verify_rapidapi_auth(request)
+    raw_input = body.url.strip()
+    if not raw_input:
+        raise HTTPException(status_code=400, detail="Field 'url' is required.")
+
+    if re.match(r"^[a-zA-Z0-9_-]{11}$", raw_input):
+        target_url = f"https://www.youtube.com/watch?v={raw_input}"
+    else:
+        target_url = _clean_youtube_url(raw_input)
+
+    if not is_youtube_url(target_url):
+        raise HTTPException(status_code=400, detail="Only valid YouTube URLs or 11-character video IDs are supported.")
+
+    quality = (body.quality or "320").lower().strip()
+    if quality not in ALLOWED_QUALITIES:
+        quality = "320"
+
+    client_ip = get_client_ip(request)
+    analytics.record_rapidapi_call("/api/v1/convert", user=auth["user"], plan=auth["plan"], ip=client_ip)
+
+    explicit_meta = {}
+    if body.artist and body.title:
+        explicit_meta = {
+            "artist": body.artist,
+            "title": body.title,
+            "album": body.album or "",
+            "year": body.year or "",
+            "poster_url": body.poster_url or "",
+        }
+
+    try:
+        info = await asyncio.to_thread(_extract_stream_info, target_url, body.title or "", explicit_meta)
+    except Exception as exc:
+        logger.error("RapidAPI convert stream extraction failed: %s", exc)
+        raise HTTPException(status_code=502, detail=f"Failed to resolve audio: {str(exc)}")
+
+    clean_title  = sanitise_filename(info["title"])
+    clean_artist = sanitise_filename(info["artist"])
+    clean_album  = sanitise_filename(info.get("album", ""))
+    year         = info.get("year", "")
+    poster_url   = info.get("poster_url", "")
+    token        = secrets.token_urlsafe(16)
+
+    _stream_tokens[token] = {
+        "stream_url":    info["stream_url"],
+        "webpage_url":   info.get("webpage_url") or target_url,
+        "explicit_meta": explicit_meta,
+        "title":         clean_title,
+        "artist":        clean_artist,
+        "album":         clean_album,
+        "year":          year,
+        "poster_url":    poster_url,
+        "quality":       quality,
+        "user_agent":    info.get("user_agent"),
+        "created_at":    time.time(),
+    }
+
+    ext = "m4a" if quality in ("native", "m4a") else "mp3"
+    if (clean_artist
+        and clean_artist != "Unknown Artist"
+        and clean_artist.lower() not in clean_title.lower()
+        and not metadata_resolver.is_label_channel(clean_artist)):
+        display_name = f"{clean_artist} - {clean_title}"
+    else:
+        display_name = clean_title
+    display_name = sanitise_filename(display_name)
+    filename = f"{display_name}.{ext}"
+
+    base_host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    proto = request.headers.get("x-forwarded-proto") or "https"
+    base_url = f"{proto}://{base_host}".rstrip("/") if base_host else ""
+
+    encoded_url    = urllib.parse.quote(info.get("webpage_url") or target_url)
+    encoded_title  = urllib.parse.quote(clean_title)
+    encoded_artist = urllib.parse.quote(clean_artist)
+    encoded_album  = urllib.parse.quote(clean_album)
+    encoded_year   = urllib.parse.quote(year)
+    encoded_poster = urllib.parse.quote(poster_url)
+
+    stream_path = (
+        f"/api/v1/stream?token={token}&url={encoded_url}&quality={quality}"
+        f"&title={encoded_title}&artist={encoded_artist}&album={encoded_album}&year={encoded_year}&poster={encoded_poster}"
+    )
+    full_download_url = f"{base_url}{stream_path}" if base_url else stream_path
+
+    return JSONResponse(content={
+        "status": "success",
+        "title": clean_title,
+        "artist": clean_artist,
+        "album": clean_album,
+        "year": str(year),
+        "quality": quality,
+        "format": ext,
+        "filename": filename,
+        "artwork_url": poster_url,
+        "download_url": full_download_url,
+        "expires_in_seconds": _TOKEN_TTL_SECONDS,
+    })
+
+
+@api_v1.api_route("/stream", methods=["GET", "HEAD"])
+async def v1_stream(
+    request: Request,
+    token: Optional[str] = None,
+    url: Optional[str] = None,
+    quality: Optional[str] = "192",
+    title: Optional[str] = None,
+    artist: Optional[str] = None,
+    album: Optional[str] = None,
+    year: Optional[str] = None,
+    poster: Optional[str] = None,
+):
+    """
+    Direct zero-disk binary audio streaming endpoint.
+    Transcodes on-the-fly and pipes stream directly to client response.
+    """
+    return await stream_audio(
+        request=request,
+        token=token,
+        url=url,
+        quality=quality,
+        title=title,
+        artist=artist,
+        album=album,
+        year=year,
+        poster=poster,
+    )
+
+
+@api_v1.get("/artist/search")
+@limiter.limit("60/minute")
+async def v1_artist_search(
+    request: Request,
+    q: str = Query(..., description="Artist name"),
+    limit: int = Query(10, ge=1, le=50, description="Max results"),
+):
+    """
+    Search official verified artists on Apple Music catalog.
+    """
+    auth = verify_rapidapi_auth(request)
+    clean_q = q.strip()
+    if not clean_q:
+        raise HTTPException(status_code=400, detail="Query parameter 'q' cannot be empty.")
+
+    client_ip = get_client_ip(request)
+    analytics.record_rapidapi_call("/api/v1/artist/search", user=auth["user"], plan=auth["plan"], ip=client_ip)
+
+    cache_key = f"v1_art_search:{clean_q.lower()}:{limit}"
+    cached = _artist_search_cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(content={"status": "success", **cached})
+
+    try:
+        data = await asyncio.to_thread(metadata_resolver.search_artists, clean_q, limit)
+        _artist_search_cache.set(cache_key, data)
+        return JSONResponse(content={"status": "success", **data})
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Artist search error: {str(exc)}")
+
+
+@api_v1.get("/artist/{artist_id}/discography")
+@limiter.limit("60/minute")
+async def v1_artist_discography(
+    request: Request,
+    artist_id: str,
+):
+    """
+    Get top popular songs and complete studio albums discography for an artist.
+    """
+    auth = verify_rapidapi_auth(request)
+    clean_id = artist_id.strip()
+    if not clean_id:
+        raise HTTPException(status_code=400, detail="artist_id cannot be empty.")
+
+    client_ip = get_client_ip(request)
+    analytics.record_rapidapi_call(f"/api/v1/artist/{clean_id}/discography", user=auth["user"], plan=auth["plan"], ip=client_ip)
+
+    cache_key = f"v1_art_disco:{clean_id}"
+    cached = _artist_disco_cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(content={"status": "success", **cached})
+
+    try:
+        data = await asyncio.to_thread(metadata_resolver.get_artist_discography, clean_id)
+        if not data or not data.get("artist"):
+            raise HTTPException(status_code=404, detail="Artist not found on Apple Music catalog.")
+        _artist_disco_cache.set(cache_key, data)
+        return JSONResponse(content={"status": "success", **data})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Discography lookup error: {str(exc)}")
+
+
+@api_v1.get("/album/{album_id}/tracks")
+@limiter.limit("60/minute")
+async def v1_album_tracks(
+    request: Request,
+    album_id: str,
+):
+    """
+    Get all songs in an Apple Music album.
+    """
+    auth = verify_rapidapi_auth(request)
+    clean_id = album_id.strip()
+    if not clean_id:
+        raise HTTPException(status_code=400, detail="album_id cannot be empty.")
+
+    client_ip = get_client_ip(request)
+    analytics.record_rapidapi_call(f"/api/v1/album/{clean_id}/tracks", user=auth["user"], plan=auth["plan"], ip=client_ip)
+
+    cache_key = f"v1_alb_tracks:{clean_id}"
+    cached = _album_tracks_cache.get(cache_key)
+    if cached is not None:
+        return JSONResponse(content={"status": "success", "tracks": cached})
+
+    try:
+        tracks = await asyncio.to_thread(metadata_resolver.get_album_tracks, clean_id)
+        _album_tracks_cache.set(cache_key, tracks)
+        return JSONResponse(content={"status": "success", "count": len(tracks), "tracks": tracks})
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Album tracks lookup error: {str(exc)}")
+
+app.include_router(api_v1)
 
 # ── Entry point ───────────────────────────────────────────────
 if __name__ == "__main__":

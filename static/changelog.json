@@ -1,5 +1,23 @@
 [
   {
+    "version": "v1.30.0",
+    "date": "2026-11-26",
+    "type": "feature",
+    "title": "RapidAPI Commercial Developer API (/api/v1) & Proxy Secret Security",
+    "highlights": [
+      "Public Developer API (/api/v1): Added 8 high-performance endpoints for YouTube music search, Apple Music rich metadata resolution (800x800 artwork), streaming token generation, and on-the-fly zero-disk MP3/M4A streaming.",
+      "RapidAPI Gateway Protection: Integrated X-RapidAPI-Proxy-Secret verification with constant-time digest comparison to prevent unauthorized direct bypass.",
+      "OpenAPI Specification & Testing: Exported ready-to-import rapidapi_openapi.json and added automated unit tests covering RapidAPI authentication, parameter models, and analytics integration."
+    ],
+    "changes": [
+      "Added /api/v1 router in main.py with endpoints: /health, /search, /info, /convert, /stream, /artist/search, /artist/{id}/discography, /album/{id}/tracks.",
+      "Added RAPIDAPI_PROXY_SECRET environment variable support in docker-compose.yml and main.py.",
+      "Added record_rapidapi_call() tracking in analytics.py.",
+      "Added rapidapi_openapi.json for one-click import into RapidAPI Provider Studio.",
+      "Added tests/test_rapidapi.py and bumped Service Worker cache to melodyxx-v173."
+    ]
+  },
+  {
     "version": "v1.29.1",
     "date": "2026-11-25",
     "type": "improvement",
