@@ -16,7 +16,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="/static/css/style.css?v=1.29.0" />
+  <link rel="stylesheet" href="/static/css/style.css?v=1.30.1" />
 
   <style>
     body {
@@ -1052,6 +1052,23 @@
           <div class="metric-sub">Today: <strong id="val-today-previews">0</strong> plays</div>
         </div>
 
+        <!-- RapidAPI Calls -->
+        <div class="metric-card"
+          style="border-color: rgba(168, 85, 247, 0.35); background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(15, 12, 29, 0.6));">
+          <div class="metric-card-header">
+            <span class="metric-label" style="color: #c084fc;">RapidAPI Requests</span>
+            <div class="metric-icon-wrap" style="background: rgba(168, 85, 247, 0.18); color: #c084fc;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+            </div>
+          </div>
+          <div class="metric-value" style="color: #e9d5ff;" id="val-rapidapi-requests">0</div>
+          <div class="metric-sub">Today: <strong id="val-today-rapidapi" style="color: #c084fc;">0</strong> calls</div>
+        </div>
+
         <!-- Uptime -->
         <div class="metric-card">
           <div class="metric-card-header">
@@ -1224,11 +1241,12 @@
                 <th>Bandwidth</th>
                 <th>Searches</th>
                 <th>Streams</th>
+                <th>RapidAPI</th>
               </tr>
             </thead>
             <tbody id="history-table-body">
               <tr>
-                <td colspan="6" style="text-align: center; color: var(--clr-text-dim); padding: 24px;">No historical
+                <td colspan="7" style="text-align: center; color: var(--clr-text-dim); padding: 24px;">No historical
                   data available.</td>
               </tr>
             </tbody>
@@ -1571,6 +1589,11 @@
       document.getElementById('val-total-previews').textContent = Number(data.total_previews || 0).toLocaleString();
       document.getElementById('val-today-previews').textContent = Number(data.today?.previews || 0).toLocaleString();
 
+      const $rapidapiVal = document.getElementById('val-rapidapi-requests');
+      if ($rapidapiVal) $rapidapiVal.textContent = Number(data.total_rapidapi_requests || 0).toLocaleString();
+      const $rapidapiToday = document.getElementById('val-today-rapidapi');
+      if ($rapidapiToday) $rapidapiToday.textContent = Number(data.today?.rapidapi_requests || 0).toLocaleString();
+
       document.getElementById('val-uptime').textContent = data.uptime_human || formatUptime(localUptimeSeconds);
 
       // Active Visitors Table
@@ -1734,11 +1757,12 @@
       document.getElementById('history-days-count').textContent = `${dates.length} days recorded`;
 
       if (dates.length === 0) {
-        $historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--clr-text-dim); padding: 24px;">No historical data available.</td></tr>';
+        $historyBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--clr-text-dim); padding: 24px;">No historical data available.</td></tr>';
       } else {
         $historyBody.innerHTML = dates.map(d => {
           const row = recent[d];
           const visitors = row.unique_visitors !== undefined ? row.unique_visitors : (d === data.today?.date ? data.today?.unique_visitors : 0);
+          const rapidapi = row.rapidapi_requests !== undefined ? row.rapidapi_requests : (d === data.today?.date ? (data.today?.rapidapi_requests || 0) : 0);
           return `
             <tr>
               <td style="color: #fff; font-weight: 600;">${esc(d)}</td>
@@ -1747,6 +1771,7 @@
               <td>${formatBytes(row.bytes || 0)}</td>
               <td>${Number(row.searches || 0).toLocaleString()}</td>
               <td>${Number(row.previews || 0).toLocaleString()}</td>
+              <td><span style="color: #c084fc; font-weight: 600;">${Number(rapidapi || 0).toLocaleString()}</span></td>
             </tr>
           `;
         }).join('');

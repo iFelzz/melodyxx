@@ -1,5 +1,22 @@
 [
   {
+    "version": "v1.30.1",
+    "date": "2026-11-26",
+    "type": "improvement",
+    "title": "Admin Dashboard RapidAPI Monitoring & Metrics Breakdown",
+    "highlights": [
+      "RapidAPI Metrics Card: Added a dedicated visual monitoring card to the Admin Panel (/admin) tracking all-time and daily API gateway requests.",
+      "Historical Breakdown Column: Added a RapidAPI column to the Recent Activity Breakdown table for multi-day usage audits.",
+      "Analytics Engine Hardening: Included rapidapi_requests in default daily buckets and database reset routines."
+    ],
+    "changes": [
+      "Added RapidAPI Requests metric card with glowing violet glassmorphic styling in static/stats.html.",
+      "Added RapidAPI column to the daily breakdown table in static/stats.html.",
+      "Updated _get_today_bucket and reset methods in analytics.py.",
+      "Bumped Service Worker cache to melodyxx-v174 and synced cache-busters to v1.30.1."
+    ]
+  },
+  {
     "version": "v1.30.0",
     "date": "2026-11-26",
     "type": "feature",

@@ -299,6 +299,7 @@ class AnalyticsEngine:
                 "bytes": 0,
                 "searches": 0,
                 "previews": 0,
+                "rapidapi_requests": 0,
                 "unique_visitors": 0,
             }
         # Keep only the last 30 days to ensure minimal disk footprint (<50 KB)
@@ -777,6 +778,7 @@ class AnalyticsEngine:
         self.data["total_searches"] = 0
         self.data["total_artist_searches"] = 0
         self.data["total_previews"] = 0
+        self.data["total_rapidapi_requests"] = 0
         self.data["total_unique_visitors"] = 0
         self.data["peak_concurrency"] = 0
         self.data["top_tracks"].clear()
