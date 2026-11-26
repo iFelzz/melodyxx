@@ -2488,9 +2488,17 @@ async def v1_convert(request: Request, body: ConvertV1Request):
     display_name = sanitise_filename(display_name)
     filename = f"{display_name}.{ext}"
 
-    base_host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    # Ensure direct download stream URL points to public server domain
+    # RapidAPI gateway blocks direct browser downloads because browser navigation / media players cannot send X-RapidAPI-Key headers
+    f_host = request.headers.get("x-forwarded-host") or ""
+    d_host = request.headers.get("host") or ""
+    if "rapidapi" in f_host.lower():
+        base_host = d_host if (d_host and "rapidapi" not in d_host.lower()) else "melodyxx.eztec.biz.id"
+    else:
+        base_host = f_host or d_host or "melodyxx.eztec.biz.id"
+
     proto = request.headers.get("x-forwarded-proto") or "https"
-    base_url = f"{proto}://{base_host}".rstrip("/") if base_host else ""
+    base_url = f"{proto}://{base_host}".rstrip("/")
 
     encoded_url    = urllib.parse.quote(info.get("webpage_url") or target_url)
     encoded_title  = urllib.parse.quote(clean_title)
