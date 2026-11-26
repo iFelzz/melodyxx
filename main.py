@@ -1161,7 +1161,14 @@ async def admin_panel_view():
     admin_path = STATIC_DIR / "stats.html"
     if not admin_path.exists():
         raise HTTPException(status_code=404, detail="Admin panel not found.")
-    return FileResponse(str(admin_path))
+    return FileResponse(
+        str(admin_path),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 @app.get("/api/stats")
 @limiter.limit("15/minute")

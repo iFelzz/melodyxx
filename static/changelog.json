@@ -1,5 +1,19 @@
 [
   {
+    "version": "v1.30.2",
+    "date": "2026-11-26",
+    "type": "improvement",
+    "title": "Admin Dashboard Cache Invalidation & Instant Sync",
+    "highlights": [
+      "Cache-Control Hardening: Added strict no-cache/no-store/must-revalidate headers to the /admin route to ensure browser always displays the newest dashboard layout.",
+      "Instant Metrics Reflection: Ensured newly deployed cards and table columns reflect immediately upon reload."
+    ],
+    "changes": [
+      "Added Cache-Control, Pragma, and Expires headers to admin_panel_view in main.py.",
+      "Bumped Service Worker cache to melodyxx-v175 and synced cache-busters to v1.30.2."
+    ]
+  },
+  {
     "version": "v1.30.1",
     "date": "2026-11-26",
     "type": "improvement",
