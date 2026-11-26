@@ -5,6 +5,12 @@
     "description": "High-performance YouTube to MP3 converter & Apple Music metadata streaming engine with official 800x800 artwork and zero-disk on-the-fly transcoding.",
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "https://melodyxx.eztec.biz.id",
+      "description": "Production Server"
+    }
+  ],
   "paths": {
     "/api/v1/health": {
       "get": {

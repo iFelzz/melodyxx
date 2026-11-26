@@ -40,7 +40,7 @@ from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any, List
 
 import yt_dlp
-from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile, Query, APIRouter
+from fastapi import FastAPI, HTTPException, Request, Header, Form, File, UploadFile, Query, APIRouter, Depends
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -397,8 +397,9 @@ def get_client_ip(request: Request) -> str:
         if client_ip:
             return client_ip
     # 4. Direct socket client host
-    if request.client and request.client.host:
-        return request.client.host
+    client_obj = getattr(request, "client", None)
+    if client_obj and getattr(client_obj, "host", None):
+        return str(client_obj.host).strip()
     return "127.0.0.1"
 
 # ── Rate Limiter ──────────────────────────────────────────────
@@ -2237,8 +2238,8 @@ class ConvertV1Request(BaseModel):
 
 def verify_rapidapi_auth(request: Request) -> Dict[str, str]:
     """
-    Validates X-RapidAPI-Proxy-Secret header if configured.
-    When configured, unauthorized access bypassing the RapidAPI Gateway is rejected with HTTP 403.
+    Validates X-RapidAPI-Proxy-Secret header.
+    Rejects direct unauthorized bypass attempts with HTTP 403.
     """
     if RAPIDAPI_PROXY_SECRET:
         secret = request.headers.get("X-RapidAPI-Proxy-Secret", "").strip()
@@ -2247,6 +2248,15 @@ def verify_rapidapi_auth(request: Request) -> Dict[str, str]:
                 status_code=403,
                 detail="Forbidden: Invalid or missing X-RapidAPI-Proxy-Secret header. Direct access without RapidAPI Gateway is prohibited."
             )
+    else:
+        # Fallback security: If RAPIDAPI_PROXY_SECRET is not yet configured, block all external non-localhost calls
+        client_ip = get_client_ip(request)
+        if client_ip not in ("127.0.0.1", "localhost", "::1"):
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: RapidAPI protection is enabled. Set RAPIDAPI_PROXY_SECRET on server to authorize requests."
+            )
+
     rapid_user = request.headers.get("X-RapidAPI-User", "anonymous")
     rapid_plan = request.headers.get("X-RapidAPI-Subscription", "default")
     return {"user": rapid_user, "plan": rapid_plan}
@@ -2263,7 +2273,7 @@ async def v1_health():
     })
 
 
-@api_v1.get("/search")
+@api_v1.get("/search", dependencies=[Depends(verify_rapidapi_auth)])
 @limiter.limit("60/minute")
 async def v1_search(
     request: Request,
@@ -2349,7 +2359,7 @@ async def v1_search(
     })
 
 
-@api_v1.get("/info")
+@api_v1.get("/info", dependencies=[Depends(verify_rapidapi_auth)])
 @limiter.limit("60/minute")
 async def v1_info(
     request: Request,
@@ -2404,7 +2414,7 @@ async def v1_info(
     return JSONResponse(content={"status": "success", **result_data})
 
 
-@api_v1.post("/convert")
+@api_v1.post("/convert", dependencies=[Depends(verify_rapidapi_auth)])
 @limiter.limit("30/minute")
 async def v1_convert(request: Request, body: ConvertV1Request):
     """
@@ -2539,7 +2549,7 @@ async def v1_stream(
     )
 
 
-@api_v1.get("/artist/search")
+@api_v1.get("/artist/search", dependencies=[Depends(verify_rapidapi_auth)])
 @limiter.limit("60/minute")
 async def v1_artist_search(
     request: Request,
@@ -2570,7 +2580,7 @@ async def v1_artist_search(
         raise HTTPException(status_code=502, detail=f"Artist search error: {str(exc)}")
 
 
-@api_v1.get("/artist/{artist_id}/discography")
+@api_v1.get("/artist/{artist_id}/discography", dependencies=[Depends(verify_rapidapi_auth)])
 @limiter.limit("60/minute")
 async def v1_artist_discography(
     request: Request,
@@ -2604,7 +2614,7 @@ async def v1_artist_discography(
         raise HTTPException(status_code=502, detail=f"Discography lookup error: {str(exc)}")
 
 
-@api_v1.get("/album/{album_id}/tracks")
+@api_v1.get("/album/{album_id}/tracks", dependencies=[Depends(verify_rapidapi_auth)])
 @limiter.limit("60/minute")
 async def v1_album_tracks(
     request: Request,

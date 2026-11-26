@@ -42,9 +42,16 @@ class TestRapidAPIAuthAndEndpoints(unittest.TestCase):
         orig_secret = main.RAPIDAPI_PROXY_SECRET
         try:
             main.RAPIDAPI_PROXY_SECRET = ""
-            req = SimpleNamespace(headers={})
-            auth = main.verify_rapidapi_auth(req)
+            # Localhost is allowed in dev mode
+            req_local = SimpleNamespace(headers={}, client=SimpleNamespace(host="127.0.0.1"))
+            auth = main.verify_rapidapi_auth(req_local)
             self.assertEqual(auth["user"], "anonymous")
+
+            # External IP is blocked with 403 when RAPIDAPI_PROXY_SECRET is not configured
+            req_external = SimpleNamespace(headers={}, client=SimpleNamespace(host="203.0.113.1"))
+            with self.assertRaises(HTTPException) as ctx:
+                main.verify_rapidapi_auth(req_external)
+            self.assertEqual(ctx.exception.status_code, 403)
         finally:
             main.RAPIDAPI_PROXY_SECRET = orig_secret
 
